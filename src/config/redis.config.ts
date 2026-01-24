@@ -1,8 +1,9 @@
-import { RedisService } from '../services/redis.service';
+import { connectRedis, getRedisClient } from '../utils/redis.utils';
 
-// Export Redis client instance
-const redisClient = RedisService.initialize();
+// Initialize and export Redis client
+const initializeRedis = async () => {
+  return await connectRedis();
+};
 
-// Export for backward compatibility
-export { RedisService };
-export default redisClient;
+export { initializeRedis, getRedisClient };
+export default initializeRedis;

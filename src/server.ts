@@ -4,12 +4,11 @@ import { Server as SocketServer } from 'socket.io';
 import app from './app';
 import config from './config';
 import logger from './utils/logger';
-import redisClient, { RedisService } from './config/redis.config';
-import { closeDB, connectDB } from './database/connection';
-import DatabaseSeeder from './database/seed';
-import { emailConfig } from './config/email.config';
+import redisClient from './config/redis.config';
+import { closeDB, connectDB } from './config/database.config';
+import { seedDatabase } from './utils/seed.utils';
+import { closeRedis } from './utils/redis.utils';
 import { setupSocket } from './socket/socket.handler';
-import { closeWorkers } from './workers/workers';
 
 // Create HTTP server and Socket.IO instance
 let server: http.Server | null = null;
@@ -219,7 +218,7 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
     if (!isDevelopmentRestart) {
       logger.info(colors.cyan('🔴 [4/5] Closing Redis...'));
     }
-    await RedisService.close();
+    await closeRedis();
     if (!isDevelopmentRestart) {
       logger.info(colors.green('   ✅ Redis closed'));
     }
@@ -325,22 +324,15 @@ async function main() {
     await connectDB();
 
     // Seed default data
-    await DatabaseSeeder.seed();
+    await seedDatabase();
 
     // Step 2: Connect to Redis
     logger.info(colors.cyan('📦 [2/5] Connecting to Redis...'));
     const redisInstance = await redisClient;
     logger.info(colors.green('   ✅ Redis connected successfully'));
 
-    // Step 3: Initialize email worker
-    logger.info(colors.cyan('📧 [3/5] Initializing email worker...'));
-    try {
-      await import('./workers/email.worker');
-      logger.info(colors.green('   ✅ Email worker initialized'));
-    } catch (error) {
-      logger.warn(colors.yellow('   ⚠️  Email worker initialization failed (server will continue without it)'));
-      logger.warn(colors.yellow(`   Error: ${(error as Error).message}`));
-    }
+    // Step 3: Skip email worker (not implemented)
+    logger.info(colors.cyan('📧 [3/5] Email worker not implemented...'));
 
     // Step 4: Start HTTP server
     logger.info(colors.cyan('🌐 [4/5] Starting HTTP server...\n'));

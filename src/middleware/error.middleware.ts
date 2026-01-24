@@ -6,7 +6,9 @@ import handleDuplicateError from '../errors/handleDuplicateError';
 import handleMulterError from '../errors/handleMulterError';
 import handleValidationError from '../errors/handleValidationError';
 import handleZodError from '../errors/handleZodError';
-import { errorLogger } from './logger.middleware';
+import logger from '../utils/logger';
+import ApiError from '@/utils/ApiError';
+import config from '@/config';
 
 const globalErrorHandler: ErrorRequestHandler = (
   error,
@@ -62,12 +64,7 @@ const globalErrorHandler: ErrorRequestHandler = (
     message = 'Request timed out';
   } else if (error instanceof ApiError) {
     statusCode = error.statusCode;
-    if (error.errors && error.errors.length > 0) {
-      // If there are detailed errors (like validation), join them
-      message = error.errors.map(err => err.message).join('. ');
-    } else {
-      message = error.message;
-    }
+    message = error.message;
   } else if (error instanceof Error) {
     message = error.message;
   }
@@ -80,9 +77,10 @@ const globalErrorHandler: ErrorRequestHandler = (
       stack: error?.stack,
     });
   } else {
-    errorLogger.error('🚨 Error Handler:', {
+    logger.error('🚨 Error Handler:', {
       statusCode,
       message,
+      stack: error?.stack,
     });
   }
 

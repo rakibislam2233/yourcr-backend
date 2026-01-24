@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../utils/ApiError';
-import { RedisService } from '../services/redis.service';
+import { existsCache } from '../utils/redis.utils';
 import { verifyAccessToken } from '../utils/jwt.utils';
 
 interface IDecodedToken {
@@ -34,9 +34,11 @@ const auth =
       }
       const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
 
-      const isBlacklisted = await RedisService.existsCache(AUTH_CACHE_KEY.BLACKlISTED_TOKEN(tokenValue));
+      const isBlacklisted = await existsCache(
+        AUTH_CACHE_KEY.BLACKlISTED_TOKEN(tokenValue)
+      );
       if (isBlacklisted) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, 'Token is blacklisted');
+        throw new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized to access');
       }
 
       // Verify token and get decoded user
@@ -47,7 +49,7 @@ const auth =
 
       // Role based authorization
       if (requiredRoles.length && verifiedUser.role && !requiredRoles.includes(verifiedUser.role)) {
-        throw new ApiError(StatusCodes.FORBIDDEN, 'Insufficient permissions');
+        throw new ApiError(StatusCodes.FORBIDDEN, 'Forbidden to access');
       }
 
       next();

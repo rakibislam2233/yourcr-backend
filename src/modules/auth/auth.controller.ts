@@ -1,99 +1,104 @@
 import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
+import { 
+  registerUser, 
+  loginUser, 
+  refreshUserToken, 
+  logoutUser, 
+  getUserProfile, 
+  updateUserProfile 
+} from './auth.service';
 import catchAsync from '../../utils/catchAsync';
 import httpStatus from 'http-status-codes';
 import ApiResponse from '../../utils/ApiResponse';
 
-export class AuthController {
-  // Register user
-  static register = catchAsync(async (req: Request, res: Response) => {
-    const userData = req.body;
-    const user = await AuthService.register(userData);
+// Register user
+export const register = catchAsync(async (req: Request, res: Response) => {
+  const userData = req.body;
+  const user = await registerUser(userData);
 
-    res.status(httpStatus.CREATED).json(
-      new ApiResponse(
-        httpStatus.CREATED,
-        'User registered successfully',
-        user
-      )
-    );
-  });
+  res.status(httpStatus.CREATED).json(
+    new ApiResponse(
+      httpStatus.CREATED,
+      'User registered successfully',
+      user
+    )
+  );
+});
 
-  // Login user
-  static login = catchAsync(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const result = await AuthService.login(email, password);
+// Login user
+export const login = catchAsync(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const result = await loginUser(email, password);
 
-    res.status(httpStatus.OK).json(
-      new ApiResponse(
-        httpStatus.OK,
-        'Login successful',
-        result
-      )
-    );
-  });
+  res.status(httpStatus.OK).json(
+    new ApiResponse(
+      httpStatus.OK,
+      'Login successful',
+      result
+    )
+  );
+});
 
-  // Refresh token
-  static refreshToken = catchAsync(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
-    const tokens = await AuthService.refreshToken(refreshToken);
+// Refresh token
+export const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  const tokens = await refreshUserToken(refreshToken);
 
-    res.status(httpStatus.OK).json(
-      new ApiResponse(
-        httpStatus.OK,
-        'Token refreshed successfully',
-        tokens
-      )
-    );
-  });
+  res.status(httpStatus.OK).json(
+    new ApiResponse(
+      httpStatus.OK,
+      'Token refreshed successfully',
+      tokens
+    )
+  );
+});
 
-  // Logout user
-  static logout = catchAsync(async (req: Request, res: Response) => {
-    const refreshToken = req.headers.authorization?.replace('Bearer ', '') || '';
-    await AuthService.logout(refreshToken);
+// Logout user
+export const logout = catchAsync(async (req: Request, res: Response) => {
+  const refreshToken = req.headers.authorization?.replace('Bearer ', '') || '';
+  await logoutUser(refreshToken);
 
-    res.status(httpStatus.OK).json(
-      new ApiResponse(
-        httpStatus.OK,
-        'Logout successful'
-      )
-    );
-  });
+  res.status(httpStatus.OK).json(
+    new ApiResponse(
+      httpStatus.OK,
+      'Logout successful'
+    )
+  );
+});
 
-  // Get profile
-  static getProfile = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
+// Get profile
+export const getProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
 
-    const user = await AuthService.getProfile(userId);
+  const user = await getUserProfile(userId);
 
-    res.status(httpStatus.OK).json(
-      new ApiResponse(
-        httpStatus.OK,
-        'Profile fetched successfully',
-        user
-      )
-    );
-  });
+  res.status(httpStatus.OK).json(
+    new ApiResponse(
+      httpStatus.OK,
+      'Profile fetched successfully',
+      user
+    )
+  );
+});
 
-  // Update profile
-  static updateProfile = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
+// Update profile
+export const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
 
-    const updateData = req.body;
-    const user = await AuthService.updateProfile(userId, updateData);
+  const updateData = req.body;
+  const user = await updateUserProfile(userId, updateData);
 
-    res.status(httpStatus.OK).json(
-      new ApiResponse(
-        httpStatus.OK,
-        'Profile updated successfully',
-        user
-      )
-    );
-  });
-}
+  res.status(httpStatus.OK).json(
+    new ApiResponse(
+      httpStatus.OK,
+      'Profile updated successfully',
+      user
+    )
+  );
+});
