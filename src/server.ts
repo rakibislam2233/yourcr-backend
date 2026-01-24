@@ -1,0 +1,440 @@
+import colors from 'colors';
+import http from 'http';
+import { Server as SocketServer } from 'socket.io';
+import app from './app';
+import { config } from './config';
+import { errorLogger, logger } from './core/middleware/logger.middleware';
+import { redisClient } from './infrastructure/cache/redis.client';
+import { closeDB, connectDB } from './infrastructure/database/mongodb';
+import { Seeder } from './infrastructure/database/seeder';
+import { emailConfig } from './infrastructure/email/email.config';
+import { emailWorker } from './infrastructure/queue/email.worker';
+import { setupSocket } from './modules/socket';
+
+// Create HTTP server and Socket.IO instance
+let server: http.Server | null = null;
+let io: SocketServer | null = null;
+
+// Track if shutdown is in progress
+let isShuttingDown = false;
+
+// ==========================================
+// UNCAUGHT EXCEPTION HANDLER
+// ==========================================
+process.on('uncaughtException', (error: Error) => {
+  errorLogger.error(colors.red('💥 UNCAUGHT EXCEPTION! Shutting down...'));
+  errorLogger.error(colors.red(`Error: ${error.message}`));
+  errorLogger.error(error.stack);
+
+  // Exit immediately on uncaught exception
+  process.exit(1);
+});
+
+// ==========================================
+// START HTTP SERVER + SOCKET.IO
+// ==========================================
+const startServer = (): void => {
+  const port = config.port;
+
+  // Create HTTP server
+  server = app.listen(port, config.backend.ip, () => {
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.green('                 🚀 SERVER STARTED SUCCESSFULLY!            '));
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.cyan(`📌 Environment      : ${colors.bold(config.env.toUpperCase())}`));
+    logger.info(colors.cyan(`🌐 Server URL       : ${colors.bold(config.backend.baseUrl)}`));
+    logger.info(colors.cyan(`📍 IP Address       : ${colors.bold(config.backend.ip)}`));
+    logger.info(colors.cyan(`🔌 Port             : ${colors.bold(port.toString())}`));
+    logger.info(colors.cyan(`⚡ Process ID       : ${colors.bold(process.pid.toString())}`));
+    logger.info(
+      colors.cyan(
+        `💾 Memory Usage     : ${colors.bold(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`
+      )
+    );
+    logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
+    logger.info(colors.green('───────────────────────────────────────────────────────────'));
+  });
+
+  // Initialize Socket.IO
+  io = new SocketServer(server, {
+    cors: {
+      origin: config.cors.allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    maxHttpBufferSize: 1e8, // 100 MB
+    transports: ['websocket', 'polling'],
+    allowEIO3: true,
+    connectTimeout: 45000,
+  });
+
+  // Setup Socket.IO handlers
+  setupSocket(io);
+
+  // Store globally for access from other modules
+  (global as any).io = io;
+
+  logger.info(colors.green(''));
+  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+  logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
+  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+  logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
+  logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
+  logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
+  logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
+  logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
+  logger.info(
+    colors.cyan(
+      `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
+    )
+  );
+  logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
+
+  // Handle server errors
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EADDRINUSE') {
+      errorLogger.error(colors.red(`❌ Port ${port} is already in use`));
+      errorLogger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
+    } else if (error.code === 'EACCES') {
+      errorLogger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
+      errorLogger.error(colors.yellow(`💡 Try: sudo node server.js`));
+    } else {
+      errorLogger.error(colors.red('❌ Server error:'), error);
+    }
+    process.exit(1);
+  });
+
+  // Handle client connections
+  server.on('connection', socket => {
+    socket.setKeepAlive(true);
+
+    socket.on('error', err => {
+      errorLogger.error(colors.red('❌ Socket error:'), err);
+    });
+  });
+
+  // Track active connections for graceful shutdown
+  let connections = new Set<any>();
+
+  server.on('connection', conn => {
+    connections.add(conn);
+    conn.on('close', () => {
+      connections.delete(conn);
+    });
+  });
+
+  (server as any).connections = connections;
+};
+
+// ==========================================
+// GRACEFUL SHUTDOWN
+// ==========================================
+const gracefulShutdown = async (signal: string): Promise<void> => {
+  if (isShuttingDown) {
+    logger.warn(colors.yellow('⚠️  Shutdown already in progress...'));
+    return;
+  }
+
+  isShuttingDown = true;
+
+  // Quick shutdown for dev restarts
+  const isDevelopmentRestart = signal === 'SIGUSR2' || signal === 'SIGTERM';
+  const timeoutDuration = isDevelopmentRestart ? 2000 : 15000;
+
+  if (!isDevelopmentRestart) {
+    logger.info(colors.yellow(''));
+    logger.info(colors.yellow('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.yellow(`         ⚠️  ${signal} RECEIVED - GRACEFUL SHUTDOWN          `));
+    logger.info(colors.yellow('═══════════════════════════════════════════════════════════'));
+  }
+
+  const shutdownTimeout = setTimeout(() => {
+    if (!isDevelopmentRestart) {
+      errorLogger.error(colors.red('❌ Forced shutdown due to timeout'));
+    }
+    process.exit(0);
+  }, timeoutDuration);
+
+  try {
+    // Stop health monitoring
+    stopHealthMonitoring();
+
+    // Step 1: Close Socket.IO
+    if (io) {
+      if (!isDevelopmentRestart) {
+        logger.info(colors.cyan('🔌 [1/5] Closing Socket.IO...'));
+      }
+
+      io.disconnectSockets(true);
+
+      await new Promise<void>(resolve => {
+        io!.close(() => {
+          if (!isDevelopmentRestart) {
+            logger.info(colors.green('   ✅ Socket.IO closed'));
+          }
+          resolve();
+        });
+      });
+
+      io = null;
+    }
+
+    // Step 2: Close HTTP Server
+    if (server) {
+      if (!isDevelopmentRestart) {
+        logger.info(colors.cyan('🌐 [2/5] Closing HTTP server...'));
+      }
+
+      await new Promise<void>(resolve => {
+        server!.close(() => {
+          if (!isDevelopmentRestart) {
+            logger.info(colors.green('   ✅ HTTP server closed'));
+          }
+          resolve();
+        });
+      });
+
+      // Force destroy all connections
+      const connections = (server as any).connections;
+      if (connections && connections.size > 0) {
+        connections.forEach((conn: any) => conn.destroy());
+        connections.clear();
+      }
+
+      server = null;
+    }
+
+    // Step 3: Close MongoDB
+    if (!isDevelopmentRestart) {
+      logger.info(colors.cyan('🗄️  [3/5] Closing MongoDB...'));
+    }
+    await closeDB();
+    if (!isDevelopmentRestart) {
+      logger.info(colors.green('   ✅ MongoDB closed'));
+    }
+
+    // Step 4: Close Redis
+    if (!isDevelopmentRestart) {
+      logger.info(colors.cyan('🔴 [4/5] Closing Redis...'));
+    }
+    if (redisClient.status !== 'end') {
+      await redisClient.quit();
+    }
+    if (!isDevelopmentRestart) {
+      logger.info(colors.green('   ✅ Redis closed'));
+    }
+
+    // Step 5: Close Email Worker
+    if (!isDevelopmentRestart) {
+      logger.info(colors.cyan('📧 [5/5] Closing Email Worker...'));
+    }
+    await emailWorker.close();
+    if (!isDevelopmentRestart) {
+      logger.info(colors.green('   ✅ Email Worker closed'));
+    }
+
+    clearTimeout(shutdownTimeout);
+
+    if (!isDevelopmentRestart) {
+      logger.info(colors.green(''));
+      logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+      logger.info(colors.green('         ✅ SHUTDOWN COMPLETED                              '));
+      logger.info(colors.green('═══════════════════════════════════════════════════════════\n'));
+    }
+
+    process.exit(0);
+  } catch (error) {
+    clearTimeout(shutdownTimeout);
+    if (!isDevelopmentRestart) {
+      errorLogger.error(colors.red('❌ Shutdown error:'), error);
+    }
+    process.exit(1);
+  }
+};
+
+// ==========================================
+// HEALTH CHECK
+// ==========================================
+const logHealthStats = (): void => {
+  const memoryUsage = process.memoryUsage();
+  const uptime = process.uptime();
+  const uptimeMinutes = Math.floor(uptime / 60);
+  const uptimeHours = Math.floor(uptimeMinutes / 60);
+  const remainingMinutes = uptimeMinutes % 60;
+
+  logger.info(colors.cyan(''));
+  logger.info(colors.cyan('╔═══════════════════════════════════════════════════════════╗'));
+  logger.info(colors.cyan('║                    📊 HEALTH CHECK                        ║'));
+  logger.info(colors.cyan('╠═══════════════════════════════════════════════════════════╣'));
+  logger.info(
+    colors.cyan(
+      `║ ⏱️  Uptime         : ${colors.bold(`${uptimeHours}h ${remainingMinutes}m`).padEnd(38)}║`
+    )
+  );
+  logger.info(
+    colors.cyan(
+      `║ 💾 Heap Used      : ${colors.bold(`${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`).padEnd(38)}║`
+    )
+  );
+  logger.info(
+    colors.cyan(
+      `║ 📦 Heap Total     : ${colors.bold(`${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`).padEnd(38)}║`
+    )
+  );
+  logger.info(
+    colors.cyan(
+      `║ 🔧 External       : ${colors.bold(`${Math.round(memoryUsage.external / 1024 / 1024)}MB`).padEnd(38)}║`
+    )
+  );
+  logger.info(
+    colors.cyan(
+      `║ 📊 RSS            : ${colors.bold(`${Math.round(memoryUsage.rss / 1024 / 1024)}MB`).padEnd(38)}║`
+    )
+  );
+  logger.info(
+    colors.cyan(`║ ⚡ Process ID     : ${colors.bold(process.pid.toString()).padEnd(38)}║`)
+  );
+  logger.info(colors.cyan('╚═══════════════════════════════════════════════════════════╝'));
+  logger.info(colors.cyan(''));
+};
+
+let healthCheckInterval: NodeJS.Timeout | null = null;
+
+const startHealthMonitoring = (intervalMs: number = 60000): void => {
+  if (config.env === 'development') {
+    healthCheckInterval = setInterval(logHealthStats, intervalMs);
+    logger.info(
+      colors.magenta(`📊 Health monitoring started (checking every ${intervalMs / 1000} seconds)`)
+    );
+  }
+};
+
+const stopHealthMonitoring = (): void => {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+    logger.info(colors.yellow('📊 Health monitoring stopped'));
+  }
+};
+
+// ==========================================
+// MAIN APPLICATION INITIALIZATION
+// ==========================================
+async function main() {
+  try {
+    logger.info(colors.cyan(''));
+    logger.info(colors.cyan('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.cyan('                🚀 APPLICATION INITIALIZATION               '));
+    logger.info(colors.cyan('═══════════════════════════════════════════════════════════'));
+
+    // Step 1: Connect to MongoDB
+    logger.info(colors.cyan('\n📦 [1/5] Connecting to MongoDB...'));
+    await connectDB();
+
+    // Seed default data (Admin & Super Admin)
+    await Seeder.seedAdmin();
+
+    // Step 2: Connect to Redis
+    logger.info(colors.cyan('📦 [2/5] Connecting to Redis...'));
+    await new Promise(resolve => {
+      if (redisClient.status === 'ready') {
+        logger.info(colors.green('   ✅ Redis already connected'));
+        resolve(true);
+      } else {
+        redisClient.once('ready', () => {
+          logger.info(colors.green('   ✅ Redis connected successfully'));
+          resolve(true);
+        });
+      }
+    });
+
+    // Step 3: Verify Email Service (optional)
+    if (config.smtp.username && config.smtp.password) {
+      logger.info(colors.cyan('📧 [3/5] Verifying email service...'));
+      await emailConfig.verifyEmailConnection();
+    } else {
+      logger.info(colors.yellow('⚠️  [3/5] Email service not configured (skipping)'));
+    }
+
+    // Step 4: Start HTTP server
+    logger.info(colors.cyan('🌐 [4/5] Starting HTTP server...\n'));
+    startServer();
+
+    // Step 5: Start health monitoring (development only)
+    if (config.env === 'development') {
+      logger.info(colors.cyan('\n📊 [5/5] Starting health monitoring...'));
+      startHealthMonitoring(60000);
+    } else {
+      logger.info(colors.cyan('\n⏭️  [5/5] Health monitoring disabled (production mode)'));
+    }
+
+    // Log final success message
+    logger.info(colors.green(''));
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.green('            ✅ ALL SYSTEMS OPERATIONAL!                     '));
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.cyan(`📝 Logs Directory   : ${colors.bold('./logs/')}`));
+    logger.info(colors.cyan(`🔧 Environment      : ${colors.bold(config.env.toUpperCase())}`));
+    logger.info(colors.cyan(`🎯 Status           : ${colors.bold.green('READY')}`));
+    logger.info(colors.cyan(`🌟 Ready to accept requests!`));
+    logger.info(colors.green('───────────────────────────────────────────────────────────\n'));
+  } catch (error) {
+    errorLogger.error(colors.red(''));
+    errorLogger.error(colors.red('═══════════════════════════════════════════════════════════'));
+    errorLogger.error(colors.red('              ❌ APPLICATION FAILED TO START               '));
+    errorLogger.error(colors.red('═══════════════════════════════════════════════════════════'));
+    errorLogger.error(colors.red('Error Details:'), error);
+    errorLogger.error(colors.red('───────────────────────────────────────────────────────────\n'));
+
+    // Attempt cleanup
+    try {
+      logger.info(colors.yellow('🧹 Attempting cleanup...'));
+      await closeDB();
+      logger.info(colors.green('✅ Cleanup completed'));
+    } catch (cleanupError) {
+      errorLogger.error(colors.red('❌ Cleanup error:'), cleanupError);
+    }
+
+    process.exit(1);
+  }
+}
+
+// Start the application
+main();
+
+// ==========================================
+// PROCESS EVENT HANDLERS
+// ==========================================
+
+// Unhandled Promise Rejection
+process.on('unhandledRejection', (reason: any) => {
+  errorLogger.error(colors.red('💥 UNHANDLED REJECTION:'), reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
+});
+
+// SIGTERM (Production/ts-node-dev restart)
+process.on('SIGTERM', () => {
+  gracefulShutdown('SIGTERM');
+});
+
+// SIGINT (Ctrl+C)
+process.on('SIGINT', () => {
+  gracefulShutdown('SIGINT');
+});
+
+// SIGUSR2 (Nodemon/ts-node-dev restart)
+process.on('SIGUSR2', () => {
+  gracefulShutdown('SIGUSR2');
+});
+
+// SIGHUP (Terminal closed)
+process.on('SIGHUP', () => {
+  gracefulShutdown('SIGHUP');
+});
+
+// SIGKILL (Manual kill)
+process.on('SIGKILL', () => {
+  gracefulShutdown('SIGKILL');
+});
