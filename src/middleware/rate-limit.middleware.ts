@@ -1,8 +1,6 @@
 import colors from 'colors';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { RedisUtils } from '../../infrastructure/cache/redis.utils';
-import { jwtHelper } from '../../shared/helpers/jwtHelper';
 
 interface RateLimitConfig {
   windowMs: number;

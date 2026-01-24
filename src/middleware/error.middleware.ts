@@ -1,8 +1,6 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import { MulterError } from 'multer';
 import { ZodError } from 'zod';
-import { config } from '../../config';
-import AppError from '../../shared/utils/AppError';
 import handleCastError from '../errors/handleCastError';
 import handleDuplicateError from '../errors/handleDuplicateError';
 import handleMulterError from '../errors/handleMulterError';
@@ -24,12 +22,12 @@ const globalErrorHandler: ErrorRequestHandler = (
     const simplifiedError = handleZodError(error);
     statusCode = simplifiedError.statusCode;
     // Combine all zod validation messages into one string
-    message = simplifiedError.errorMessages.map((msg) => msg.message).join('. ');
+    message = simplifiedError.errorMessages.map(msg => msg.message).join('. ');
   } else if (error?.name === 'ValidationError') {
     const simplifiedError = handleValidationError(error);
     statusCode = simplifiedError.statusCode;
     // Combine all mongoose validation messages into one string
-    message = simplifiedError.errorMessages.map((msg) => msg.message).join('. ');
+    message = simplifiedError.errorMessages.map(msg => msg.message).join('. ');
   } else if (error?.name === 'CastError') {
     const simplifiedError = handleCastError(error);
     statusCode = simplifiedError.statusCode;
@@ -62,11 +60,11 @@ const globalErrorHandler: ErrorRequestHandler = (
   } else if (error.message?.includes('timeout') || error.name === 'TimeoutError') {
     statusCode = 504;
     message = 'Request timed out';
-  } else if (error instanceof AppError) {
+  } else if (error instanceof ApiError) {
     statusCode = error.statusCode;
     if (error.errors && error.errors.length > 0) {
       // If there are detailed errors (like validation), join them
-      message = error.errors.map((err) => err.message).join('. ');
+      message = error.errors.map(err => err.message).join('. ');
     } else {
       message = error.message;
     }
