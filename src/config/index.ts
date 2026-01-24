@@ -133,6 +133,13 @@ if (process.env.NODE_ENV === 'development') {
     bucketName: process.env.AWS_S3_BUCKET_NAME || '',
   },
 
+  // Cloudinary
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+  },
+
   // CloudFront CDN
   cloudfront: {
     domain: process.env.CLOUDFRONT_DOMAIN || '',

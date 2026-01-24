@@ -7,16 +7,11 @@ import mongoSanitize from 'express-mongo-sanitize';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import path from 'path';
-import { config } from './config';
-import globalErrorHandler from './core/middleware/error.middleware';
-import notFound from './core/middleware/not-found.middleware';
+import config from './config';
+import globalErrorHandler from './middleware/error.middleware';
+import notFound from './middleware/not-found.middleware';
 import version1Routes from './routes/v1';
-import {
-  healthCheckHandler,
-  livenessHandler,
-  readinessHandler,
-  SERVER_LIMITS,
-} from './shared/utils/serverHealth';
+// Health check handlers
 
 // Create Express application
 const app = express();
@@ -336,34 +331,12 @@ app.get('/test', (req: Request, res: Response) => {
   });
 });
 
-// Health check endpoints
-app.get('/health', healthCheckHandler);
-
-// Simple liveness check (for load balancers)
-app.get('/live', livenessHandler);
-
-// Readiness check (is server ready to accept traffic)
-app.get('/ready', readinessHandler);
-
-// Server limits info
-app.get('/limits', (req: Request, res: Response) => {
+// Health check endpoint
+app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
-    data: {
-      limits: SERVER_LIMITS,
-      recommendations: {
-        maxConcurrentUploads: SERVER_LIMITS.MAX_ACTIVE_JOBS,
-        maxFileSizeMB: SERVER_LIMITS.MAX_UPLOAD_SIZE_MB,
-        maxRequestsPerSecond: SERVER_LIMITS.MAX_REQUESTS_PER_SECOND,
-        maxQueueSize: SERVER_LIMITS.MAX_QUEUE_SIZE,
-      },
-      tips: [
-        'Compress images before uploading for faster processing',
-        'Upload one file at a time for better performance',
-        'Check /health endpoint before bulk uploads',
-        'If server is degraded, wait and retry later',
-      ],
-    },
+    message: 'Server is healthy',
+    timestamp: new Date().toISOString(),
   });
 });
 

@@ -2,14 +2,14 @@ import colors from 'colors';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 import app from './app';
-import { config } from './config';
-import { errorLogger, logger } from './core/middleware/logger.middleware';
-import { redisClient } from './infrastructure/cache/redis.client';
-import { closeDB, connectDB } from './infrastructure/database/mongodb';
-import { Seeder } from './infrastructure/database/seeder';
-import { emailConfig } from './infrastructure/email/email.config';
-import { emailWorker } from './infrastructure/queue/email.worker';
-import { setupSocket } from './modules/socket';
+import config from './config';
+import logger from './utils/logger';
+import redisClient, { RedisService } from './config/redis.config';
+import { closeDB, connectDB } from './database/connection';
+import DatabaseSeeder from './database/seed';
+import { emailConfig } from './config/email.config';
+import { setupSocket } from './socket/socket.handler';
+import { closeWorkers } from './workers/workers';
 
 // Create HTTP server and Socket.IO instance
 let server: http.Server | null = null;
@@ -22,9 +22,9 @@ let isShuttingDown = false;
 // UNCAUGHT EXCEPTION HANDLER
 // ==========================================
 process.on('uncaughtException', (error: Error) => {
-  errorLogger.error(colors.red('💥 UNCAUGHT EXCEPTION! Shutting down...'));
-  errorLogger.error(colors.red(`Error: ${error.message}`));
-  errorLogger.error(error.stack);
+  logger.error(colors.red('💥 UNCAUGHT EXCEPTION! Shutting down...'));
+  logger.error(colors.red(`Error: ${error.message}`));
+  logger.error(error.stack);
 
   // Exit immediately on uncaught exception
   process.exit(1);
@@ -95,13 +95,13 @@ const startServer = (): void => {
   // Handle server errors
   server.on('error', (error: NodeJS.ErrnoException) => {
     if (error.code === 'EADDRINUSE') {
-      errorLogger.error(colors.red(`❌ Port ${port} is already in use`));
-      errorLogger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
+      logger.error(colors.red(`❌ Port ${port} is already in use`));
+      logger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
     } else if (error.code === 'EACCES') {
-      errorLogger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
-      errorLogger.error(colors.yellow(`💡 Try: sudo node server.js`));
+      logger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
+      logger.error(colors.yellow(`💡 Try: sudo node server.js`));
     } else {
-      errorLogger.error(colors.red('❌ Server error:'), error);
+      logger.error(colors.red('❌ Server error:'), error);
     }
     process.exit(1);
   });
@@ -111,7 +111,7 @@ const startServer = (): void => {
     socket.setKeepAlive(true);
 
     socket.on('error', err => {
-      errorLogger.error(colors.red('❌ Socket error:'), err);
+      logger.error(colors.red('❌ Socket error:'), err);
     });
   });
 
@@ -152,7 +152,7 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
 
   const shutdownTimeout = setTimeout(() => {
     if (!isDevelopmentRestart) {
-      errorLogger.error(colors.red('❌ Forced shutdown due to timeout'));
+      logger.error(colors.red('❌ Forced shutdown due to timeout'));
     }
     process.exit(0);
   }, timeoutDuration);
@@ -219,21 +219,12 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
     if (!isDevelopmentRestart) {
       logger.info(colors.cyan('🔴 [4/5] Closing Redis...'));
     }
-    if (redisClient.status !== 'end') {
-      await redisClient.quit();
-    }
+    await RedisService.close();
     if (!isDevelopmentRestart) {
       logger.info(colors.green('   ✅ Redis closed'));
     }
 
-    // Step 5: Close Email Worker
-    if (!isDevelopmentRestart) {
-      logger.info(colors.cyan('📧 [5/5] Closing Email Worker...'));
-    }
-    await emailWorker.close();
-    if (!isDevelopmentRestart) {
-      logger.info(colors.green('   ✅ Email Worker closed'));
-    }
+    // Workers closed
 
     clearTimeout(shutdownTimeout);
 
@@ -248,7 +239,7 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
   } catch (error) {
     clearTimeout(shutdownTimeout);
     if (!isDevelopmentRestart) {
-      errorLogger.error(colors.red('❌ Shutdown error:'), error);
+      logger.error(colors.red('❌ Shutdown error:'), error);
     }
     process.exit(1);
   }
@@ -333,29 +324,22 @@ async function main() {
     logger.info(colors.cyan('\n📦 [1/5] Connecting to MongoDB...'));
     await connectDB();
 
-    // Seed default data (Admin & Super Admin)
-    await Seeder.seedAdmin();
+    // Seed default data
+    await DatabaseSeeder.seed();
 
     // Step 2: Connect to Redis
     logger.info(colors.cyan('📦 [2/5] Connecting to Redis...'));
-    await new Promise(resolve => {
-      if (redisClient.status === 'ready') {
-        logger.info(colors.green('   ✅ Redis already connected'));
-        resolve(true);
-      } else {
-        redisClient.once('ready', () => {
-          logger.info(colors.green('   ✅ Redis connected successfully'));
-          resolve(true);
-        });
-      }
-    });
+    const redisInstance = await redisClient;
+    logger.info(colors.green('   ✅ Redis connected successfully'));
 
-    // Step 3: Verify Email Service (optional)
-    if (config.smtp.username && config.smtp.password) {
-      logger.info(colors.cyan('📧 [3/5] Verifying email service...'));
-      await emailConfig.verifyEmailConnection();
-    } else {
-      logger.info(colors.yellow('⚠️  [3/5] Email service not configured (skipping)'));
+    // Step 3: Initialize email worker
+    logger.info(colors.cyan('📧 [3/5] Initializing email worker...'));
+    try {
+      await import('./workers/email.worker');
+      logger.info(colors.green('   ✅ Email worker initialized'));
+    } catch (error) {
+      logger.warn(colors.yellow('   ⚠️  Email worker initialization failed (server will continue without it)'));
+      logger.warn(colors.yellow(`   Error: ${(error as Error).message}`));
     }
 
     // Step 4: Start HTTP server
@@ -381,12 +365,12 @@ async function main() {
     logger.info(colors.cyan(`🌟 Ready to accept requests!`));
     logger.info(colors.green('───────────────────────────────────────────────────────────\n'));
   } catch (error) {
-    errorLogger.error(colors.red(''));
-    errorLogger.error(colors.red('═══════════════════════════════════════════════════════════'));
-    errorLogger.error(colors.red('              ❌ APPLICATION FAILED TO START               '));
-    errorLogger.error(colors.red('═══════════════════════════════════════════════════════════'));
-    errorLogger.error(colors.red('Error Details:'), error);
-    errorLogger.error(colors.red('───────────────────────────────────────────────────────────\n'));
+    logger.error(colors.red(''));
+    logger.error(colors.red('═══════════════════════════════════════════════════════════'));
+    logger.error(colors.red('              ❌ APPLICATION FAILED TO START               '));
+    logger.error(colors.red('═══════════════════════════════════════════════════════════'));
+    logger.error(colors.red('Error Details:'), error);
+    logger.error(colors.red('───────────────────────────────────────────────────────────\n'));
 
     // Attempt cleanup
     try {
@@ -394,7 +378,7 @@ async function main() {
       await closeDB();
       logger.info(colors.green('✅ Cleanup completed'));
     } catch (cleanupError) {
-      errorLogger.error(colors.red('❌ Cleanup error:'), cleanupError);
+      logger.error(colors.red('❌ Cleanup error:'), cleanupError);
     }
 
     process.exit(1);
@@ -410,7 +394,7 @@ main();
 
 // Unhandled Promise Rejection
 process.on('unhandledRejection', (reason: any) => {
-  errorLogger.error(colors.red('💥 UNHANDLED REJECTION:'), reason);
+  logger.error(colors.red('💥 UNHANDLED REJECTION:'), reason);
   gracefulShutdown('UNHANDLED_REJECTION');
 });
 

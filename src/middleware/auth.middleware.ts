@@ -1,10 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import ApiError from '../utils/ApiError';
+import { RedisService } from '../services/redis.service';
+import { verifyAccessToken } from '../utils/jwt.utils';
+
+interface IDecodedToken {
+  userId: string;
+  email: string;
+  role?: string;
+}
+
+const AUTH_CACHE_KEY = {
+  BLACKlISTED_TOKEN: (token: string) => `blacklisted_token:${token}`,
+};
 
 declare global {
   namespace Express {
     interface Request {
-      user?: IDecodedToken; // ✅ This has userId, email, role
+      user?: IDecodedToken;
     }
   }
 }
@@ -17,24 +30,24 @@ const auth =
       const token = req.headers.authorization;
 
       if (!token) {
-        throw ApiError(StatusCodes.UNAUTHORIZED, 'Authorization header is missing');
+        throw new ApiError(StatusCodes.UNAUTHORIZED, 'Authorization header is missing');
       }
       const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
 
-      const isBlacklisted = await redisClient.exists(AUTH_CACHE_KEY.BLACKlISTED_TOKEN(tokenValue));
+      const isBlacklisted = await RedisService.existsCache(AUTH_CACHE_KEY.BLACKlISTED_TOKEN(tokenValue));
       if (isBlacklisted) {
-        throw ApiError(StatusCodes.UNAUTHORIZED, 'Token is blacklisted');
+        throw new ApiError(StatusCodes.UNAUTHORIZED, 'Token is blacklisted');
       }
 
       // Verify token and get decoded user
-      const verifiedUser = jwtHelper.verifyAccessToken(tokenValue);
+      const verifiedUser = verifyAccessToken(tokenValue);
 
       // ✅ Now verifiedUser has userId, email, role
       req.user = verifiedUser;
 
       // Role based authorization
-      if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
-        throw ApiError.forbidden();
+      if (requiredRoles.length && verifiedUser.role && !requiredRoles.includes(verifiedUser.role)) {
+        throw new ApiError(StatusCodes.FORBIDDEN, 'Insufficient permissions');
       }
 
       next();
@@ -43,4 +56,4 @@ const auth =
     }
   };
 
-export default auth;
+export { auth };

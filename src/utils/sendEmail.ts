@@ -1,0 +1,24 @@
+import { emailTransporter } from '../config/email.config';
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+  attachments?: any[];
+}
+
+export const sendEmail = async (options: EmailOptions): Promise<void> => {
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.SMTP_USERNAME,
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+      html: options.html,
+      attachments: options.attachments,
+    });
+  } catch (error) {
+    throw new Error(`Email sending failed: ${error}`);
+  }
+};
