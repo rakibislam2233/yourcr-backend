@@ -4,8 +4,8 @@ import { hashPassword, comparePassword } from '../../utils/bcrypt.utils';
 import ApiError from '../../utils/ApiError';
 import httpStatus from 'http-status-codes';
 
-// Get prisma client instance
-const prisma = getPrismaClient();
+// Helper function to get prisma client
+const getPrisma = () => getPrismaClient();
 
 // Register user
 export const registerUser = async (userData: {
@@ -15,7 +15,7 @@ export const registerUser = async (userData: {
   phone?: string;
 }) => {
   // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await getPrisma().user.findUnique({
     where: { email: userData.email },
   });
 
@@ -27,7 +27,7 @@ export const registerUser = async (userData: {
   const hashedPassword = await hashPassword(userData.password);
 
   // Create user
-  const user = await prisma.user.create({
+  const user = await getPrisma().user.create({
     data: {
       name: userData.name,
       email: userData.email,
@@ -51,7 +51,7 @@ export const registerUser = async (userData: {
 // Login user
 export const loginUser = async (email: string, password: string) => {
   // Find user
-  const user = await prisma.user.findUnique({
+  const user = await getPrisma().user.findUnique({
     where: { email },
   });
 
@@ -71,7 +71,7 @@ export const loginUser = async (email: string, password: string) => {
   }
 
   // Update last login
-  await prisma.user.update({
+  await getPrisma().user.update({
     where: { id: user.id },
     data: { lastLogin: new Date() },
   });
@@ -88,7 +88,7 @@ export const loginUser = async (email: string, password: string) => {
   });
 
   // Store refresh token in database
-  await prisma.refreshToken.create({
+  await getPrisma().refreshToken.create({
     data: {
       userId: user.id,
       token: refreshToken,
@@ -116,7 +116,7 @@ export const refreshUserToken = async (refreshToken: string) => {
   const decoded = verifyRefreshToken(refreshToken);
 
   // Check if token exists in database
-  const storedToken = await prisma.refreshToken.findUnique({
+  const storedToken = await getPrisma().refreshToken.findUnique({
     where: { token: refreshToken },
   });
 
@@ -136,7 +136,7 @@ export const refreshUserToken = async (refreshToken: string) => {
   });
 
   // Update refresh token in database
-  await prisma.refreshToken.update({
+  await getPrisma().refreshToken.update({
     where: { id: storedToken.id },
     data: {
       token: newRefreshToken,
@@ -152,14 +152,14 @@ export const refreshUserToken = async (refreshToken: string) => {
 
 // Logout user
 export const logoutUser = async (refreshToken: string) => {
-  await prisma.refreshToken.deleteMany({
+  await getPrisma().refreshToken.deleteMany({
     where: { token: refreshToken },
   });
 };
 
 // Get user profile
 export const getUserProfile = async (userId: string) => {
-  const user = await prisma.user.findUnique({
+  const user = await getPrisma().user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -190,7 +190,7 @@ export const updateUserProfile = async (
     avatar?: string;
   }
 ) => {
-  const user = await prisma.user.update({
+  const user = await getPrisma().user.update({
     where: { id: userId },
     data: updateData,
     select: {

@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { redisIncr, existsCache, updateTTL, getTTL, deleteCache, getCache } from '../utils/redis.utils';
 import { logger } from '../config/logger.config';
 import colors from 'colors';
-import { decodeToken } from '@/utils/jwt.utils';
+import { decodeToken } from '../utils/jwt.utils';
 
 interface RateLimitConfig {
   windowMs: number;

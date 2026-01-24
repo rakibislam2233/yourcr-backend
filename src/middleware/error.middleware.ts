@@ -7,8 +7,8 @@ import handleMulterError from '../errors/handleMulterError';
 import handleValidationError from '../errors/handleValidationError';
 import handleZodError from '../errors/handleZodError';
 import logger from '../utils/logger';
-import ApiError from '@/utils/ApiError';
-import config from '@/config';
+import ApiError from '../utils/ApiError';
+import config from '../config';
 
 const globalErrorHandler: ErrorRequestHandler = (
   error,

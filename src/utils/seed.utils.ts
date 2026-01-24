@@ -2,8 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import logger from './logger';
 import { hashPassword } from './bcrypt.utils';
 
-// Initialize Prisma Client for seeding
-const prisma = new PrismaClient();
+// Helper function to get prisma client
+const getPrisma = () => new PrismaClient();
 
 // Seed initial data
 export const seedDatabase = async (): Promise<void> => {
@@ -28,14 +28,14 @@ export const seedDatabase = async (): Promise<void> => {
 
 // Seed admin user
 export const seedAdminUser = async (): Promise<void> => {
-  const adminExists = await prisma.user.findUnique({
+  const adminExists = await getPrisma().user.findUnique({
     where: { email: 'admin@example.com' },
   });
   
   if (!adminExists) {
     const hashedPassword = await hashPassword('admin123');
     
-    await prisma.user.create({
+    await getPrisma().user.create({
       data: {
         name: 'Admin User',
         email: 'admin@example.com',
@@ -69,6 +69,7 @@ export const clearDatabase = async (): Promise<void> => {
     logger.warn('🗑️  Clearing database...');
     
     // Delete in reverse order of relationships
+    const prisma = getPrisma();
     await prisma.fileUpload.deleteMany();
     await prisma.refreshToken.deleteMany();
     await prisma.otp.deleteMany();
@@ -89,5 +90,6 @@ export const resetDatabase = async (): Promise<void> => {
 
 // Close Prisma connection
 export const closePrisma = async (): Promise<void> => {
+  const prisma = getPrisma();
   await prisma.$disconnect();
 };

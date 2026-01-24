@@ -4,12 +4,12 @@ import catchAsync from '../../utils/catchAsync';
 import httpStatus from 'http-status-codes';
 import ApiResponse from '../../utils/ApiResponse';
 
-// Get prisma client instance
-const prisma = getPrismaClient();
+// Helper function to get prisma client
+const getPrisma = () => getPrismaClient();
 
 // Get all users
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await prisma.user.findMany({
+  const users = await getPrisma().user.findMany({
     select: {
       id: true,
       name: true,
@@ -38,7 +38,7 @@ export const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
   
-  const user = await prisma.user.findUnique({
+  const user = await getPrisma().user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -73,7 +73,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
   const updateData = req.body;
   
   // Check if user exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await getPrisma().user.findUnique({
     where: { id: userId },
   });
 
@@ -84,7 +84,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
   // Prevent updating email and password through this endpoint
   const { email, password, ...allowedUpdates } = updateData;
 
-  const user = await prisma.user.update({
+  const user = await getPrisma().user.update({
     where: { id: userId },
     data: allowedUpdates,
     select: {
@@ -114,7 +114,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const userId = Array.isArray(id) ? id[0] : id;
   
   // Check if user exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await getPrisma().user.findUnique({
     where: { id: userId },
   });
 
@@ -122,7 +122,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not found');
   }
 
-  await prisma.user.delete({
+  await getPrisma().user.delete({
     where: { id: userId },
   });
 
