@@ -4,6 +4,7 @@ import {
   IForgotPasswordPayload,
   ILoginPayload,
   IRefreshTokenPayload,
+  IRegisterPayload,
   IResendOtpPayload,
   IResetPasswordPayload,
   IVerifyOtpPayload,
@@ -13,56 +14,18 @@ import ApiError from '../../utils/ApiError';
 import config from '../../config';
 
 // --- Register ---
-const register = async (payload: ICreateUserPayload) => {
+const register = async (payload: IRegisterPayload) => {
   // 1. Check if email already exists
   const isEmailExists = await UserRepository.isEmailExists(payload?.email);
   if (isEmailExists) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Email already exists');
   }
 
-  // 2. Validate referral code if provided
-  let referrerUser = null;
-  if (payload.referralCode) {
-    const isValidReferral = await UserUtils.validateReferralCode(payload.referralCode);
-    if (!isValidReferral) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid referral code');
-    }
-    referrerUser = await UserRepository.getUserByReferralCode(payload.referralCode);
-  }
-
-  // 3. Generate unique identifiers
-  const [customerId, nickname, referralCode] = await Promise.all([
-    UserUtils.generateCustomerId(),
-    UserUtils.generateNickname(payload.email),
-    UserUtils.generateReferralCode(),
-  ]);
-
-  // 4. Create user
-  const user = await UserRepository.createUser({
-    fullName: payload.fullName,
-    email: payload.email,
-    password: payload.password,
-    country: payload.country,
-    phoneNumber: payload.phoneNumber,
-    customerId,
-    nickname,
-    referralCode,
-    referredBy: referrerUser?._id,
-    isVerified: false,
-  });
-
-  if (referrerUser) {
-    await UserRepository.addReferredUser(referrerUser._id.toString(), user._id.toString());
-  }
-
-  // 5. Create OTP session
-  const sessionId = await OtpService.createOtpSession(user, OtpType.VERIFY_ACCOUNT);
-
   return {
     message: 'User registered successfully! Please verify your email.',
     data: {
-      email: user.email,
-      sessionId,
+      email: null,
+      sessionId: null,
     },
   };
 };

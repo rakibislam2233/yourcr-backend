@@ -1,11 +1,13 @@
 model CRRegistration {
-    id              String               @id @default(uuid())
-    userId          String
-    user            User                 @relation(fields: [userId], references: [id])
-    institutionId   String
-    institution     Institution          @relation(fields: [institutionId], references: [id])
-    sessionId       String
-    session         Session              @relation(fields: [sessionId], references: [id])
+    id            String      @id @default(uuid())
+    userId        String
+    user          User        @relation(fields: [userId], references: [id])
+    institutionId String
+    institution   Institution @relation(fields: [institutionId], references: [id])
+    sessionId     String
+    session       Session     @relation(fields: [sessionId], references: [id])
+
+    documentProof   String
     status          CRRegistrationStatus @default(PENDING)
     rejectionReason String?
     reviewedById    String?

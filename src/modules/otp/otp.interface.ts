@@ -1,7 +1,6 @@
 export enum OtpType {
-  VERIFY_ACCOUNT = 'verify-account',
-  FORGOT_PASSWORD = 'forgot-password',
-  TWO_FACTOR_AUTHENTICATION = '2fa',
+  EMAIL_VERIFICATION = 'email-verification',
+  PASSWORD_RESET = 'password-reset',
 }
 
 export interface IOtpSession {
