@@ -1,0 +1,19 @@
+model User {
+    id           String     @id @default(uuid())
+    fullName     String
+    email        String     @unique
+    password     String
+    phoneNumber  String
+    profileImage String?
+    department   String?
+    rollNumber   String?
+    bio          String?
+    dateOfBirth  DateTime?
+    lastLogin    DateTime   @default(now())
+    role         UserRole   @default(STUDENT)
+    status       UserStatus @default(ACTIVE)
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    @@map("users")
+}

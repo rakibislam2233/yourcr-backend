@@ -14,13 +14,6 @@ import config from '../../config';
 
 // --- Register ---
 const register = async (payload: ICreateUserPayload) => {
-  if (
-    payload.role === UserRole.ADMIN ||
-    payload.role === UserRole.Sub_ADMIN ||
-    payload.role === UserRole.SUPER_ADMIN
-  ) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'You are not allowed to create admin user');
-  }
   // 1. Check if email already exists
   const isEmailExists = await UserRepository.isEmailExists(payload?.email);
   if (isEmailExists) {
