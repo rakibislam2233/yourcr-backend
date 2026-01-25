@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
-interface ITokenPayload {
+export interface ITokenPayload {
   userId: string;
   email: string;
   role: string;
   type: TokenType;
 }
 
-interface IDecodedToken extends jwt.JwtPayload {
+export interface IDecodedToken extends jwt.JwtPayload {
   userId: string;
   email: string;
   role: string;
@@ -18,5 +18,3 @@ export enum TokenType {
   REFRESH = 'refresh',
   RESET_PASSWORD = 'reset-password',
 }
-
-export { ITokenPayload, IDecodedToken };
