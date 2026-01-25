@@ -1,7 +1,7 @@
 model Session {
     id            String      @id @default(uuid())
     institutionId String
-    institution   Institution @relation("Session", fields: [institutionId], references: [id])
+    institution   Institution @relation(fields: [institutionId], references: [id])
     name          String
     sessionType   SessionType
     department    String
@@ -10,6 +10,9 @@ model Session {
     cr            User        @relation(fields: [crId], references: [id])
     isActive      Boolean     @default(true)
     isArchived    Boolean     @default(false)
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
+
+    crRegistrations CRRegistration[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }

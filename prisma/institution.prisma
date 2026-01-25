@@ -24,6 +24,7 @@ model Institution {
     createdAt       DateTime         @default(now())
     updatedAt       DateTime         @updatedAt
     crRegistrations CRRegistration[]
+    sessions        Session[]
 
     @@map("institutions")
 }

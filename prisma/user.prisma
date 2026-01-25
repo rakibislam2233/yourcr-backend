@@ -16,6 +16,7 @@ model User {
     updatedAt       DateTime         @updatedAt
     crRegistrations CRRegistration[]
     reviewedCRs     CRRegistration[] @relation("ReviewedCR")
+    sessions        Session[]
 
     @@map("users")
 }
