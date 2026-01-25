@@ -1,28 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "es2016",
     "module": "commonjs",
-    "lib": ["ES2022"],
-    "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "outDir": "./dist",
     "esModuleInterop": true,
-    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "allowUmdGlobalAccess": true,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"]
-    }
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests"]
+ "include": [
+    "src/**/*",
+    "prisma.config.ts"
+  ]
 }

@@ -33,7 +33,7 @@ export const getTokenTTL = (expiry: string): number => {
 };
 
 // ==================== Token Generation ====================
-const generateAccessToken = (userId: string, email: string, role: string): string => {
+export const generateAccessToken = (userId: string, email: string, role: string): string => {
   const payload: ITokenPayload = {
     userId,
     email,
@@ -45,7 +45,7 @@ const generateAccessToken = (userId: string, email: string, role: string): strin
   } as jwt.SignOptions);
 };
 
-const generateRefreshToken = (userId: string, email: string, role: string): string => {
+export const generateRefreshToken = (userId: string, email: string, role: string): string => {
   const payload: ITokenPayload = {
     userId,
     email,
@@ -59,7 +59,7 @@ const generateRefreshToken = (userId: string, email: string, role: string): stri
   } as jwt.SignOptions);
 };
 
-const generateResetPasswordToken = (userId: string, email: string, role: string): string => {
+export const generateResetPasswordToken = (userId: string, email: string, role: string): string => {
   const payload: ITokenPayload = {
     userId,
     email,
@@ -79,7 +79,7 @@ const generateResetPasswordToken = (userId: string, email: string, role: string)
 };
 
 // ==================== Token Verification ====================
-const verifyAccessToken = (token: string): IDecodedToken => {
+export const verifyAccessToken = (token: string): IDecodedToken => {
   try {
     const decoded = jwt.verify(token, config.jwt.accessSecret) as IDecodedToken;
 
@@ -100,7 +100,7 @@ const verifyAccessToken = (token: string): IDecodedToken => {
 };
 
 // ==================== Refresh Token Verification ====================
-const verifyRefreshToken = (token: string): IDecodedToken => {
+export const verifyRefreshToken = (token: string): IDecodedToken => {
   try {
     const decoded = jwt.verify(token, config.jwt.refreshSecret) as IDecodedToken;
 
@@ -121,7 +121,7 @@ const verifyRefreshToken = (token: string): IDecodedToken => {
 };
 
 // ==================== Reset Password Token Verification ====================
-const verifyResetPasswordToken = (token: string): IDecodedToken => {
+export const verifyResetPasswordToken = (token: string): IDecodedToken => {
   try {
     const decoded = jwt.verify(token, config.jwt.resetPasswordSecret) as IDecodedToken;
 
@@ -142,7 +142,7 @@ const verifyResetPasswordToken = (token: string): IDecodedToken => {
 };
 
 // ==================== Utilities ====================
-const decodeToken = (token: string): IDecodedToken | null => {
+export const decodeToken = (token: string): IDecodedToken | null => {
   try {
     return jwt.decode(token) as IDecodedToken;
   } catch {
@@ -151,7 +151,7 @@ const decodeToken = (token: string): IDecodedToken | null => {
 };
 
 // ==================== Token Expiration ====================
-const isTokenExpired = (token: string): boolean => {
+export const isTokenExpired = (token: string): boolean => {
   const decoded = decodeToken(token);
   if (!decoded || !decoded.exp) {
     return true;

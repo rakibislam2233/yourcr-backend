@@ -8,10 +8,9 @@ import {
   IResetPasswordPayload,
   IVerifyOtpPayload,
 } from './auth.interface';
-import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.redisService';
-import ApiError from '@/utils/ApiError';
 import { StatusCodes } from 'http-status-codes';
-import { RedisUtils } from '@/utils/redis.utils';
+import ApiError from '../../utils/ApiError';
+import config from '../../config';
 
 // --- Register ---
 const register = async (payload: ICreateUserPayload) => {

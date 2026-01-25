@@ -3,15 +3,16 @@ import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import colors from 'colors';
 import logger from '../utils/logger';
+import { decodeToken } from '../utils/jwt.utils';
 
-interface RateLimitConfig {
+export interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   message?: string;
   keyGenerator?: (req: Request) => string;
 }
 
-interface RateLimitInfo {
+export interface RateLimitInfo {
   totalRequests: number;
   resetTime: Date;
   remaining: number;
@@ -315,4 +316,3 @@ export const rateLimiters = {
   burstProtectionLimiter,
 };
 
-export type { RateLimitConfig, RateLimitInfo };
