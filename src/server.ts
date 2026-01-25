@@ -35,26 +35,12 @@ process.on('uncaughtException', (error: Error) => {
 const startServer = (): void => {
   const port = config.port;
 
-  // Create HTTP server
+  // Initialize Socket.IO after server is listening
   server = app.listen(port, config.backend.ip, () => {
-    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
-    logger.info(colors.green('                 🚀 SERVER STARTED SUCCESSFULLY!            '));
-    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
-    logger.info(colors.cyan(`📌 Environment      : ${colors.bold(config.env.toUpperCase())}`));
-    logger.info(colors.cyan(`🌐 Server URL       : ${colors.bold(config.backend.baseUrl)}`));
-    logger.info(colors.cyan(`📍 IP Address       : ${colors.bold(config.backend.ip)}`));
-    logger.info(colors.cyan(`🔌 Port             : ${colors.bold(port.toString())}`));
-    logger.info(colors.cyan(`⚡ Process ID       : ${colors.bold(process.pid.toString())}`));
-    logger.info(
-      colors.cyan(
-        `💾 Memory Usage     : ${colors.bold(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`
-      )
-    );
-    logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
-    logger.info(colors.green('───────────────────────────────────────────────────────────'));
+    logger.info(colors.cyan(`🌐 Server listening on port ${port}...`));
   });
 
-  // Initialize Socket.IO
+  // Initialize Socket.IO separately (outside the listen callback)
   io = new SocketServer(server, {
     cors: {
       origin: config.cors.allowedOrigins,
@@ -75,21 +61,17 @@ const startServer = (): void => {
   // Store globally for access from other modules
   (global as any).io = io;
 
-  logger.info(colors.green(''));
-  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-  logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
-  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-  logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
+  // Socket.IO startup message
+  logger.info(colors.cyan(`🎯 Socket.IO        : ${colors.bold('Connected with Redis Adapter')}`));
   logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
   logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
   logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
-  logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
   logger.info(
     colors.cyan(
       `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
     )
   );
-  logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
+  logger.info(colors.green('───────────────────────────────────────────────────────────'));
 
   // Handle server errors
   server.on('error', (error: NodeJS.ErrnoException) => {
