@@ -3,6 +3,7 @@ export interface IRegisterPayload {
     fullName: string;
     email: string;
     password: string;
+    phoneNumber: string;
   };
   institutionInfo: {
     name: string;

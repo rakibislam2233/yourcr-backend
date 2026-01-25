@@ -2,12 +2,13 @@ import colors from 'colors';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 import app from './app';
-import logger from './utils/logger';
 import config from './config';
 import { closeDB, connectDB } from './config/database.config';
-import { closeRedis, redisClient } from './config/redis.config';
-import { seedDatabase } from './utils/seed.utils';
 import { emailConfig } from './config/email.config';
+import { closeRedis, redisClient } from './config/redis.config';
+import logger from './utils/logger';
+import { seedDatabase } from './utils/seed.utils';
+import './workers/email.worker';
 
 // Create HTTP server and Socket.IO instance
 let server: http.Server | null = null;

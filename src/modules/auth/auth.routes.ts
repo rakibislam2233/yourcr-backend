@@ -1,36 +1,37 @@
 import { Router } from 'express';
 import validateRequest from '../../middleware/validation.middleware';
-
-import { auth } from '../../middleware/auth.middleware';
 import { AuthController } from './auth.controller';
+import { AuthValidations } from './auth.validation';
 
 const router = Router();
 
 // Register user
-router.post('/register', validateRequest(AuthValidation.register), AuthController.register);
+router.post('/register', validateRequest(AuthValidations.register), AuthController.register);
 
 // Login user
-router.post('/login', validateRequest(AuthValidation.login), AuthController.login);
+router.post('/login', validateRequest(AuthValidations.login), AuthController.login);
 
-// Refresh token
+// OTP Verification
+router.post('/verify-otp', validateRequest(AuthValidations.verifyOTP), AuthController.verifyOtp);
+router.post('/resend-otp', validateRequest(AuthValidations.resendOtp), AuthController.resendOtp);
+
+// Password Management
 router.post(
-  '/refresh-token',
-  validateRequest(AuthValidation.refreshToken),
-  AuthController.refreshToken
+  '/forgot-password',
+  validateRequest(AuthValidations.forgotPassword),
+  AuthController.forgotPassword
+);
+router.post(
+  '/reset-password',
+  validateRequest(AuthValidations.resetPassword),
+  AuthController.resetPassword
 );
 
-// Logout user
-router.post('/logout', auth(), AuthController.logout);
-
-// Get profile
-router.get('/profile', auth(), AuthController.getProfile);
-
-// Update profile
-router.patch(
-  '/profile',
-  auth(),
-  validateRequest(AuthValidation.updateProfile),
-  AuthController.updateProfile
+// Token Management
+router.post(
+  '/refresh-token',
+  validateRequest(AuthValidations.refreshToken),
+  AuthController.refreshToken
 );
 
 export const AuthRoutes = router;

@@ -1,4 +1,4 @@
-import { createEmailTransporter } from '../config/email.config';
+
 
 interface EmailOptions {
   to: string;

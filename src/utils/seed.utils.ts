@@ -1,3 +1,4 @@
+import { UserRole, UserStatus } from '@prisma/client';
 import { prisma } from '../config/database.config';
 import { hashPassword } from './bcrypt.utils';
 import logger from './logger';
@@ -34,11 +35,13 @@ export const seedAdminUser = async (): Promise<void> => {
 
     await prisma.user.create({
       data: {
-        name: 'Admin User',
+        fullName: 'Admin User',
         email: 'admin@example.com',
         password: hashedPassword,
-        isVerified: true,
-        isActive: true,
+        isEmailVerified: true,
+        phoneNumber: '1234567890',
+        role: UserRole.ADMIN,
+        status: UserStatus.ACTIVE,
       },
     });
 
