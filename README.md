@@ -1,4 +1,4 @@
-# YourCR Backend
+# yourcr Backend
 
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -50,17 +50,20 @@ Before you begin, ensure you have met the following requirements:
 ## 🚀 Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/rakibislam2233/yourcr-backend.git
 cd yourcr-backend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables (see `.env.example`):
+
 ```bash
 cp .env.example .env
 ```
@@ -68,16 +71,19 @@ cp .env.example .env
 4. Update your `.env` file with appropriate values
 
 5. Run database migrations:
+
 ```bash
 npx prisma migrate dev
 ```
 
 6. Generate Prisma client:
+
 ```bash
 npx prisma generate
 ```
 
 7. Start the development server:
+
 ```bash
 npm run dev
 ```

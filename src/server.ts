@@ -1,6 +1,5 @@
 import colors from 'colors';
 import http from 'http';
-import { Server as SocketServer } from 'socket.io';
 import app from './app';
 import config from './config';
 import { closeDB, connectDB } from './config/database.config';
@@ -10,12 +9,11 @@ import logger from './utils/logger';
 import { seedDatabase } from './utils/seed.utils';
 import './workers/email.worker';
 
-// Create HTTP server and Socket.IO instance
-let server: http.Server | null = null;
-let io: SocketServer | null = null;
-
 // Track if shutdown is in progress
 let isShuttingDown = false;
+
+// Declare server variable globally
+let server: http.Server | null = null;
 
 // ==========================================
 // UNCAUGHT EXCEPTION HANDLER
@@ -30,7 +28,7 @@ process.on('uncaughtException', (error: Error) => {
 });
 
 // ==========================================
-// START HTTP SERVER + SOCKET.IO
+// START HTTP SERVER
 // ==========================================
 const startServer = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -53,40 +51,6 @@ const startServer = async (): Promise<void> => {
       );
       logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
       logger.info(colors.green('───────────────────────────────────────────────────────────'));
-
-      // Initialize Socket.IO AFTER server starts
-      io = new SocketServer(server!, {
-        cors: {
-          origin: config.cors.allowedOrigins,
-          credentials: true,
-          methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        },
-        pingTimeout: 60000,
-        pingInterval: 25000,
-        maxHttpBufferSize: 1e8, // 100 MB
-        transports: ['websocket', 'polling'],
-        allowEIO3: true,
-        connectTimeout: 45000,
-      });
-
-      // Store globally for access from other modules
-      (global as any).io = io;
-
-      logger.info(colors.green(''));
-      logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-      logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
-      logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-      logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
-      logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
-      logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
-      logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
-      logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
-      logger.info(
-        colors.cyan(
-          `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
-        )
-      );
-      logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
 
       resolve();
     });
@@ -155,28 +119,8 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
   }, timeoutDuration);
 
   try {
-    // Stop health monitoring
+    // Step 1: Stop health monitoring
     stopHealthMonitoring();
-
-    // Step 1: Close Socket.IO
-    if (io) {
-      if (!isDevelopmentRestart) {
-        logger.info(colors.cyan('🔌 [1/5] Closing Socket.IO...'));
-      }
-
-      io.disconnectSockets(true);
-
-      await new Promise<void>(resolve => {
-        io!.close(() => {
-          if (!isDevelopmentRestart) {
-            logger.info(colors.green('   ✅ Socket.IO closed'));
-          }
-          resolve();
-        });
-      });
-
-      io = null;
-    }
 
     // Step 2: Close HTTP Server
     if (server) {

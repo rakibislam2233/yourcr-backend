@@ -291,7 +291,6 @@ app.use(getHelmetConfig(allowedOrigins));
 // Additional security headers
 app.use(getAdditionalSecurityHeaders());
 
-
 // HTTP Parameter Pollution Protection
 app.use(getHppConfig());
 
@@ -304,29 +303,23 @@ app.use('/api/v1', version1Routes);
 // Health check endpoints
 app.get('/test', (req: Request, res: Response) => {
   res.status(200).json({
-    message: 'Welcome to the YourCR backend API',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0',
+    success: true,
+    message: '🚀 yourcr Backend API is running smoothly!',
+    data: {
+      name: 'yourcr',
+      status: 'Online',
+      uptime: `${Math.floor(process.uptime())}s`,
+      timestamp: new Date().toISOString(),
+      environment: config.env || 'development',
+      version: '1.0.0',
+    },
+    services: {
+      database: 'Connected',
+      security: 'Fortified',
+    },
     documentation: {
-      swagger:
-        process.env.NODE_ENV !== 'production' ? '/api-docs' : 'Contact admin for documentation',
+      swagger: config.env !== 'production' ? '/api-docs' : 'Contact admin for documentation',
       routes: '/api/v1',
-    },
-    security: {
-      cors: 'enabled',
-      helmet: 'enabled',
-      rateLimit: 'enabled',
-      csrf: process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled',
-      xss: 'enabled',
-      hpp: 'enabled',
-      mongoSanitize: 'enabled',
-    },
-    features: {
-      aiQuizGeneration: 'enabled',
-      realTimeAttempts: 'enabled',
-      analytics: 'enabled',
-      multiLanguage: 'enabled',
     },
   });
 });
