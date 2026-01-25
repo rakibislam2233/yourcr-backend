@@ -12,109 +12,154 @@ const generateProfessionalEmailTemplate = (
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>${title}</title>
   <style>
-    body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333333; line-height: 1.6; }
+    :root {
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --muted: #64748b;
+    }
+    [data-scheme="dark"] {
+      --bg: #0f172a;
+      --text: #f1f5f9;
+      --card: #1e293b;
+      --border: #334155;
+      --muted: #94a3b8;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+    }
     table { border-collapse: collapse; }
-    .container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border: 1px solid #eeeeee; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .logo { text-align: center; padding: 20px; border-bottom: 1px solid #eeeeee; }
-    .logo img { max-width: 150px; height: auto; }
-    .content { padding: 40px; font-size: 15px; }
-    .content h2 { color: #9300D3; font-size: 22px; margin: 0 0 20px 0; font-weight: 600; }
-    .content p { margin: 0 0 16px; }
-    .otp-code { 
-      font-family: 'Courier New', Courier, monospace; 
-      font-size: 32px; 
-      font-weight: bold; 
-      letter-spacing: 8px; 
-      color: #9300D3; 
-      text-align: center; 
-      padding: 20px; 
-      background: #f8f8f8; 
-      border: 2px dashed #cccccc; 
-      border-radius: 6px; 
-      margin: 24px 0; 
+    .container {
+      max-width: 600px;
+      margin: 32px auto;
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .logo {
+      text-align: center;
+      padding: 32px 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo img { max-width: 160px; height: auto; }
+    .content {
+      padding: 40px 32px;
+      font-size: 16px;
+    }
+    .content h1, .content h2 {
+      color: var(--primary);
+      margin: 0 0 20px;
+      font-weight: 600;
+    }
+    .content h1 { font-size: 26px; }
+    .content h2 { font-size: 22px; }
+    .content p { margin: 0 0 20px; }
+    .otp-code {
+      font-family: 'Courier New', monospace;
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 10px;
+      color: var(--primary);
+      text-align: center;
+      padding: 24px;
+      background: rgba(37,99,235,0.08);
+      border: 2px dashed var(--primary);
+      border-radius: 12px;
+      margin: 28px 0;
     }
     .highlight-box {
-      background-color: #f9f9f9;
-      border-left: 4px solid #9300D3; 
-      padding: 20px; 
-      margin: 24px 0; 
-      border-radius: 0 4px 4px 0; 
+      background: rgba(37,99,235,0.05);
+      border-left: 5px solid var(--primary);
+      padding: 24px;
+      margin: 28px 0;
+      border-radius: 0 8px 8px 0;
     }
-    .credentials-table {
-      width: 100%;
-      border: 1px solid #d0d0d0;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 24px 0;
-      font-size: 15px;
-    }
-    .credentials-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    .credentials-table td:first-child {
-      background-color: #f5f5f5;
+    .btn {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white !important;
       font-weight: 600;
-      width: 35%;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      margin: 20px 0;
     }
+    .btn:hover { background-color: var(--primary-dark); }
     .footer {
-      background-color: #f9f9f9;
-      padding: 30px 40px;
+      background: rgba(0,0,0,0.03);
+      padding: 32px 40px;
       text-align: center;
-      font-size: 13px;
-      color: #666666;
-      border-top: 1px solid #eeeeee;
+      font-size: 14px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
     }
-    .footer a { color: #9300D3; text-decoration: none; }
+    .footer a { color: var(--primary); text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --text: #f1f5f9;
+        --card: #1e293b;
+        --border: #334155;
+        --muted: #94a3b8;
+      }
+      .otp-code { background: rgba(37,99,235,0.15); }
+      .highlight-box { background: rgba(37,99,235,0.12); }
+      .btn { color: white !important; }
+    }
     @media (max-width: 600px) {
-      .container { margin: 10px !important; border-radius: 0; }
-      .header, .content, .logo, .footer { padding: 20px !important; }
-      .otp-code { font-size: 28px !important; letter-spacing: 5px !important; }
+      .container { margin: 16px !important; border-radius: 0; }
+      .content, .logo, .footer { padding: 24px !important; }
+      .otp-code { font-size: 30px; letter-spacing: 6px; }
     }
   </style>
 </head>
 <body>
-  ${
-    preheader
-      ? `<div style="display:none;font-size:1px;color:#f4f4f4;line-height:1px;max-height:0;overflow:hidden;">${preheader}</div>`
-      : ''
-  }
-
+  ${preheader ? `<div style="display:none;font-size:0;color:transparent;line-height:0;max-height:0;">${preheader}</div>` : ''}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
-      <td align="center">
+      <td align="center" style="background:var(--bg);">
         <table class="container" role="presentation">
           <!-- Logo -->
           <tr>
             <td class="logo">
-              <img src="https://talenzy.s3.us-east-1.amazonaws.com/common/logo_talenzy.png" alt="Talenzy" />
+              <img src="https://i.ibb.co/YOUR-LOGO-HERE/your-cr-logo.png" alt="Your CR Logo" />
             </td>
           </tr>
-
-          <!-- Main Content -->
+          <!-- Content -->
           <tr>
             <td class="content">
               ${content}
             </td>
           </tr>
-
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="margin: 0 0 8px;">
-                <strong>Talenzy</strong><br>
-                Email: <a href="mailto:contact@talenzy.app">contact@talenzy.app</a>
+              <p style="margin:0 0 12px;">
+                <strong>Your CR</strong> — Class Representative Platform<br>
+                <a href="mailto:support@yourcr.app">support@yourcr.app</a>
               </p>
-              <p style="margin: 20px 0 0; color: #999999;">
-                © ${new Date().getFullYear()} Talenzy. All rights reserved.<br>
-                Share Your Talent With The World
+              <p style="margin:16px 0 0; font-size:13px;">
+                © ${new Date().getFullYear()} Your CR. All rights reserved.<br>
+                Empowering Class Representatives & Students
               </p>
             </td>
           </tr>
-
         </table>
       </td>
     </tr>
@@ -124,49 +169,59 @@ const generateProfessionalEmailTemplate = (
   `;
 };
 
-const generateOTPSection = (otp: string, minutes: number = 30) => `
-  <p>Please enter the following verification code to proceed:</p>
+const generateOTPSection = (otp: string, minutes: number = 15) => `
+  <p style="text-align:center; font-size:15px; margin-bottom:12px;">Your verification code:</p>
   <div class="otp-code">${otp}</div>
-  <p>This code will expire in ${minutes} minutes.</p>
+  <p style="text-align:center; color:var(--muted); font-size:14px;">
+    This code will expire in ${minutes} minutes.
+  </p>
 `;
 
 const generateHighlightBox = (html: string) => `
   <div class="highlight-box">${html}</div>
 `;
 
-const sendWelcomeEmail = async (to: string, name: string): Promise<void> => {
-  const subject = 'Welcome to Talenzy!';
+const generateButton = (text: string, url: string) => `
+  <div style="text-align:center; margin:32px 0;">
+    <a href="${url}" class="btn" target="_blank">${text}</a>
+  </div>
+`;
+
+// ──────────────────────────────────────────────
+// Email Functions (all in English)
+export const sendWelcomeEmail = async (to: string, name: string): Promise<void> => {
+  const subject = 'Welcome to Your CR!';
   const content = `
-    <h2>Welcome to Talenzy, ${name}!</h2>
-    <p>We're excited to have you join our community of talented creators and enthusiasts.</p>
+    <h1>Welcome, ${name}!</h1>
+    <p>You're now part of Your CR — the centralized platform for class representatives and students to manage everything in one place.</p>
     ${generateHighlightBox(`
-      <p><strong>What you can do on Talenzy:</strong></p>
-      <ul style="margin: 10px 0; padding-left: 20px;">
-        <li>Share your photos and videos with the world</li>
-        <li>Discover and connect with talented creators</li>
-        <li>Hire talents for events or projects</li>
-        <li>Send gifts to support your favorite creators</li>
+      <p><strong>What you can do on Your CR:</strong></p>
+      <ul style="padding-left:24px; margin:16px 0;">
+        <li>Share class notices, routines, and assignments</li>
+        <li>Communicate quickly with students</li>
+        <li>Track attendance and results</li>
+        <li>Manage college/polytechnic/university events & group chats</li>
       </ul>
     `)}
-    <p>Start exploring and showcasing your talent today!</p>
-    <p>If you have any questions, feel free to reach out to us at <a href="mailto:contact@talenzy.app" style="color: #9300D3;">contact@talenzy.app</a></p>
+    <p>Get started right away!</p>
+    ${generateButton('Go to Dashboard', 'https://yourcr.app/dashboard')}
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
-    title: 'Welcome to Talenzy',
-    preheader: `Welcome ${name}! Start your journey on Talenzy.`,
+    title: 'Welcome to Your CR',
+    preheader: `Hi ${name}, your class management journey starts now!`,
   });
 
   await addEmailToQueue({ to, subject, html });
 };
 
-const sendVerificationEmail = async (to: string, otp: string): Promise<void> => {
-  const subject = 'Email Verification - Your OTP Code';
+export const sendVerificationEmail = async (to: string, otp: string): Promise<void> => {
+  const subject = 'Verify Your Email – Your OTP Code';
   const content = `
     <h2>Verify Your Email</h2>
-    <p>Thank you for signing up! Please use the One-Time Password (OTP) below to verify your email address:</p>
-    ${generateOTPSection(otp, 30)}
-    <p>If you did not request this verification, please ignore this email.</p>
+    <p>Thank you for signing up! Please use the code below to verify your email address:</p>
+    ${generateOTPSection(otp, 15)}
+    <p style="color:var(--muted); font-size:14px;">If you didn’t request this, you can safely ignore this email.</p>
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
@@ -174,143 +229,39 @@ const sendVerificationEmail = async (to: string, otp: string): Promise<void> => 
     preheader: `Your verification code: ${otp}`,
   });
 
-  // High priority for OTP emails
   await addEmailToQueue({ to, subject, html });
 };
 
-const sendResetPasswordEmail = async (to: string, otp: string): Promise<void> => {
-  const subject = 'Password Reset Request - Your OTP Code';
+export const sendResetPasswordEmail = async (to: string, otp: string): Promise<void> => {
+  const subject = 'Password Reset Request – Your OTP Code';
   const content = `
     <h2>Password Reset Request</h2>
-    <p>You requested to reset your password. Please use the One-Time Password (OTP) below to proceed:</p>
-    ${generateOTPSection(otp, 30)}
-    <p>If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
+    <p>You requested to reset your password. Use the OTP below to continue:</p>
+    ${generateOTPSection(otp, 15)}
+    <p style="color:var(--muted); font-size:14px;">If you didn’t request this, your password will remain unchanged.</p>
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
-    title: 'Password Reset Request',
-    preheader: `Your password reset code: ${otp}`,
+    title: 'Password Reset',
+    preheader: `Your reset code: ${otp}`,
   });
 
-  // High priority for password reset emails
   await addEmailToQueue({ to, subject, html });
 };
 
-const sendOTPEmail = async (to: string, otp: string): Promise<void> => {
-  const subject = 'Your OTP Code';
+export const sendOTPEmail = async (to: string, otp: string): Promise<void> => {
+  const subject = 'Your One-Time Password (OTP)';
   const content = `
     <h2>Your OTP Code</h2>
-    <p>Your One-Time Password (OTP) is:</p>
-    ${generateOTPSection(otp, 30)}
-    <p>If you did not request this code, please ignore this email.</p>
+    <p>Use this code to proceed:</p>
+    ${generateOTPSection(otp, 15)}
+    <p style="color:var(--muted); font-size:14px;">If you didn’t request this code, please ignore this email.</p>
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
     title: 'Your OTP Code',
-    preheader: `Your OTP code: ${otp}`,
-  });
-
-  // High priority for OTP emails
-  await addEmailToQueue({ to, subject, html });
-};
-
-// ============== VERIFICATION MODULE EMAILS ==============
-
-const sendVerificationSubmittedEmail = async (to: string, name: string): Promise<void> => {
-  const subject = 'Verification Request Submitted';
-  const content = `
-    <h2>Verification Request Received</h2>
-    <p>Hi ${name},</p>
-    <p>Thank you for submitting your verification request! We've received your documents and our team will review them shortly.</p>
-    ${generateHighlightBox(`
-      <p><strong>What happens next?</strong></p>
-      <ul style="margin: 10px 0; padding-left: 20px;">
-        <li>Our team will review your submitted documents</li>
-        <li>This process typically takes 1-3 business days</li>
-        <li>You'll receive an email once the review is complete</li>
-      </ul>
-    `)}
-    <p>Once verified, you'll receive the verified badge on your profile, increasing your visibility and credibility on Talenzy.</p>
-  `;
-
-  const html = generateProfessionalEmailTemplate(content, {
-    title: 'Verification Submitted',
-    preheader: 'Your verification request is being reviewed',
+    preheader: `Your code: ${otp}`,
   });
 
   await addEmailToQueue({ to, subject, html });
-};
-
-const sendVerificationApprovedEmail = async (to: string, name: string): Promise<void> => {
-  const subject = 'Congratulations! You are now Verified!';
-  const content = `
-    <h2>You're Verified!</h2>
-    <p>Hi ${name},</p>
-    <p>Congratulations! Your verification request has been approved. You now have the official verified badge on your Talenzy profile!</p>
-    ${generateHighlightBox(`
-      <p style="text-align: center;">
-        <span style="font-size: 48px;">✓</span><br>
-        <strong style="color: #9300D3; font-size: 18px;">VERIFIED CREATOR</strong>
-      </p>
-    `)}
-    <p><strong>What this means for you:</strong></p>
-    <ul style="margin: 10px 0; padding-left: 20px;">
-      <li>Verified badge displayed on your profile</li>
-      <li>Increased visibility in search results</li>
-      <li>Higher trust and credibility with clients</li>
-      <li>Priority support from our team</li>
-    </ul>
-    <p>Thank you for being a valued member of Talenzy!</p>
-  `;
-
-  const html = generateProfessionalEmailTemplate(content, {
-    title: 'Verification Approved',
-    preheader: 'Congratulations! You are now a verified creator on Talenzy',
-  });
-
-  await addEmailToQueue({ to, subject, html });
-};
-
-const sendVerificationRejectedEmail = async (
-  to: string,
-  name: string,
-  reason: string
-): Promise<void> => {
-  const subject = 'Verification Request Update';
-  const content = `
-    <h2>Verification Request Not Approved</h2>
-    <p>Hi ${name},</p>
-    <p>Unfortunately, we were unable to verify your account at this time.</p>
-    ${generateHighlightBox(`
-      <p><strong>Reason:</strong></p>
-      <p>${reason}</p>
-    `)}
-    <p><strong>What you can do:</strong></p>
-    <ul style="margin: 10px 0; padding-left: 20px;">
-      <li>Review the reason above and address the issue</li>
-      <li>Ensure your documents are clear and readable</li>
-      <li>Submit a new verification request with updated information</li>
-    </ul>
-    <p>If you have questions or believe this was an error, please contact us at <a href="mailto:contact@talenzy.app" style="color: #9300D3;">contact@talenzy.app</a></p>
-  `;
-
-  const html = generateProfessionalEmailTemplate(content, {
-    title: 'Verification Not Approved',
-    preheader: 'Your verification request needs attention',
-  });
-
-  await addEmailToQueue({ to, subject, html });
-};
-
-export const emailTemplates = {
-  // Auth & General
-  sendWelcomeEmail,
-  sendResetPasswordEmail,
-  sendVerificationEmail,
-  sendOTPEmail,
-
-  // Verification Module
-  sendVerificationSubmittedEmail,
-  sendVerificationApprovedEmail,
-  sendVerificationRejectedEmail,
 };

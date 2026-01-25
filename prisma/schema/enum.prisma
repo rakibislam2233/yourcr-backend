@@ -1,35 +1,35 @@
 //=============================== User related enum ==================//
 enum UserStatus {
-    ACTIVE
-    INACTIVE
-    BLOCKED
-    BANNED
+    ACTIVE   @map("active")
+    INACTIVE @map("inactive")
+    BLOCKED  @map("blocked")
+    BANNED   @map("banned")
 }
 
 enum UserRole {
-    SUPER_ADMIN
-    ADMIN
-    CR
-    STUDENT
+    SUPER_ADMIN @map("super_admin")
+    ADMIN       @map("admin")
+    CR          @map("cr")
+    STUDENT     @map("student")
 }
 
 //============================= Institution Model ====================/
 
 enum InstitutionType {
-    COLLEGE
-    POLYTECHNIC
-    UNIVERSITY
+    COLLEGE     @map("college")
+    POLYTECHNIC @map("polytechnic")
+    UNIVERSITY  @map("university")
 }
 
 //============================ CRRegistration  Model Related enum ==============//
 enum CRRegistrationStatus {
-    PENDING
-    APPROVED
-    REJECTED
+    PENDING  @map("pending")
+    APPROVED @map("approved")
+    REJECTED @map("rejected")
 }
 
 // ================================= Session Model Enum ================//
 enum SessionType {
-    SEMESTER
-    YEAR
+    SEMESTER @map("semester")
+    YEAR     @map("year")
 }

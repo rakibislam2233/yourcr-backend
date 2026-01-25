@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import { prisma } from '../../config/database.config';
-import ApiResponse from '../../utils/ApiResponse';
 import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
@@ -21,9 +21,12 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  res
-    .status(httpStatus.OK)
-    .json(new ApiResponse(httpStatus.OK, 'Users fetched successfully', users));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Users fetched successfully',
+    data: users,
+  });
 });
 
 // Get user by ID
@@ -50,7 +53,12 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not found');
   }
 
-  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User fetched successfully', user));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User fetched successfully',
+    data: user,
+  });
 });
 
 // Update user
@@ -86,7 +94,12 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User updated successfully', user));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User updated successfully',
+    data: user,
+  });
 });
 
 // Delete user
@@ -107,7 +120,11 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
     where: { id: userId },
   });
 
-  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User deleted successfully'));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User deleted successfully',
+  });
 });
 
 export const UserController = {

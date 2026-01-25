@@ -15,101 +15,46 @@ import {
   IResendOtpPayload,
   IResetPasswordPayload,
   IVerifyOtpPayload,
-  UserRole,
 } from './auth.interface';
+import { UserRepository } from '../user/user.repository';
+import { hashPassword } from '../../utils/bcrypt.utils';
+import { OtpService } from '../otp/otp.service';
+import { OtpType } from '../otp/otp.interface';
 
-/**
- * --- Register ---
- * Flow: User -> Address -> Institution -> Session -> CRRegistration
- */
+// --- Register ---
 const register = async (payload: IRegisterPayload) => {
-  const { personalInfo, institutionInfo, sessionDetails, documentProof } = payload;
+  const { fullName, email, password, phoneNumber } = payload;
 
-  // 1. Check if email already exists
-  const isEmailExists = await prisma.user.findUnique({
-    where: { email: personalInfo.email },
-  });
-
-  if (isEmailExists) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Email already exists');
+  //1.check if user already exists
+  const user = await UserRepository.getUserByEmail(email);
+  if (user) {
+    throw new ApiError(StatusCodes.CONFLICT, 'User already exists');
   }
 
-  // 2. Hash password
-  const hashedPassword = await bcrypt.hash(personalInfo.password, config.bcrypt.saltRounds);
+  //2. Hash password
+  const hashedPassword = await hashPassword(password);
 
-  // 3. Multi-table Transaction
-  const result = await prisma.$transaction(async tx => {
-    // a. Create User
-    const user = await tx.user.create({
-      data: {
-        fullName: personalInfo.fullName,
-        email: personalInfo.email,
-        password: hashedPassword,
-        phoneNumber: personalInfo.phoneNumber,
-        role: UserRole.CR,
-      },
-    });
-
-    // b. Create/Find Address for Institution
-    const address = await tx.address.create({
-      data: {
-        district: institutionInfo.district,
-      },
-    });
-
-    // c. Create Institution
-    const institution = await tx.institution.create({
-      data: {
-        name: institutionInfo.name,
-        type: institutionInfo.type as any,
-        contactEmail: institutionInfo.contactEmail,
-        addressId: address.id,
-      },
-    });
-
-    // d. Create Session
-    const session = await tx.session.create({
-      data: {
-        name: sessionDetails.name,
-        sessionType: sessionDetails.sessionType as any,
-        department: sessionDetails.department,
-        academicYear: sessionDetails.academicYear,
-        institutionId: institution.id,
-        crId: user.id,
-      },
-    });
-
-    // e. Create CRRegistration
-    const crRegistration = await tx.cRRegistration.create({
-      data: {
-        userId: user.id,
-        institutionId: institution.id,
-        sessionId: session.id,
-        documentProof: documentProof || '',
-        status: 'PENDING',
-      },
-    });
-
-    return { user, crRegistration };
+  //3. Create user
+  const result = await UserRepository.createCR({
+    fullName,
+    email,
+    phoneNumber,
+    password: hashedPassword,
   });
 
-  // 4. Send "Awaiting Approval" email notification (Queue Job)
-  await addEmailToQueue({
-    to: personalInfo.email,
-    subject: 'Registration Pending Approval',
-    html: `<h1>Hello ${personalInfo.fullName}</h1><p>Your registration as a CR is currently pending admin approval. You will be notified once it is approved.</p>`,
-  });
+  // 5. Create OTP session
+  const sessionId = await OtpService.createOtpSession(result, OtpType.EMAIL_VERIFICATION);
 
   return {
-    message: 'User registered successfully! Please wait for admin approval.',
-    data: result.user,
+    message: 'User registered successfully! Please verify your email.',
+    data: {
+      email: result.email,
+      sessionId,
+    },
   };
 };
 
-/**
- * --- Login ---
- * Includes 5-attempt lockout (Redis) and verification checks
- */
+// --- Login ---
 const login = async (payload: ILoginPayload) => {
   const { email, password } = payload;
 

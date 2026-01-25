@@ -1,6 +1,6 @@
 export enum OtpType {
   EMAIL_VERIFICATION = 'email-verification',
-  PASSWORD_RESET = 'password-reset',
+  RESET_PASSWORD = 'reset-password',
 }
 
 export interface IOtpSession {
@@ -8,7 +8,6 @@ export interface IOtpSession {
   userId: string;
   code: string;
   type: OtpType;
-  ipAddress?: string;
   attempts: number;
   createdAt: Date;
 }

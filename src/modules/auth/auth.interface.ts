@@ -1,23 +1,8 @@
 export interface IRegisterPayload {
-  personalInfo: {
-    fullName: string;
-    email: string;
-    password: string;
-    phoneNumber: string;
-  };
-  institutionInfo: {
-    name: string;
-    type: string;
-    contactEmail: string;
-    district: string;
-  };
-  sessionDetails: {
-    name: string;
-    sessionType: string;
-    department: string;
-    academicYear: string;
-  };
-  documentProof?: string;
+  fullName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
 }
 
 export interface ILoginPayload {

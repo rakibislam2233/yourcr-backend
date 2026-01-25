@@ -17,33 +17,15 @@ const requiredString = (fieldName: string) =>
 // ── Register ────────────────────────────────────────────────────────────────
 const register = z.object({
   body: z.object({
-    personalInfo: z.object({
-      fullName: requiredString('Full name').min(2, 'Full name must be at least 2 characters'),
-      email: requiredString('Email')
-        .email('Invalid email format')
-        .transform(val => val.toLowerCase()),
-      password: requiredString('Password').min(8, 'Password must be at least 8 characters long'),
-      phoneNumber: requiredString('Phone number').min(
-        8,
-        'Phone number must be at least 8 characters'
-      ),
-    }),
-    institutionInfo: z.object({
-      name: requiredString('Institution name').min(
-        2,
-        'Institution name must be at least 2 characters'
-      ),
-      type: z.enum(['COLLEGE', 'POLYTECHNIC', 'UNIVERSITY']),
-      contactEmail: requiredString('Contact email').email('Invalid email format'),
-      district: requiredString('District'),
-    }),
-    sessionDetails: z.object({
-      name: requiredString('Session name'),
-      sessionType: z.enum(['SEMESTER', 'YEAR']),
-      department: requiredString('Department'),
-      academicYear: requiredString('Academic Year'),
-    }),
-    documentProof: z.string().optional(),
+    fullName: requiredString('Full name').min(2, 'Full name must be at least 2 characters'),
+    email: requiredString('Email')
+      .email('Invalid email format')
+      .transform(val => val.toLowerCase()),
+    password: requiredString('Password').min(8, 'Password must be at least 8 characters long'),
+    phoneNumber: requiredString('Phone number').min(
+      8,
+      'Phone number must be at least 8 characters'
+    ),
   }),
 });
 

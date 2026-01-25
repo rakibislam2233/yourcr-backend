@@ -10,13 +10,7 @@
     "strict": true,
     "skipLibCheck": true,
     "paths": {
-      "@prisma/client": [
-        "generated/prisma"
-      ]
+      "@prisma/client": ["generated/prisma"]
     }
-  },
-  "include": [
-    "src/**/*",
-    "generated/**/*"
-  ]
+  }
 }

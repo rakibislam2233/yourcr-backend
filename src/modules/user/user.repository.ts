@@ -1,11 +1,17 @@
 import { prisma } from '../../config/database.config';
-import { ICreateUser } from './user.interface';
+import { ICreateCRPayload } from './user.interface';
 
-const createUser = async (payload: ICreateUser) => {
+const createCR = async (payload: ICreateCRPayload) => {
   const user = await prisma.user.create({
     data: payload,
   });
   return user;
+};
+
+export const getUserById = async (id: string) => {
+  return await prisma.user.findUnique({
+    where: { id },
+  });
 };
 
 const getUserByEmail = async (email: string) => {
@@ -23,7 +29,7 @@ const isEmailExists = async (email: string) => {
 };
 
 export const UserRepository = {
-  createUser,
+  createCR,
   getUserByEmail,
   isEmailExists,
 };

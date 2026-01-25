@@ -1,4 +1,4 @@
-export interface ICreateUser {
+export interface ICreateCRPayload {
   fullName: string;
   email: string;
   phoneNumber: string;
