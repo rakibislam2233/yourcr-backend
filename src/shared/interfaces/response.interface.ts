@@ -1,11 +1,3 @@
-export interface ISuccessResponse<T = any> {
-  success: true;
-  statusCode: number;
-  message: string;
-  data?: T;
-  meta?: any;
-}
-
 export interface IErrorResponse {
   success: false;
   statusCode: number;
@@ -18,11 +10,15 @@ export interface IErrorMessage {
   message: string;
 }
 
-export interface IApiResponse<T = any> {
-  success: boolean;
+export interface IApiResponse<T> {
   statusCode: number;
-  message: string;
+  success: boolean;
+  message?: string;
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+  };
   data?: T;
-  meta?: any;
-  errorMessages?: IErrorMessage[];
+  timestamp?: string;
 }

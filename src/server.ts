@@ -4,11 +4,12 @@ import { Server as SocketServer } from 'socket.io';
 import app from './app';
 import config from './config';
 import logger from './utils/logger';
-import redisClient from './config/redis.config';
+
 import { closeDB, connectDB } from './config/database.config';
 import { seedDatabase } from './utils/seed.utils';
-import { closeRedis } from './utils/redis.utils';
 import { setupSocket } from './socket/socket.handler';
+import { emailConfig } from './config/email.config';
+import { closeRedis, redisClient } from './config/redis.config';
 
 // Create HTTP server and Socket.IO instance
 let server: http.Server | null = null;
@@ -17,9 +18,7 @@ let io: SocketServer | null = null;
 // Track if shutdown is in progress
 let isShuttingDown = false;
 
-// ==========================================
-// UNCAUGHT EXCEPTION HANDLER
-// ==========================================
+// ========================================== UNCAUGHT EXCEPTION HANDLER ====================================//
 process.on('uncaughtException', (error: Error) => {
   logger.error(colors.red('💥 UNCAUGHT EXCEPTION! Shutting down...'));
   logger.error(colors.red(`Error: ${error.message}`));
@@ -29,9 +28,7 @@ process.on('uncaughtException', (error: Error) => {
   process.exit(1);
 });
 
-// ==========================================
-// START HTTP SERVER + SOCKET.IO
-// ==========================================
+// ========================================== START HTTP SERVER + SOCKET.IO ====================================//
 const startServer = (): void => {
   const port = config.port;
 
@@ -127,9 +124,7 @@ const startServer = (): void => {
   (server as any).connections = connections;
 };
 
-// ==========================================
-// GRACEFUL SHUTDOWN
-// ==========================================
+// ========================================== GRACEFUL SHUTDOWN ====================================//
 const gracefulShutdown = async (signal: string): Promise<void> => {
   if (isShuttingDown) {
     logger.warn(colors.yellow('⚠️  Shutdown already in progress...'));
@@ -244,9 +239,7 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
   }
 };
 
-// ==========================================
-// HEALTH CHECK
-// ==========================================
+// ========================================== HEALTH CHECK ====================================//
 const logHealthStats = (): void => {
   const memoryUsage = process.memoryUsage();
   const uptime = process.uptime();
@@ -309,9 +302,7 @@ const stopHealthMonitoring = (): void => {
   }
 };
 
-// ==========================================
-// MAIN APPLICATION INITIALIZATION
-// ==========================================
+// ========================================== MAIN APPLICATION INITIALIZATION ====================================//
 async function main() {
   try {
     logger.info(colors.cyan(''));
@@ -319,8 +310,8 @@ async function main() {
     logger.info(colors.cyan('                🚀 APPLICATION INITIALIZATION               '));
     logger.info(colors.cyan('═══════════════════════════════════════════════════════════'));
 
-    // Step 1: Connect to MongoDB
-    logger.info(colors.cyan('\n📦 [1/5] Connecting to MongoDB...'));
+    // Step 1: Connect to  Database
+    logger.info(colors.cyan('\n📦 [1/5] Connecting to Database...'));
     await connectDB();
 
     // Seed default data
@@ -328,11 +319,24 @@ async function main() {
 
     // Step 2: Connect to Redis
     logger.info(colors.cyan('📦 [2/5] Connecting to Redis...'));
-    const redisInstance = await redisClient;
-    logger.info(colors.green('   ✅ Redis connected successfully'));
-
-    // Step 3: Skip email worker (not implemented)
-    logger.info(colors.cyan('📧 [3/5] Email worker not implemented...'));
+    await new Promise(resolve => {
+      if (redisClient.status === 'ready') {
+        logger.info(colors.green('   ✅ Redis already connected'));
+        resolve(true);
+      } else {
+        redisClient.once('ready', () => {
+          logger.info(colors.green('   ✅ Redis connected successfully'));
+          resolve(true);
+        });
+      }
+    });
+    // Step 3: Verify Email Service (optional)
+    if (config.email.username && config.email.password) {
+      logger.info(colors.cyan('📧 [3/5] Verifying email service...'));
+      await emailConfig.verifyEmailConnection();
+    } else {
+      logger.info(colors.yellow('⚠️  [3/5] Email service not configured (skipping)'));
+    }
 
     // Step 4: Start HTTP server
     logger.info(colors.cyan('🌐 [4/5] Starting HTTP server...\n'));

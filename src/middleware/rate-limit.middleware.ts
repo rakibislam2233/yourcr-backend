@@ -1,6 +1,6 @@
+import { RedisUtils } from './../utils/redis.utils';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { redisIncr, existsCache, updateTTL, getTTL, deleteCache, getCache } from '../utils/redis.utils';
 import { logger } from '../config/logger.config';
 import colors from 'colors';
 import { decodeToken } from '../utils/jwt.utils';
@@ -47,23 +47,21 @@ const checkRateLimit = async (key: string, config: RateLimitConfig): Promise<Rat
   const expirySeconds = Math.floor(config.windowMs / 1000);
 
   try {
-    let current = await redisIncr(key);
-    const exists = await existsCache(key);
+    let current = await RedisUtils.incrementCounter(key);
+    const exists = await RedisUtils.existsCache(key);
     if (current === 1 || !exists) {
-      await updateTTL(key, expirySeconds);
+      await RedisUtils.updateTTL(key, expirySeconds);
     }
-    let ttl = await getTTL(key);
+    let ttl = await RedisUtils.getTTL(key);
     if (ttl === -1) {
-      await updateTTL(key, expirySeconds);
+      await RedisUtils.updateTTL(key, expirySeconds);
       ttl = expirySeconds;
     }
 
     const resetTime = new Date(now + ttl * 1000);
 
     if (current > config.maxRequests) {
-      logger.error(
-        colors.red(`🚨 Rate limit exceeded: ${key} (${current}/${config.maxRequests})`)
-      );
+      logger.error(colors.red(`🚨 Rate limit exceeded: ${key} (${current}/${config.maxRequests})`));
     }
 
     return {
@@ -141,7 +139,7 @@ export const createRateLimiter = (prefix: string, config: RateLimitConfig) => {
 export const resetRateLimit = async (identifier: string, prefix: string): Promise<void> => {
   try {
     const key = `ratelimit:${prefix}:ip:${identifier}`;
-    await deleteCache(key);
+    await RedisUtils.deleteCache(key);
     logger.info(colors.blue(`🔄 Rate limit reset: ${key}`));
   } catch (error: any) {
     logger.error(colors.red('❌ Failed to reset rate limit:'), error);
@@ -156,10 +154,10 @@ export const getRateLimitInfo = async (
   try {
     const key = `ratelimit:${prefix}:ip:${identifier}`;
 
-    const requestsStr = await getCache<string>(key);
+    const requestsStr = await RedisUtils.getCache<string>(key);
     const currentRequests = requestsStr ? parseInt(requestsStr, 10) : 0;
 
-    const ttl = await getTTL(key);
+    const ttl = await RedisUtils.getTTL(key);
 
     if (ttl === -2) {
       return null;

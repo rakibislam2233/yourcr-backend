@@ -1,245 +1,204 @@
-import Redis from 'ioredis';
-import { logger } from '../config/logger.config';
-import config from '../config';
+import { redisClient } from '@/config/redis.config';
+import colors from 'colors';
 
-// Redis client instance
-let redisClient: Redis | null = null;
+// Generic type for cached data
+type CachedData<T> = T | null;
 
-// Initialize Redis connection
-export const connectRedis = async (): Promise<Redis> => {
-  if (redisClient) {
-    return redisClient;
-  }
-
-  redisClient = new Redis({
-    host: config.redis.host,
-    port: config.redis.port,
-    password: config.redis.password || undefined,
-    db: config.redis.db || 0,
-    username: config.redis.username || undefined,
-
-    // Connection settings
-    retryStrategy: (times: number) => {
-      const delay = Math.min(times * 50, 2000);
-      logger.warn(`Redis retry attempt ${times}, delaying ${delay}ms`);
-      return delay;
-    },
-    maxRetriesPerRequest: 3,
-    connectTimeout: 10000,
-    lazyConnect: false,
-
-    // Keep connection alive
-    keepAlive: 30000,
-
-    // Performance settings
-    enableOfflineQueue: true,
-    enableReadyCheck: true,
-  });
-
-  // Event listeners
-  redisClient.on('connect', () => {
-    logger.info('✅ Redis connected');
-  });
-
-  redisClient.on('ready', () => {
-    logger.info('✅ Redis ready');
-  });
-
-  redisClient.on('error', (error) => {
-    logger.error('❌ Redis error:', error);
-  });
-
-  redisClient.on('close', () => {
-    logger.warn('⚠️ Redis disconnected');
-  });
-
-  redisClient.on('reconnecting', () => {
-    logger.info('🔄 Redis reconnecting...');
-  });
-
-  return redisClient;
-};
-
-// Get Redis client instance
-export const getRedisClient = (): Redis => {
-  if (!redisClient) {
-    throw new Error('Redis client not initialized. Call connectRedis() first.');
-  }
-  return redisClient;
-};
-
-// Close Redis connection
-export const closeRedis = async (): Promise<void> => {
-  if (redisClient) {
-    await redisClient.quit();
-    redisClient = null;
-    logger.info('✅ Redis connection closed');
-  }
-};
-
-// Health check
-export const redisHealthCheck = async (): Promise<boolean> => {
+const setCache = async <T>(key: string, value: T, ttlMs?: number): Promise<void> => {
   try {
-    const client = getRedisClient();
-    const result = await client.ping();
-    return result === 'PONG';
+    const serialized = JSON.stringify(value);
+    if (ttlMs) {
+      // Convert milliseconds to seconds for Redis
+      const ttlSeconds = Math.floor(ttlMs / 1000);
+      await redisClient.setex(key, ttlSeconds, serialized);
+    } else {
+      await redisClient.set(key, serialized);
+    }
   } catch (error) {
-    logger.error('Redis health check failed:', error);
+    console.error(colors.red(`❌ Redis SET error for key ${key}:`), error);
+    throw error;
+  }
+};
+
+const getCache = async <T>(key: string): Promise<CachedData<T>> => {
+  try {
+    const data = await redisClient.get(key);
+    if (!data) return null;
+    return JSON.parse(data) as T;
+  } catch (error) {
+    console.error(colors.red(`❌ Redis GET error for key ${key}:`), error);
+    return null;
+  }
+};
+
+const deleteCache = async (key: string): Promise<void> => {
+  try {
+    await redisClient.del(key);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis DEL error for key ${key}:`), error);
+    throw error;
+  }
+};
+
+const deleteCachePattern = async (pattern: string): Promise<number> => {
+  try {
+    const keys = await redisClient.keys(pattern);
+    if (keys.length === 0) return 0;
+    return await redisClient.del(...keys);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis DELETE PATTERN error for pattern ${pattern}:`), error);
+    throw error;
+  }
+};
+
+const existsCache = async (key: string): Promise<boolean> => {
+  try {
+    const result = await redisClient.exists(key);
+    return result === 1;
+  } catch (error) {
+    console.error(colors.red(`❌ Redis EXISTS error for key ${key}:`), error);
     return false;
   }
 };
 
-// Core Redis operations
-export const redisSetex = async (key: string, seconds: number, value: string): Promise<string> => {
-  const client = getRedisClient();
-  return await client.setex(key, seconds, value);
-};
-
-export const redisGet = async (key: string): Promise<string | null> => {
-  const client = getRedisClient();
-  return await client.get(key);
-};
-
-export const redisDel = async (key: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.del(key);
-};
-
-export const redisExists = async (key: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.exists(key);
-};
-
-export const redisSet = async (key: string, value: string): Promise<string> => {
-  const client = getRedisClient();
-  return await client.set(key, value);
-};
-
-export const redisIncr = async (key: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.incr(key);
-};
-
-export const redisDecr = async (key: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.decr(key);
-};
-
-export const redisExpire = async (key: string, seconds: number): Promise<number> => {
-  const client = getRedisClient();
-  return await client.expire(key, seconds);
-};
-
-export const redisTtl = async (key: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.ttl(key);
-};
-
-export const redisMset = async (data: Record<string, string>): Promise<string> => {
-  const client = getRedisClient();
-  const keyValueArray: string[] = [];
-  Object.entries(data).forEach(([key, value]) => {
-    keyValueArray.push(key, value);
-  });
-  return await client.mset(keyValueArray);
-};
-
-export const redisMget = async (keys: string[]): Promise<(string | null)[]> => {
-  const client = getRedisClient();
-  return await client.mget(keys);
-};
-
-// Cache operations (aliases for backward compatibility)
-export const setCache = async (key: string, value: string, ttlSeconds?: number): Promise<string> => {
-  if (ttlSeconds) {
-    return await redisSetex(key, ttlSeconds, value);
+const getTTL = async (key: string): Promise<number> => {
+  try {
+    return await redisClient.ttl(key);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis TTL error for key ${key}:`), error);
+    return -2;
   }
-  return await redisSet(key, value);
 };
 
-export const getCache = async <T = string>(key: string): Promise<T | null> => {
-  const result = await redisGet(key);
-  return result as T | null;
+const updateTTL = async (key: string, ttlSeconds: number): Promise<void> => {
+  try {
+    await redisClient.expire(key, ttlSeconds);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis EXPIRE error for key ${key}:`), error);
+    throw error;
+  }
 };
 
-export const deleteCache = async (key: string): Promise<number> => {
-  return await redisDel(key);
+const incrementCounter = async (key: string, amount: number = 1): Promise<number> => {
+  try {
+    return await redisClient.incrby(key, amount);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis INCR error for key ${key}:`), error);
+    throw error;
+  }
 };
 
-export const existsCache = async (key: string): Promise<boolean> => {
-  const result = await redisExists(key);
-  return result === 1;
+const setCacheNX = async <T>(key: string, value: T, ttlMs?: number): Promise<boolean> => {
+  try {
+    const serialized = JSON.stringify(value);
+    if (ttlMs) {
+      const ttlSeconds = Math.floor(ttlMs / 1000);
+      const result = await redisClient.set(key, serialized, 'EX', ttlSeconds, 'NX');
+      return result === 'OK';
+    } else {
+      const result = await redisClient.setnx(key, serialized);
+      return result === 1;
+    }
+  } catch (error) {
+    console.error(colors.red(`❌ Redis SETNX error for key ${key}:`), error);
+    throw error;
+  }
 };
 
-export const updateTTL = async (key: string, seconds: number): Promise<number> => {
-  return await redisExpire(key, seconds);
+const getMultipleCache = async <T>(keys: string[]): Promise<CachedData<T>[]> => {
+  try {
+    if (keys.length === 0) return [];
+    const values = await redisClient.mget(...keys);
+    return values.map(value => (value ? JSON.parse(value) : null));
+  } catch (error) {
+    console.error(colors.red(`❌ Redis MGET error:`), error);
+    return keys.map(() => null);
+  }
 };
 
-export const getTTL = async (key: string): Promise<number> => {
-  return await redisTtl(key);
+const flushAll = async (): Promise<void> => {
+  try {
+    await redisClient.flushall();
+    console.log(colors.yellow('⚠️ Redis: All data flushed'));
+  } catch (error) {
+    console.error(colors.red(`❌ Redis FLUSHALL error:`), error);
+    throw error;
+  }
 };
 
-// Hash operations
-export const setHash = async (key: string, field: string, value: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.hset(key, field, value);
+const getKeysByPattern = async (pattern: string): Promise<string[]> => {
+  try {
+    return await redisClient.keys(pattern);
+  } catch (error) {
+    console.error(colors.red(`❌ Redis KEYS error for pattern ${pattern}:`), error);
+    return [];
+  }
 };
 
-export const getHash = async (key: string, field: string): Promise<string | null> => {
-  const client = getRedisClient();
-  return await client.hget(key, field);
+// Hash operations remain unchanged
+const hashOperations = {
+  setHash: async <T>(key: string, field: string, value: T): Promise<void> => {
+    try {
+      await redisClient.hset(key, field, JSON.stringify(value));
+    } catch (error) {
+      console.error(colors.red(`❌ Redis HSET error for key ${key}:`), error);
+      throw error;
+    }
+  },
+  getHash: async <T>(key: string, field: string): Promise<CachedData<T>> => {
+    try {
+      const data = await redisClient.hget(key, field);
+      if (!data) return null;
+      return JSON.parse(data) as T;
+    } catch (error) {
+      console.error(colors.red(`❌ Redis HGET error for key ${key}:`), error);
+      return null;
+    }
+  },
+  getAllHash: async <T>(key: string): Promise<Record<string, T>> => {
+    try {
+      const data = await redisClient.hgetall(key);
+      const result: Record<string, T> = {};
+      for (const [field, value] of Object.entries(data)) {
+        result[field] = JSON.parse(value) as T;
+      }
+      return result;
+    } catch (error) {
+      console.error(colors.red(`❌ Redis HGETALL error for key ${key}:`), error);
+      return {};
+    }
+  },
+  deleteHash: async (key: string, field: string): Promise<void> => {
+    try {
+      await redisClient.hdel(key, field);
+    } catch (error) {
+      console.error(colors.red(`❌ Redis HDEL error for key ${key}:`), error);
+      throw error;
+    }
+  },
+  existsHash: async (key: string, field: string): Promise<boolean> => {
+    try {
+      const result = await redisClient.hexists(key, field);
+      return result === 1;
+    } catch (error) {
+      console.error(colors.red(`❌ Redis HEXISTS error for key ${key}:`), error);
+      return false;
+    }
+  },
 };
 
-export const getAllHash = async (key: string): Promise<Record<string, string>> => {
-  const client = getRedisClient();
-  return await client.hgetall(key);
-};
-
-// List operations
-export const pushToList = async (key: string, ...values: string[]): Promise<number> => {
-  const client = getRedisClient();
-  return await client.lpush(key, ...values);
-};
-
-export const getList = async (key: string, start = 0, stop = -1): Promise<string[]> => {
-  const client = getRedisClient();
-  return await client.lrange(key, start, stop);
-};
-
-// Set operations
-export const addToSet = async (key: string, ...members: string[]): Promise<number> => {
-  const client = getRedisClient();
-  return await client.sadd(key, ...members);
-};
-
-export const isMemberOfSet = async (key: string, member: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.sismember(key, member);
-};
-
-// Sorted set operations
-export const addToSortedSet = async (key: string, score: number, member: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.zadd(key, score, member);
-};
-
-export const getSortedSet = async (key: string, start = 0, stop = -1): Promise<string[]> => {
-  const client = getRedisClient();
-  return await client.zrange(key, start, stop);
-};
-
-// Pub/Sub operations
-export const publish = async (channel: string, message: string): Promise<number> => {
-  const client = getRedisClient();
-  return await client.publish(channel, message);
-};
-
-export const subscribe = async (
-  client: Redis,
-  channel: string,
-  callback: (channel: string, message: string) => void
-): Promise<string[]> => {
-  client.subscribe(channel);
-  client.on('message', callback);
-  return [channel];
+export const RedisUtils = {
+  getCache,
+  setCache,
+  setCacheNX,
+  deleteCache,
+  getTTL,
+  deleteCachePattern,
+  existsCache,
+  updateTTL,
+  incrementCounter,
+  getMultipleCache,
+  flushAll,
+  getKeysByPattern,
+  hashOperations,
 };

@@ -1,33 +1,14 @@
-import { PrismaClient } from '../generated/prisma/client';
-import "dotenv/config";
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import 'dotenv/config';
+import { PrismaClient } from '../generated/prisma/client';
+import config from './index';
 
-let prisma: PrismaClient;
+const connectionString = `${config.database.url}`;
 
-// Initialize Prisma client with adapter
-if (process.env.NODE_ENV === "production") {
-  const connectionString = process.env.DATABASE_URL!;
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
-  prisma = new PrismaClient({ adapter });
-} else {
-  // In development, avoid hot-reloading issues
-  const globalWithPrisma = global as typeof global & {
-    prisma: PrismaClient;
-  };
-  if (!globalWithPrisma.prisma) {
-    const connectionString = process.env.DATABASE_URL!;
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    globalWithPrisma.prisma = new PrismaClient({ adapter });
-  }
-  prisma = globalWithPrisma.prisma;
-}
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
-/**
- * Connect to the database
- */
+// Connect to Prisma
 const connectDB = async (): Promise<void> => {
   try {
     await prisma.$connect();
@@ -38,18 +19,9 @@ const connectDB = async (): Promise<void> => {
   }
 };
 
-/**
- * Close the database connection
- */
+// Close Prisma connection
 const closeDB = async (): Promise<void> => {
   await prisma.$disconnect();
 };
 
-/**
- * Get the Prisma client instance
- */
-const getPrismaClient = (): PrismaClient => {
-  return prisma;
-};
-
-export { prisma, connectDB, closeDB, getPrismaClient };
+export { closeDB, connectDB, prisma };

@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../utils/ApiError';
-import { existsCache } from '../utils/redis.utils';
 import { verifyAccessToken } from '../utils/jwt.utils';
+import { RedisUtils } from '@/utils/redis.utils';
 
 interface IDecodedToken {
   userId: string;
@@ -34,7 +34,7 @@ const auth =
       }
       const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
 
-      const isBlacklisted = await existsCache(
+      const isBlacklisted = await RedisUtils.existsCache(
         AUTH_CACHE_KEY.BLACKlISTED_TOKEN(tokenValue)
       );
       if (isBlacklisted) {
