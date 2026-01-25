@@ -6,7 +6,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from '../../utils/jwt.utils';
-import { prisma } from '@/config/database.config';
+import { prisma } from '../../config/database.config';
 
 
 // Register user

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../utils/ApiError';
 import { verifyAccessToken } from '../utils/jwt.utils';
-import { RedisUtils } from '@/utils/redis.utils';
+import { RedisUtils } from '../utils/redis.utils';
 
 interface IDecodedToken {
   userId: string;

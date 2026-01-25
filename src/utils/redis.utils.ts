@@ -1,4 +1,4 @@
-import { redisClient } from '@/config/redis.config';
+import { redisClient } from '../config/redis.config';
 import colors from 'colors';
 
 // Generic type for cached data

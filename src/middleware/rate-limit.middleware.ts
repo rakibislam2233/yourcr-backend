@@ -1,9 +1,9 @@
-import { RedisUtils } from './../utils/redis.utils';
+import { RedisUtils } from '../utils/redis.utils';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { logger } from '../config/logger.config';
 import colors from 'colors';
 import { decodeToken } from '../utils/jwt.utils';
+import logger from '../utils/logger';
 
 interface RateLimitConfig {
   windowMs: number;

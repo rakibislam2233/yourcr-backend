@@ -5,7 +5,7 @@ import ApiResponse from '../../utils/ApiResponse';
 import catchAsync from '../../utils/catchAsync';
 
 // Get all users
-export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -27,7 +27,7 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Get user by ID
-export const getUserById = catchAsync(async (req: Request, res: Response) => {
+const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
 
@@ -54,7 +54,7 @@ export const getUserById = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Update user
-export const updateUser = catchAsync(async (req: Request, res: Response) => {
+const updateUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
   const updateData = req.body;
@@ -90,7 +90,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Delete user
-export const deleteUser = catchAsync(async (req: Request, res: Response) => {
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
 
@@ -109,3 +109,10 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
 
   res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User deleted successfully'));
 });
+
+export const UserController = {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+};
