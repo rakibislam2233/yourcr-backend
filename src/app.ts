@@ -304,7 +304,7 @@ app.use('/api/v1', version1Routes);
 // Health check endpoints
 app.get('/test', (req: Request, res: Response) => {
   res.status(200).json({
-    message: 'Welcome to the goldan society backend apps API',
+    message: 'Welcome to the YourCR backend API',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: process.env.npm_package_version || '1.0.0',

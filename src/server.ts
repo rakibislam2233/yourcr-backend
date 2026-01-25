@@ -2,13 +2,12 @@ import colors from 'colors';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 import app from './app';
-import config from './config';
 import logger from './utils/logger';
+import config from './config';
 import { closeDB, connectDB } from './config/database.config';
+import { closeRedis, redisClient } from './config/redis.config';
 import { seedDatabase } from './utils/seed.utils';
-import { setupSocket } from './socket/socket.handler';
 import { emailConfig } from './config/email.config';
-import { redisClient } from './config/redis.config';
 
 // Create HTTP server and Socket.IO instance
 let server: http.Server | null = null;
@@ -35,12 +34,26 @@ process.on('uncaughtException', (error: Error) => {
 const startServer = (): void => {
   const port = config.port;
 
-  // Initialize Socket.IO after server is listening
+  // Create HTTP server
   server = app.listen(port, config.backend.ip, () => {
-    logger.info(colors.cyan(`🌐 Server listening on port ${port}...`));
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.green('                 🚀 SERVER STARTED SUCCESSFULLY!            '));
+    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+    logger.info(colors.cyan(`📌 Environment      : ${colors.bold(config.env.toUpperCase())}`));
+    logger.info(colors.cyan(`🌐 Server URL       : ${colors.bold(config.backend.baseUrl)}`));
+    logger.info(colors.cyan(`📍 IP Address       : ${colors.bold(config.backend.ip)}`));
+    logger.info(colors.cyan(`🔌 Port             : ${colors.bold(port.toString())}`));
+    logger.info(colors.cyan(`⚡ Process ID       : ${colors.bold(process.pid.toString())}`));
+    logger.info(
+      colors.cyan(
+        `💾 Memory Usage     : ${colors.bold(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`
+      )
+    );
+    logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
+    logger.info(colors.green('───────────────────────────────────────────────────────────'));
   });
 
-  // Initialize Socket.IO separately (outside the listen callback)
+  // Initialize Socket.IO
   io = new SocketServer(server, {
     cors: {
       origin: config.cors.allowedOrigins,
@@ -55,23 +68,24 @@ const startServer = (): void => {
     connectTimeout: 45000,
   });
 
-  // Setup Socket.IO handlers
-  setupSocket(io);
-
   // Store globally for access from other modules
   (global as any).io = io;
 
-  // Socket.IO startup message
-  logger.info(colors.cyan(`🎯 Socket.IO        : ${colors.bold('Connected with Redis Adapter')}`));
+  logger.info(colors.green(''));
+  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+  logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
+  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+  logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
   logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
   logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
   logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
+  logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
   logger.info(
     colors.cyan(
       `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
     )
   );
-  logger.info(colors.green('───────────────────────────────────────────────────────────'));
+  logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
 
   // Handle server errors
   server.on('error', (error: NodeJS.ErrnoException) => {
@@ -187,29 +201,22 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
       server = null;
     }
 
-    // Step 3: Close MongoDB
+    // Step 3: Close Database
     if (!isDevelopmentRestart) {
-      logger.info(colors.cyan('🗄️  [3/5] Closing MongoDB...'));
+      logger.info(colors.cyan('🗄️  [3/5] Closing Database..'));
     }
     await closeDB();
     if (!isDevelopmentRestart) {
-      logger.info(colors.green('   ✅ MongoDB closed'));
+      logger.info(colors.green('   ✅ Database closed'));
     }
 
     // Step 4: Close Redis
     if (!isDevelopmentRestart) {
       logger.info(colors.cyan('🔴 [4/5] Closing Redis...'));
     }
-    if (redisClient.status !== 'end') {
-      await redisClient.quit();
-    }
+    await closeRedis();
     if (!isDevelopmentRestart) {
       logger.info(colors.green('   ✅ Redis closed'));
-    }
-
-    // Step 5: Close Email Worker
-    if (!isDevelopmentRestart) {
-      logger.info(colors.cyan('📧 [5/5] Closing Email Worker...'));
     }
 
     clearTimeout(shutdownTimeout);
@@ -306,8 +313,8 @@ async function main() {
     logger.info(colors.cyan('                🚀 APPLICATION INITIALIZATION               '));
     logger.info(colors.cyan('═══════════════════════════════════════════════════════════'));
 
-    // Step 1: Connect to MongoDB
-    logger.info(colors.cyan('\n📦 [1/5] Connecting to MongoDB...'));
+    // Step 1: Connect to Database
+    logger.info(colors.cyan('\n📦 [1/5] Connecting to Database...'));
     await connectDB();
 
     // Seed default data (Admin & Super Admin)
