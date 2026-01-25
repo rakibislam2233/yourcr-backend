@@ -67,10 +67,6 @@ export const seedSettings = async (): Promise<void> => {
 export const clearDatabase = async (): Promise<void> => {
   try {
     logger.warn('🗑️  Clearing database...');
-
-    await prisma.fileUpload.deleteMany();
-    await prisma.refreshToken.deleteMany();
-    await prisma.otp.deleteMany();
     await prisma.user.deleteMany();
 
     logger.info('✅ Database cleared successfully');

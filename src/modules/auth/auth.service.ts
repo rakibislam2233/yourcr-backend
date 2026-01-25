@@ -15,8 +15,8 @@ import {
   IResendOtpPayload,
   IResetPasswordPayload,
   IVerifyOtpPayload,
+  UserRole,
 } from './auth.interface';
-import { UserRole } from '@prisma/client';
 
 /**
  * --- Register ---

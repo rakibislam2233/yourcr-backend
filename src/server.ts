@@ -32,101 +32,102 @@ process.on('uncaughtException', (error: Error) => {
 // ==========================================
 // START HTTP SERVER + SOCKET.IO
 // ==========================================
-const startServer = (): void => {
-  const port = config.port;
+const startServer = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const port = config.port;
 
-  // Create HTTP server
-  server = app.listen(port, config.backend.ip, () => {
-    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
-    logger.info(colors.green('                 🚀 SERVER STARTED SUCCESSFULLY!            '));
-    logger.info(colors.green('═══════════════════════════════════════════════════════════'));
-    logger.info(colors.cyan(`📌 Environment      : ${colors.bold(config.env.toUpperCase())}`));
-    logger.info(colors.cyan(`🌐 Server URL       : ${colors.bold(config.backend.baseUrl)}`));
-    logger.info(colors.cyan(`📍 IP Address       : ${colors.bold(config.backend.ip)}`));
-    logger.info(colors.cyan(`🔌 Port             : ${colors.bold(port.toString())}`));
-    logger.info(colors.cyan(`⚡ Process ID       : ${colors.bold(process.pid.toString())}`));
-    logger.info(
-      colors.cyan(
-        `💾 Memory Usage     : ${colors.bold(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`
-      )
-    );
-    logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
-    logger.info(colors.green('───────────────────────────────────────────────────────────'));
-  });
+    // Create HTTP server
+    server = app.listen(port, config.backend.ip, () => {
+      logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+      logger.info(colors.green('                 🚀 SERVER STARTED SUCCESSFULLY!            '));
+      logger.info(colors.green('═══════════════════════════════════════════════════════════'));
+      logger.info(colors.cyan(`📌 Environment      : ${colors.bold(config.env.toUpperCase())}`));
+      logger.info(colors.cyan(`🌐 Server URL       : ${colors.bold(config.backend.baseUrl)}`));
+      logger.info(colors.cyan(`📍 IP Address       : ${colors.bold(config.backend.ip)}`));
+      logger.info(colors.cyan(`🔌 Port             : ${colors.bold(port.toString())}`));
+      logger.info(colors.cyan(`⚡ Process ID       : ${colors.bold(process.pid.toString())}`));
+      logger.info(
+        colors.cyan(
+          `💾 Memory Usage     : ${colors.bold(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`
+        )
+      );
+      logger.info(colors.cyan(`📅 Started At       : ${colors.bold(new Date().toLocaleString())}`));
+      logger.info(colors.green('───────────────────────────────────────────────────────────'));
 
-  // Initialize Socket.IO
-  io = new SocketServer(server, {
-    cors: {
-      origin: config.cors.allowedOrigins,
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    },
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    maxHttpBufferSize: 1e8, // 100 MB
-    transports: ['websocket', 'polling'],
-    allowEIO3: true,
-    connectTimeout: 45000,
-  });
+      // Initialize Socket.IO AFTER server starts
+      io = new SocketServer(server!, {
+        cors: {
+          origin: config.cors.allowedOrigins,
+          credentials: true,
+          methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+        },
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        maxHttpBufferSize: 1e8, // 100 MB
+        transports: ['websocket', 'polling'],
+        allowEIO3: true,
+        connectTimeout: 45000,
+      });
 
-  // Store globally for access from other modules
-  (global as any).io = io;
+      // Store globally for access from other modules
+      (global as any).io = io;
 
-  logger.info(colors.green(''));
-  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-  logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
-  logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
-  logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
-  logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
-  logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
-  logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
-  logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
-  logger.info(
-    colors.cyan(
-      `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
-    )
-  );
-  logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
+      logger.info(colors.green(''));
+      logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+      logger.info(colors.magenta('             🔌 SOCKET.IO INITIALIZED SUCCESSFULLY!         '));
+      logger.info(colors.magenta('═══════════════════════════════════════════════════════════'));
+      logger.info(colors.cyan(`🎯 Adapter          : ${colors.bold('Redis Cluster Mode')}`));
+      logger.info(colors.cyan(`🔄 Transports       : ${colors.bold('WebSocket, Polling')}`));
+      logger.info(colors.cyan(`⏱️  Ping Timeout     : ${colors.bold('60 seconds')}`));
+      logger.info(colors.cyan(`📡 Ping Interval    : ${colors.bold('25 seconds')}`));
+      logger.info(colors.cyan(`📦 Max Buffer Size  : ${colors.bold('100 MB')}`));
+      logger.info(
+        colors.cyan(
+          `🌍 CORS Origin      : ${colors.bold(Array.isArray(config.cors.allowedOrigins) ? config.cors.allowedOrigins.join(', ') : config.cors.allowedOrigins)}`
+        )
+      );
+      logger.info(colors.magenta('───────────────────────────────────────────────────────────'));
 
-  // Handle server errors
-  server.on('error', (error: NodeJS.ErrnoException) => {
-    if (error.code === 'EADDRINUSE') {
-      logger.error(colors.red(`❌ Port ${port} is already in use`));
-      logger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
-    } else if (error.code === 'EACCES') {
-      logger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
-      logger.error(colors.yellow(`💡 Try: sudo node server.js`));
-    } else {
-      logger.error(colors.red('❌ Server error:'), error);
-    }
-    process.exit(1);
-  });
-
-  // Handle client connections
-  server.on('connection', socket => {
-    socket.setKeepAlive(true);
-
-    socket.on('error', err => {
-      logger.error(colors.red('❌ Socket error:'), err);
+      resolve();
     });
-  });
 
-  // Track active connections for graceful shutdown
-  let connections = new Set<any>();
-
-  server.on('connection', conn => {
-    connections.add(conn);
-    conn.on('close', () => {
-      connections.delete(conn);
+    // Handle server errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.error(colors.red(`❌ Port ${port} is already in use`));
+        logger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
+      } else if (error.code === 'EACCES') {
+        logger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
+        logger.error(colors.yellow(`💡 Try: sudo node server.js`));
+      } else {
+        logger.error(colors.red('❌ Server error:'), error);
+      }
+      reject(error);
     });
-  });
 
-  (server as any).connections = connections;
+    // Handle client connections
+    server.on('connection', socket => {
+      socket.setKeepAlive(true);
+
+      socket.on('error', err => {
+        logger.error(colors.red('❌ Socket error:'), err);
+      });
+    });
+
+    // Track active connections for graceful shutdown
+    let connections = new Set<any>();
+
+    server.on('connection', conn => {
+      connections.add(conn);
+      conn.on('close', () => {
+        connections.delete(conn);
+      });
+    });
+
+    (server as any).connections = connections;
+  });
 };
 
-// ==========================================
-// GRACEFUL SHUTDOWN
-// ==========================================
 const gracefulShutdown = async (signal: string): Promise<void> => {
   if (isShuttingDown) {
     logger.warn(colors.yellow('⚠️  Shutdown already in progress...'));
@@ -343,9 +344,9 @@ async function main() {
       logger.info(colors.yellow('⚠️  [3/5] Email service not configured (skipping)'));
     }
 
-    // Step 4: Start HTTP server
+    // Step 4: Start HTTP server (NOW ASYNC)
     logger.info(colors.cyan('🌐 [4/5] Starting HTTP server...\n'));
-    startServer();
+    await startServer();
 
     // Step 5: Start health monitoring (development only)
     if (config.env === 'development') {
@@ -377,6 +378,7 @@ async function main() {
     try {
       logger.info(colors.yellow('🧹 Attempting cleanup...'));
       await closeDB();
+      await closeRedis();
       logger.info(colors.green('✅ Cleanup completed'));
     } catch (cleanupError) {
       logger.error(colors.red('❌ Cleanup error:'), cleanupError);

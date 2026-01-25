@@ -6,3 +6,5 @@ dist
 .env
 .claude
 /generated/prisma
+
+/generated/prisma

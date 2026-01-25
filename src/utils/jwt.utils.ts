@@ -1,8 +1,8 @@
-import config from '../config';
-import { IDecodedToken, ITokenPayload, TokenType } from '../shared/interfaces/jwt.interface';
 import { addDays, addMinutes } from 'date-fns';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
+import config from '../config';
+import { IDecodedToken, ITokenPayload, TokenType } from '../shared/interfaces/jwt.interface';
 import ApiError from './ApiError';
 
 // ==================== Helpers ====================
@@ -71,7 +71,7 @@ export const generateResetPasswordToken = (userId: string, email: string, role: 
       expiresIn: config.jwt.resetPasswordExpiration,
     } as jwt.SignOptions);
   } catch (error) {
-    throw new AppError(
+    throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
       'Failed to generate reset password token'
     );
@@ -158,5 +158,3 @@ export const isTokenExpired = (token: string): boolean => {
   }
   return Date.now() >= decoded.exp * 1000;
 };
-
-
