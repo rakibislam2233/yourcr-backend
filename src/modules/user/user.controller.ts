@@ -1,15 +1,12 @@
 import { Request, Response } from 'express';
-import { getPrismaClient } from '../../config/database.config';
-import catchAsync from '../../utils/catchAsync';
 import httpStatus from 'http-status-codes';
+import { prisma } from '../../config/database.config';
 import ApiResponse from '../../utils/ApiResponse';
-
-// Helper function to get prisma client
-const getPrisma = () => getPrismaClient();
+import catchAsync from '../../utils/catchAsync';
 
 // Get all users
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await getPrisma().user.findMany({
+  const users = await prisma.user.findMany({
     select: {
       id: true,
       name: true,
@@ -24,21 +21,17 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  res.status(httpStatus.OK).json(
-    new ApiResponse(
-      httpStatus.OK,
-      'Users fetched successfully',
-      users
-    )
-  );
+  res
+    .status(httpStatus.OK)
+    .json(new ApiResponse(httpStatus.OK, 'Users fetched successfully', users));
 });
 
 // Get user by ID
 export const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
-  
-  const user = await getPrisma().user.findUnique({
+
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -57,13 +50,7 @@ export const getUserById = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not found');
   }
 
-  res.status(httpStatus.OK).json(
-    new ApiResponse(
-      httpStatus.OK,
-      'User fetched successfully',
-      user
-    )
-  );
+  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User fetched successfully', user));
 });
 
 // Update user
@@ -71,9 +58,9 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
   const updateData = req.body;
-  
+
   // Check if user exists
-  const existingUser = await getPrisma().user.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: { id: userId },
   });
 
@@ -84,7 +71,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
   // Prevent updating email and password through this endpoint
   const { email, password, ...allowedUpdates } = updateData;
 
-  const user = await getPrisma().user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: allowedUpdates,
     select: {
@@ -99,22 +86,16 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  res.status(httpStatus.OK).json(
-    new ApiResponse(
-      httpStatus.OK,
-      'User updated successfully',
-      user
-    )
-  );
+  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User updated successfully', user));
 });
 
 // Delete user
 export const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
-  
+
   // Check if user exists
-  const existingUser = await getPrisma().user.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: { id: userId },
   });
 
@@ -122,14 +103,9 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not found');
   }
 
-  await getPrisma().user.delete({
+  await prisma.user.delete({
     where: { id: userId },
   });
 
-  res.status(httpStatus.OK).json(
-    new ApiResponse(
-      httpStatus.OK,
-      'User deleted successfully'
-    )
-  );
+  res.status(httpStatus.OK).json(new ApiResponse(httpStatus.OK, 'User deleted successfully'));
 });

@@ -1,11 +1,13 @@
-import { getPrismaClient } from '../../config/database.config';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt.utils';
-import { hashPassword, comparePassword } from '../../utils/bcrypt.utils';
-import ApiError from '../../utils/ApiError';
 import httpStatus from 'http-status-codes';
+import ApiError from '../../utils/ApiError';
+import { comparePassword, hashPassword } from '../../utils/bcrypt.utils';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from '../../utils/jwt.utils';
+import { prisma } from '@/config/database.config';
 
-// Helper function to get prisma client
-const getPrisma = () => getPrismaClient();
 
 // Register user
 export const registerUser = async (userData: {
@@ -15,7 +17,7 @@ export const registerUser = async (userData: {
   phone?: string;
 }) => {
   // Check if user already exists
-  const existingUser = await getPrisma().user.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: { email: userData.email },
   });
 
@@ -27,7 +29,7 @@ export const registerUser = async (userData: {
   const hashedPassword = await hashPassword(userData.password);
 
   // Create user
-  const user = await getPrisma().user.create({
+  const user = await prisma.user.create({
     data: {
       name: userData.name,
       email: userData.email,
@@ -51,7 +53,7 @@ export const registerUser = async (userData: {
 // Login user
 export const loginUser = async (email: string, password: string) => {
   // Find user
-  const user = await getPrisma().user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
@@ -71,7 +73,7 @@ export const loginUser = async (email: string, password: string) => {
   }
 
   // Update last login
-  await getPrisma().user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: { lastLogin: new Date() },
   });
@@ -88,7 +90,7 @@ export const loginUser = async (email: string, password: string) => {
   });
 
   // Store refresh token in database
-  await getPrisma().refreshToken.create({
+  await prisma.refreshToken.create({
     data: {
       userId: user.id,
       token: refreshToken,
@@ -116,7 +118,7 @@ export const refreshUserToken = async (refreshToken: string) => {
   const decoded = verifyRefreshToken(refreshToken);
 
   // Check if token exists in database
-  const storedToken = await getPrisma().refreshToken.findUnique({
+  const storedToken = await prisma.refreshToken.findUnique({
     where: { token: refreshToken },
   });
 
@@ -136,7 +138,7 @@ export const refreshUserToken = async (refreshToken: string) => {
   });
 
   // Update refresh token in database
-  await getPrisma().refreshToken.update({
+  await prisma.refreshToken.update({
     where: { id: storedToken.id },
     data: {
       token: newRefreshToken,
@@ -152,14 +154,14 @@ export const refreshUserToken = async (refreshToken: string) => {
 
 // Logout user
 export const logoutUser = async (refreshToken: string) => {
-  await getPrisma().refreshToken.deleteMany({
+  await prisma.refreshToken.deleteMany({
     where: { token: refreshToken },
   });
 };
 
 // Get user profile
 export const getUserProfile = async (userId: string) => {
-  const user = await getPrisma().user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -190,7 +192,7 @@ export const updateUserProfile = async (
     avatar?: string;
   }
 ) => {
-  const user = await getPrisma().user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: updateData,
     select: {

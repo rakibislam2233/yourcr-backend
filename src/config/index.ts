@@ -4,22 +4,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const requiredEnvVars = [
-  'MONGODB_URL',
+  'DATABASE_URL',
   'JWT_ACCESS_SECRET',
   'JWT_REFRESH_SECRET',
   'REDIS_HOST',
   'REDIS_PORT',
-  'REDIS_PASSWORD',
 ] as const;
 
 const optionalEnvVars = [
-  'AWS_ACCESS_KEY_ID',
-  'AWS_SECRET_ACCESS_KEY',
-  'AWS_S3_BUCKET_NAME',
+  'JWT_RESET_PASSWORD_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
   'SMTP_USERNAME',
   'SMTP_PASSWORD',
-  'STRIPE_SECRET_KEY',
-  'GOOGLE_MAPS_API_KEY',
 ] as const;
 
 // Validate required environment variables
@@ -59,14 +57,14 @@ if (process.env.NODE_ENV === 'development') {
 
   // Database
   database: {
-    mongoUrl: process.env.MONGODB_URL || 'mongodb://localhost:27017/talenzy',
+    url: process.env.DATABASE_URL!,
   },
 
   // JWT Authentication (For Access & Refresh Tokens)
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET!,
     refreshSecret: process.env.JWT_REFRESH_SECRET!,
-    resetPasswordSecret: process.env.JWT_RESET_PASSWORD_SECRET!,
+    resetPasswordSecret: process.env.JWT_RESET_PASSWORD_SECRET || process.env.JWT_ACCESS_SECRET!,
     accessExpiration: process.env.JWT_ACCESS_EXPIRATION_TIME || '1d',
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION_TIME || '7d',
     resetPasswordExpiration: process.env.JWT_RESET_PASSWORD_EXPIRATION_TIME || '30m',
@@ -81,7 +79,7 @@ if (process.env.NODE_ENV === 'development') {
   // Session Configuration (For OTP, Email Verification, Password Reset)
   session: {
     // OTP Session
-    otpExpiry: parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10) * 60 * 1000, // 30 minutes in ms
+    otpExpiry: parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10) * 60 * 1000, // 10 minutes in ms
 
     // Password Reset Session
     passwordResetExpiry:
@@ -97,10 +95,6 @@ if (process.env.NODE_ENV === 'development') {
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
   },
 
-  // Google Maps
-  googleMaps: {
-    apiKey: process.env.GOOGLE_MAPS_API_KEY || '',
-  },
 
   // Email
   email: {
@@ -125,13 +119,6 @@ if (process.env.NODE_ENV === 'development') {
       `http://${process.env.BACKEND_IP || 'localhost'}:${process.env.PORT || '8082'}`,
   },
 
-  // AWS S3
-  aws: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-    region: process.env.AWS_REGION || 'us-east-1',
-    bucketName: process.env.AWS_S3_BUCKET_NAME || '',
-  },
 
   // Cloudinary
   cloudinary: {
@@ -140,17 +127,7 @@ if (process.env.NODE_ENV === 'development') {
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
 
-  // CloudFront CDN
-  cloudfront: {
-    domain: process.env.CLOUDFRONT_DOMAIN || '',
-    enabled: process.env.CLOUDFRONT_ENABLED === 'true',
-  },
 
-  // Stripe Payment
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || '',
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-  },
 
   // CORS
   cors: {
