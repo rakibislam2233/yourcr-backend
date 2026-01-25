@@ -28,6 +28,7 @@ enum CRRegistrationStatus {
     REJECTED
 }
 
+// ================================= Session Model Enum ================//
 enum SessionType {
     SEMESTER
     YEAR

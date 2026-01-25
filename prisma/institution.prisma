@@ -3,7 +3,7 @@ model Address {
     street       String?
     city         String?
     district     String
-    division     String
+    division     String?
     postalCode   String?
     createdAt    DateTime      @default(now())
     updatedAt    DateTime      @updatedAt
@@ -16,7 +16,7 @@ model Institution {
     type            InstitutionType
     logo            String?
     contactEmail    String
-    contactPhone    String
+    contactPhone    String?
     website         String?
     isVerified      Boolean          @default(false)
     addressId       String
