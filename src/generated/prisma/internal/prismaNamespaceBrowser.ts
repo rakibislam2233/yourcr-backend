@@ -51,10 +51,7 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User',
-  Otp: 'Otp',
-  RefreshToken: 'RefreshToken',
-  FileUpload: 'FileUpload'
+
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -71,88 +68,4 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  phone: 'phone',
-  password: 'password',
-  name: 'name',
-  avatar: 'avatar',
-  isVerified: 'isVerified',
-  isActive: 'isActive',
-  lastLogin: 'lastLogin',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const OtpScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  code: 'code',
-  type: 'type',
-  expiresAt: 'expiresAt',
-  isUsed: 'isUsed',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type OtpScalarFieldEnum = (typeof OtpScalarFieldEnum)[keyof typeof OtpScalarFieldEnum]
-
-
-export const RefreshTokenScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  token: 'token',
-  expiresAt: 'expiresAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
-
-
-export const FileUploadScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  filename: 'filename',
-  originalName: 'originalName',
-  mimetype: 'mimetype',
-  size: 'size',
-  url: 'url',
-  publicId: 'publicId',
-  folder: 'folder',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type FileUploadScalarFieldEnum = (typeof FileUploadScalarFieldEnum)[keyof typeof FileUploadScalarFieldEnum]
-
-
-export const SortOrder = {
-  asc: 'asc',
-  desc: 'desc'
-} as const
-
-export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-export const QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-} as const
-
-export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

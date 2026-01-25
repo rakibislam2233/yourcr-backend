@@ -1,3 +1,4 @@
+//=============================== User related enum ==================//
 enum UserStatus {
     ACTIVE
     INACTIVE
@@ -10,4 +11,24 @@ enum UserRole {
     ADMIN
     CR
     STUDENT
+}
+
+//============================= Institution Model ====================/
+
+enum InstitutionType {
+    COLLEGE
+    POLYTECHNIC
+    UNIVERSITY
+}
+
+//============================ CRRegistration  Model Related enum ==============//
+enum CRRegistrationStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum SessionType {
+    SEMESTER
+    YEAR
 }

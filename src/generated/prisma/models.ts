@@ -8,8 +8,4 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User'
-export type * from './models/Otp'
-export type * from './models/RefreshToken'
-export type * from './models/FileUpload'
 export type * from './commonInputTypes'
