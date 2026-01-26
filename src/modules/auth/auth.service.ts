@@ -19,7 +19,8 @@ import {
 import { UserRepository } from '../user/user.repository';
 import { hashPassword } from '../../utils/bcrypt.utils';
 import { OtpService } from '../otp/otp.service';
-import { OtpType } from '../otp/otp.interface';
+import { IOtpSession, OtpType } from '../otp/otp.interface';
+import { AUTH_CACHE_KEY } from './auth.cache';
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
@@ -176,44 +177,37 @@ const login = async (payload: ILoginPayload) => {
  */
 const verifyOtp = async (payload: IVerifyOtpPayload) => {
   const { sessionId, code } = payload;
-  const key = `otp:${sessionId}`;
 
-  const storedData: any = await RedisUtils.getCache(key);
-  if (!storedData) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'OTP expired or invalid session');
+  const otpResponse = await OtpService.verifyOtpSession(sessionId, code);
+
+  // check if user exists
+  const user = await UserRepository.getUserByEmail(otpResponse.email);
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  if (storedData.otp !== code) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid OTP code');
-  }
-
-  if (storedData.type === 'VERIFY_EMAIL') {
+  if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
     const user = await prisma.user.update({
-      where: { email: storedData.email },
+      where: { email: otpResponse.email },
       data: { isEmailVerified: true },
     });
 
-    await RedisUtils.deleteCache(key);
-
-    const accessToken = jwtHelper.generateAccessToken(user.id, user.email, user.role);
-    const refreshToken = jwtHelper.generateRefreshToken(user.id, user.email, user.role);
+    await RedisUtils.deleteCache(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
 
     return {
       message: 'Email verified successfully',
       data: {
-        user: { id: user.id, email: user.email, role: user.role },
-        tokens: { accessToken, refreshToken },
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
       },
     };
   }
 
-  if (storedData.type === 'RESET_PASSWORD') {
-    const user = await prisma.user.findUnique({ where: { email: storedData.email } });
+  if (otpResponse.type === OtpType.RESET_PASSWORD) {
+    const user = await prisma.user.findUnique({ where: { email: otpResponse.email } });
     if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-
     const resetToken = jwtHelper.generateResetPasswordToken(user.id, user.email, user.role);
-    await RedisUtils.deleteCache(key);
-
+    await RedisUtils.deleteCache(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
     return {
       message: 'OTP verified. You can now reset your password.',
       data: { resetToken },

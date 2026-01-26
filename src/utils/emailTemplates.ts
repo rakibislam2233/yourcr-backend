@@ -12,154 +12,229 @@ const generateProfessionalEmailTemplate = (
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
   <title>${title}</title>
   <style>
-    :root {
-      --bg: #f8fafc;
-      --text: #0f172a;
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --card: #ffffff;
-      --border: #e2e8f0;
-      --muted: #64748b;
-    }
-    [data-scheme="dark"] {
-      --bg: #0f172a;
-      --text: #f1f5f9;
-      --card: #1e293b;
-      --border: #334155;
-      --muted: #94a3b8;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg);
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      color: var(--text);
-      line-height: 1.6;
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      color: #333333; 
+      line-height: 1.6; 
     }
     table { border-collapse: collapse; }
-    .container {
-      max-width: 600px;
-      margin: 32px auto;
-      background-color: var(--card);
-      border: 1px solid var(--border);
+    .container { 
+      max-width: 600px; 
+      margin: 30px auto; 
+      background-color: #F9F9F9; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
+    }
+    .header { 
+      background: #F9F9F9;
+      padding: 40px 30px; 
+      text-align: center; 
+      border-bottom: 3px solid #65C257;
+    }
+    .header img { 
+      max-width: 200px; 
+      height: auto; 
       border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
     }
-    .logo {
-      text-align: center;
-      padding: 32px 20px 24px;
-      border-bottom: 1px solid var(--border);
+    .header h1 {
+      color: #1e293b;
+      font-size: 28px;
+      margin: 15px 0 0 0;
+      font-weight: 700;
     }
-    .logo img { max-width: 160px; height: auto; }
-    .content {
-      padding: 40px 32px;
-      font-size: 16px;
+    .content { 
+      padding: 45px 40px; 
+      font-size: 15px; 
+      background-color: #F9F9F9;
     }
-    .content h1, .content h2 {
-      color: var(--primary);
-      margin: 0 0 20px;
-      font-weight: 600;
+    .content h2 { 
+      color: #65C257; 
+      font-size: 24px; 
+      margin: 0 0 20px 0; 
+      font-weight: 700; 
     }
-    .content h1 { font-size: 26px; }
-    .content h2 { font-size: 22px; }
-    .content p { margin: 0 0 20px; }
-    .otp-code {
-      font-family: 'Courier New', monospace;
-      font-size: 36px;
-      font-weight: bold;
-      letter-spacing: 10px;
-      color: var(--primary);
-      text-align: center;
-      padding: 24px;
-      background: rgba(37,99,235,0.08);
-      border: 2px dashed var(--primary);
-      border-radius: 12px;
-      margin: 28px 0;
+    .content p { 
+      margin: 0 0 16px; 
+      color: #4b5563;
+    }
+    .otp-code { 
+      font-family: 'Courier New', Courier, monospace; 
+      font-size: 36px; 
+      font-weight: bold; 
+      letter-spacing: 10px; 
+      color: #ffffff; 
+      text-align: center; 
+      padding: 25px; 
+      background: #65C257;
+      border-radius: 10px; 
+      margin: 30px 0; 
+      box-shadow: 0 4px 15px rgba(0, 214, 92, 0.3);
     }
     .highlight-box {
-      background: rgba(37,99,235,0.05);
-      border-left: 5px solid var(--primary);
-      padding: 24px;
-      margin: 28px 0;
-      border-radius: 0 8px 8px 0;
+      background: #F9F9F9;
+      border-left: 4px solid #65C257; 
+      padding: 25px; 
+      margin: 25px 0; 
+      border-radius: 0 8px 8px 0; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .btn {
-      display: inline-block;
-      background-color: var(--primary);
-      color: white !important;
-      font-weight: 600;
-      padding: 14px 32px;
+    .highlight-box ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .highlight-box li {
+      margin: 8px 0;
+      color: #4b5563;
+    }
+    .credentials-table {
+      width: 100%;
+      border: 1px solid #e5e7eb;
       border-radius: 8px;
+      overflow: hidden;
+      margin: 25px 0;
+      font-size: 15px;
+    }
+    .credentials-table td {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .credentials-table tr:last-child td {
+      border-bottom: none;
+    }
+    .credentials-table td:first-child {
+      background-color: #f9fafb;
+      font-weight: 600;
+      width: 40%;
+      color: #374151;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .status-completed {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #65C257;
+      color: #ffffff;
       text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
       margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(0, 214, 92, 0.3);
+      transition: transform 0.2s;
     }
-    .btn:hover { background-color: var(--primary-dark); }
     .footer {
-      background: rgba(0,0,0,0.03);
-      padding: 32px 40px;
+      background: #F9F9F9;
+      padding: 35px 40px;
       text-align: center;
-      font-size: 14px;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: #94a3b8;
     }
-    .footer a { color: var(--primary); text-decoration: none; }
-    .footer a:hover { text-decoration: underline; }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f172a;
-        --text: #f1f5f9;
-        --card: #1e293b;
-        --border: #334155;
-        --muted: #94a3b8;
-      }
-      .otp-code { background: rgba(37,99,235,0.15); }
-      .highlight-box { background: rgba(37,99,235,0.12); }
-      .btn { color: white !important; }
+    .footer strong {
+      color: #65C257;
+      font-size: 16px;
+    }
+    .footer a { 
+      color: #65C257; 
+      text-decoration: none; 
+      font-weight: 500;
+    }
+    .footer a:hover { 
+      text-decoration: underline; 
+    }
+    .footer-tagline {
+      color: #64748b;
+      font-style: italic;
+      margin-top: 15px;
+      font-size: 14px;
     }
     @media (max-width: 600px) {
-      .container { margin: 16px !important; border-radius: 0; }
-      .content, .logo, .footer { padding: 24px !important; }
-      .otp-code { font-size: 30px; letter-spacing: 6px; }
+      .container { 
+        margin: 10px !important; 
+        border-radius: 8px !important; 
+      }
+      .header, .content, .footer { 
+        padding: 25px 20px !important; 
+      }
+      .otp-code { 
+        font-size: 28px !important; 
+        letter-spacing: 6px !important; 
+        padding: 20px !important;
+      }
+      .header h1 {
+        font-size: 22px !important;
+      }
     }
   </style>
 </head>
 <body>
-  ${preheader ? `<div style="display:none;font-size:0;color:transparent;line-height:0;max-height:0;">${preheader}</div>` : ''}
+  ${
+    preheader
+      ? `<div style="display:none;font-size:1px;color:#0f172a;line-height:1px;max-height:0;overflow:hidden;">${preheader}</div>`
+      : ''
+  }
+
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
-      <td align="center" style="background:var(--bg);">
+      <td align="center" style="padding: 20px 0;">
         <table class="container" role="presentation">
-          <!-- Logo -->
+          <!-- Header -->
           <tr>
-            <td class="logo">
-              <img src="https://i.ibb.co/YOUR-LOGO-HERE/your-cr-logo.png" alt="Your CR Logo" />
+            <td class="header">
+              <img src="https://i.ibb.co.com/dwnFctfX/logo.webp" alt="Easy Bet" />
             </td>
           </tr>
-          <!-- Content -->
+
+          <!-- Main Content -->
           <tr>
             <td class="content">
               ${content}
             </td>
           </tr>
+
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="margin:0 0 12px;">
-                <strong>Your CR</strong> — Class Representative Platform<br>
-                <a href="mailto:support@yourcr.app">support@yourcr.app</a>
+              <p style="margin: 0 0 10px;">
+                <strong>Easy Bet</strong>
               </p>
-              <p style="margin:16px 0 0; font-size:13px;">
-                © ${new Date().getFullYear()} Your CR. All rights reserved.<br>
-                Empowering Class Representatives & Students
+              <p style="margin: 0 0 8px;">
+                Email: <a href="mailto:support@easybet.com">support@easybet.com</a><br>
+                Website: <a href="https://www.easybet.com">www.easybet.com</a>
+              </p>
+              <p style="margin: 25px 0 0; color: #64748b; font-size: 12px;">
+                © ${new Date().getFullYear()} Easy Bet. All rights reserved.
               </p>
             </td>
           </tr>
+
         </table>
       </td>
     </tr>
@@ -169,18 +244,17 @@ const generateProfessionalEmailTemplate = (
   `;
 };
 
-const generateOTPSection = (otp: string, minutes: number = 15) => `
-  <p style="text-align:center; font-size:15px; margin-bottom:12px;">Your verification code:</p>
+const generateOTPSection = (otp: string, minutes: number = 30) => `
+  <p>Please enter the following verification code to proceed:</p>
   <div class="otp-code">${otp}</div>
-  <p style="text-align:center; color:var(--muted); font-size:14px;">
-    This code will expire in ${minutes} minutes.
+  <p style="text-align: center; color: #6b7280; font-size: 14px;">
+    ⏱️ This code will expire in <strong>${minutes} minutes</strong>
   </p>
 `;
 
 const generateHighlightBox = (html: string) => `
   <div class="highlight-box">${html}</div>
 `;
-
 const generateButton = (text: string, url: string) => `
   <div style="text-align:center; margin:32px 0;">
     <a href="${url}" class="btn" target="_blank">${text}</a>

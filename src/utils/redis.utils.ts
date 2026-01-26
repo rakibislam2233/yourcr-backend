@@ -4,12 +4,10 @@ import colors from 'colors';
 // Generic type for cached data
 type CachedData<T> = T | null;
 
-const setCache = async <T>(key: string, value: T, ttlMs?: number): Promise<void> => {
+const setCache = async <T>(key: string, value: T, ttlSeconds?: number): Promise<void> => {
   try {
     const serialized = JSON.stringify(value);
-    if (ttlMs) {
-      // Convert milliseconds to seconds for Redis
-      const ttlSeconds = Math.floor(ttlMs / 1000);
+    if (ttlSeconds) {
       await redisClient.setex(key, ttlSeconds, serialized);
     } else {
       await redisClient.set(key, serialized);
@@ -88,11 +86,10 @@ const incrementCounter = async (key: string, amount: number = 1): Promise<number
   }
 };
 
-const setCacheNX = async <T>(key: string, value: T, ttlMs?: number): Promise<boolean> => {
+const setCacheNX = async <T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> => {
   try {
     const serialized = JSON.stringify(value);
-    if (ttlMs) {
-      const ttlSeconds = Math.floor(ttlMs / 1000);
+    if (ttlSeconds) {
       const result = await redisClient.set(key, serialized, 'EX', ttlSeconds, 'NX');
       return result === 'OK';
     } else {
@@ -135,7 +132,6 @@ const getKeysByPattern = async (pattern: string): Promise<string[]> => {
   }
 };
 
-// Hash operations remain unchanged
 const hashOperations = {
   setHash: async <T>(key: string, field: string, value: T): Promise<void> => {
     try {

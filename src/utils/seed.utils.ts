@@ -1,7 +1,8 @@
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserStatus } from '@prisma/client';
 import { prisma } from '../config/database.config';
 import { hashPassword } from './bcrypt.utils';
 import logger from './logger';
+import { UserRole } from '../shared/enum/user.enum';
 
 // Seed initial data
 export const seedDatabase = async (): Promise<void> => {

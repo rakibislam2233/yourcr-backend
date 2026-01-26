@@ -8,7 +8,7 @@ export const AUTH_CACHE_KEY = {
 };
 
 export const AUTH_CACHE_TTL = {
-  OTP_SESSION: 30 * 60 * 1000, // 30 minutes
-  RESET_PASSWORD_TOKEN: 60 * 60 * 1000, // 1hour
-  REFRESH_TOKEN: 7 * 24 * 60 * 60 * 1000, // 7day
+  OTP_SESSION: 30 * 60, // 30 minutes (1800 seconds)
+  RESET_PASSWORD_TOKEN: 60 * 60, // 1 hour (3600 seconds)
+  REFRESH_TOKEN: 7 * 24 * 60 * 60, // 7 days (604800 seconds)
 };
