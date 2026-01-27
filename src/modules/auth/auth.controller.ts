@@ -3,6 +3,7 @@ import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import { AuthService } from './auth.service';
 import sendResponse from '../../utils/sendResponse';
+import ApiError from '../../utils/ApiError';
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.register(req.body);
@@ -83,6 +84,9 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
+  if (!userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
+  }
   const result = await AuthService.changePassword(userId, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
