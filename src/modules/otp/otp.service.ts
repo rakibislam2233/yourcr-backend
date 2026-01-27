@@ -42,28 +42,28 @@ const createOtpSession = async (user: IUserPayload, type: OtpType): Promise<stri
 };
 
 const verifyOtpSession = async (sessionId: string, code: string) => {
-  const sessionData = await RedisUtils.getCache<IOtpSession>(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
+  const sessionKey = AUTH_CACHE_KEY.OTP_SESSION(sessionId);
+  const sessionData = await RedisUtils.getCache<IOtpSession>(sessionKey);
 
   if (!sessionData) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid session');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid or expired session');
   }
 
   // Max attempts reached
   if (sessionData.attempts >= 5) {
-    await RedisUtils.deleteCache(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
+    await RedisUtils.deleteCache(sessionKey);
     throw new ApiError(StatusCodes.TOO_MANY_REQUESTS, 'Too many attempts. Please try again later.');
   }
 
   // Code mismatch
   if (sessionData.code !== code) {
     sessionData.attempts += 1;
-    await RedisUtils.setCache(
-      AUTH_CACHE_KEY.OTP_SESSION(sessionId),
-      sessionData,
-      AUTH_CACHE_TTL.OTP_SESSION
-    );
+    await RedisUtils.setCache(sessionKey, sessionData, AUTH_CACHE_TTL.OTP_SESSION);
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid OTP code');
   }
+
+  // On success, delete the session and return data
+  await RedisUtils.deleteCache(sessionKey);
 
   return {
     email: sessionData.email,
@@ -73,18 +73,19 @@ const verifyOtpSession = async (sessionId: string, code: string) => {
 };
 
 const resendOtpSession = async (sessionId: string) => {
-  const sessionData = await RedisUtils.getCache<IOtpSession>(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
+  const sessionKey = AUTH_CACHE_KEY.OTP_SESSION(sessionId);
+  const sessionData = await RedisUtils.getCache<IOtpSession>(sessionKey);
 
   if (!sessionData) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid session');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid or expired session');
   }
 
-  // Throttle check (1 minute)
+  // Throttle check
   const timeSinceCreation = Date.now() - new Date(sessionData.createdAt).getTime();
-  const COOLDOWN_PERIOD = 60 * 1000;
+  const cooldownMs = AUTH_CACHE_TTL.OTP_RESEND_COOLDOWN * 1000;
 
-  if (timeSinceCreation < COOLDOWN_PERIOD) {
-    const remainingSeconds = Math.ceil((COOLDOWN_PERIOD - timeSinceCreation) / 1000);
+  if (timeSinceCreation < cooldownMs) {
+    const remainingSeconds = Math.ceil((cooldownMs - timeSinceCreation) / 1000);
     throw new ApiError(
       StatusCodes.TOO_MANY_REQUESTS,
       `Please wait ${remainingSeconds} seconds before requesting a new OTP.`
@@ -97,11 +98,7 @@ const resendOtpSession = async (sessionId: string) => {
   sessionData.attempts = 0;
   sessionData.createdAt = new Date();
 
-  await RedisUtils.setCache(
-    AUTH_CACHE_KEY.OTP_SESSION(sessionId),
-    sessionData,
-    AUTH_CACHE_TTL.OTP_SESSION
-  );
+  await RedisUtils.setCache(sessionKey, sessionData, AUTH_CACHE_TTL.OTP_SESSION);
 
   // Trigger Email
   if (sessionData.type === OtpType.EMAIL_VERIFICATION) {

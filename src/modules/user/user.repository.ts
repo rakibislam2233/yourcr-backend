@@ -20,6 +20,18 @@ const getUserByEmail = async (email: string) => {
   });
 };
 
+const findUserByEmailWithLatestCr = async (email: string) => {
+  return await database.user.findUnique({
+    where: { email },
+    include: {
+      crRegistrations: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+  });
+};
+
 const isEmailExists = async (email: string) => {
   const user = await database.user.findUnique({
     where: { email },
@@ -28,8 +40,18 @@ const isEmailExists = async (email: string) => {
   return !!user;
 };
 
+const setUserEmailVerified = async (email: string) => {
+  return await database.user.update({
+    where: { email },
+    data: { isEmailVerified: true },
+  });
+};
+
 export const UserRepository = {
   createCR,
   getUserByEmail,
   isEmailExists,
+  getUserById,
+  findUserByEmailWithLatestCr,
+  setUserEmailVerified,
 };

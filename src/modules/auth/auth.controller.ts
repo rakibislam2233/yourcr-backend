@@ -49,6 +49,7 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: result.message,
+    data: result.data,
   });
 });
 

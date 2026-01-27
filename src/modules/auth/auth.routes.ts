@@ -2,27 +2,58 @@ import { Router } from 'express';
 import validateRequest from '../../middleware/validation.middleware';
 import { AuthValidations } from './auth.validation';
 import { AuthController } from './auth.controller';
+import {
+  registerRateLimiter,
+  loginRateLimiter,
+  verifyOtpRateLimiter,
+  resendOtpRateLimiter,
+  forgotPasswordRateLimiter,
+  resetPasswordRateLimiter,
+  refreshTokenRateLimiter,
+} from '../../middleware/rate-limit.middleware';
 
 const router = Router();
 
 // Register user
-router.post('/register', validateRequest(AuthValidations.register), AuthController.register);
+router.post(
+  '/register',
+  registerRateLimiter,
+  validateRequest(AuthValidations.register),
+  AuthController.register
+);
 
 // Login user
-router.post('/login', validateRequest(AuthValidations.login), AuthController.login);
+router.post(
+  '/login',
+  loginRateLimiter,
+  validateRequest(AuthValidations.login),
+  AuthController.login
+);
 
 // OTP Verification
-router.post('/verify-otp', validateRequest(AuthValidations.verifyOTP), AuthController.verifyOtp);
-router.post('/resend-otp', validateRequest(AuthValidations.resendOtp), AuthController.resendOtp);
+router.post(
+  '/verify-otp',
+  verifyOtpRateLimiter,
+  validateRequest(AuthValidations.verifyOTP),
+  AuthController.verifyOtp
+);
+router.post(
+  '/resend-otp',
+  resendOtpRateLimiter,
+  validateRequest(AuthValidations.resendOtp),
+  AuthController.resendOtp
+);
 
 // Password Management
 router.post(
   '/forgot-password',
+  forgotPasswordRateLimiter,
   validateRequest(AuthValidations.forgotPassword),
   AuthController.forgotPassword
 );
 router.post(
   '/reset-password',
+  resetPasswordRateLimiter,
   validateRequest(AuthValidations.resetPassword),
   AuthController.resetPassword
 );
@@ -30,6 +61,7 @@ router.post(
 // Token Management
 router.post(
   '/refresh-token',
+  refreshTokenRateLimiter,
   validateRequest(AuthValidations.refreshToken),
   AuthController.refreshToken
 );

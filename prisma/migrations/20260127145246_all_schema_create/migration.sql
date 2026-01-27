@@ -14,7 +14,7 @@ CREATE TYPE "CRRegistrationStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE "SessionType" AS ENUM ('SEMESTER', 'YEAR');
 
 -- CreateTable
-CREATE TABLE "CRRegistration" (
+CREATE TABLE "cr_registrations" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "institutionId" TEXT NOT NULL,
@@ -27,11 +27,11 @@ CREATE TABLE "CRRegistration" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "CRRegistration_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "cr_registrations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Address" (
+CREATE TABLE "addresses" (
     "id" TEXT NOT NULL,
     "street" TEXT,
     "city" TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE "Address" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "addresses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -62,7 +62,7 @@ CREATE TABLE "institutions" (
 );
 
 -- CreateTable
-CREATE TABLE "Session" (
+CREATE TABLE "sessions" (
     "id" TEXT NOT NULL,
     "institutionId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE "Session" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -104,22 +104,22 @@ CREATE TABLE "users" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
-ALTER TABLE "CRRegistration" ADD CONSTRAINT "CRRegistration_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "cr_registrations" ADD CONSTRAINT "cr_registrations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CRRegistration" ADD CONSTRAINT "CRRegistration_institutionId_fkey" FOREIGN KEY ("institutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "cr_registrations" ADD CONSTRAINT "cr_registrations_institutionId_fkey" FOREIGN KEY ("institutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CRRegistration" ADD CONSTRAINT "CRRegistration_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "Session"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "cr_registrations" ADD CONSTRAINT "cr_registrations_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "sessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CRRegistration" ADD CONSTRAINT "CRRegistration_reviewedById_fkey" FOREIGN KEY ("reviewedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "cr_registrations" ADD CONSTRAINT "cr_registrations_reviewedById_fkey" FOREIGN KEY ("reviewedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "institutions" ADD CONSTRAINT "institutions_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "Address"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "institutions" ADD CONSTRAINT "institutions_addressId_fkey" FOREIGN KEY ("addressId") REFERENCES "addresses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_institutionId_fkey" FOREIGN KEY ("institutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_institutionId_fkey" FOREIGN KEY ("institutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_crId_fkey" FOREIGN KEY ("crId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_crId_fkey" FOREIGN KEY ("crId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
