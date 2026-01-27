@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
-import { prisma } from '../../config/database.config';
+import { database } from '../../config/database.config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await prisma.user.findMany({
+  const users = await database.user.findMany({
     select: {
       id: true,
       fullName: true,
@@ -34,7 +34,7 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
 
-  const user = await prisma.user.findUnique({
+  const user = await database.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -68,7 +68,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
   const updateData = req.body;
 
   // Check if user exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await database.user.findUnique({
     where: { id: userId },
   });
 
@@ -79,7 +79,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
   // Prevent updating email and password through this endpoint
   const { email, password, ...allowedUpdates } = updateData;
 
-  const user = await prisma.user.update({
+  const user = await database.user.update({
     where: { id: userId },
     data: allowedUpdates,
     select: {
@@ -108,7 +108,7 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const userId = Array.isArray(id) ? id[0] : id;
 
   // Check if user exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await database.user.findUnique({
     where: { id: userId },
   });
 
@@ -116,7 +116,7 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not found');
   }
 
-  await prisma.user.delete({
+  await database.user.delete({
     where: { id: userId },
   });
 

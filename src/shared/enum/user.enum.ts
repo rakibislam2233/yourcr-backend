@@ -4,3 +4,9 @@ export enum UserRole {
   CR = 'CR',
   STUDENT = 'STUDENT',
 }
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+}

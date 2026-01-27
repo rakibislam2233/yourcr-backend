@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import otpGenerator from 'otp-generator';
 import config from '../../config';
-import { prisma } from '../../config/database.config';
+import { database } from '../../config/database.config';
 import { addEmailToQueue } from '../../queues/email.queue';
 import ApiError from '../../utils/ApiError';
 import * as jwtHelper from '../../utils/jwt.utils';
@@ -19,7 +19,7 @@ import {
 import { UserRepository } from '../user/user.repository';
 import { hashPassword } from '../../utils/bcrypt.utils';
 import { OtpService } from '../otp/otp.service';
-import { IOtpSession, OtpType } from '../otp/otp.interface';
+import { OtpType } from '../otp/otp.interface';
 import { AUTH_CACHE_KEY } from './auth.cache';
 
 // --- Register ---
@@ -72,7 +72,7 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 2. Check user
-  const user = await prisma.user.findUnique({
+  const user = await database.user.findUnique({
     where: { email },
     include: {
       crRegistrations: {
@@ -187,7 +187,7 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
   }
 
   if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
-    const user = await prisma.user.update({
+    const user = await database.user.update({
       where: { email: otpResponse.email },
       data: { isEmailVerified: true },
     });
@@ -204,7 +204,7 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
   }
 
   if (otpResponse.type === OtpType.RESET_PASSWORD) {
-    const user = await prisma.user.findUnique({ where: { email: otpResponse.email } });
+    const user = await database.user.findUnique({ where: { email: otpResponse.email } });
     if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
     const resetToken = jwtHelper.generateResetPasswordToken(user.id, user.email, user.role);
     await RedisUtils.deleteCache(AUTH_CACHE_KEY.OTP_SESSION(sessionId));
@@ -259,7 +259,7 @@ const resendOtp = async (payload: IResendOtpPayload) => {
  */
 const forgotPassword = async (payload: IForgotPasswordPayload) => {
   const { email } = payload;
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await database.user.findUnique({ where: { email } });
 
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No user found with this email');
@@ -295,7 +295,7 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 
   const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
 
-  await prisma.user.update({
+  await database.user.update({
     where: { id: decoded.userId },
     data: { password: hashedPassword },
   });
@@ -314,7 +314,7 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token');
   }
 
-  const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+  const user = await database.user.findUnique({ where: { id: decoded.userId } });
   if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
   const accessToken = jwtHelper.generateAccessToken(user.id, user.email, user.role);
@@ -328,7 +328,7 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
  * Extra: Admin approve user (to allow login)
  */
 export const approveUser = async (userId: string) => {
-  const updated = await prisma.$transaction(async tx => {
+  const updated = await database.$transaction(async tx => {
     const registration = await tx.cRRegistration.findFirst({
       where: { userId, status: 'PENDING' },
       orderBy: { createdAt: 'desc' },

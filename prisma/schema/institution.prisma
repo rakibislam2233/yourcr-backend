@@ -8,6 +8,8 @@ model Address {
     createdAt    DateTime      @default(now())
     updatedAt    DateTime      @updatedAt
     institutions Institution[]
+
+    @@map("addresses")
 }
 
 model Institution {

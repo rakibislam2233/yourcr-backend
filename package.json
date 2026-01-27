@@ -1,9 +1,10 @@
 {
   "name": "yourcr-backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
@@ -50,6 +51,7 @@
     "pg": "^8.17.2",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.3",
+    "tsx": "^4.21.0",
     "uuid": "^13.0.0",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",

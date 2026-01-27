@@ -1,8 +1,7 @@
-import { UserStatus } from '@prisma/client';
-import { prisma } from '../config/database.config';
+import { database } from '../config/database.config';
 import { hashPassword } from './bcrypt.utils';
 import logger from './logger';
-import { UserRole } from '../shared/enum/user.enum';
+import { UserRole, UserStatus } from '../shared/enum/user.enum';
 
 // Seed initial data
 export const seedDatabase = async (): Promise<void> => {
@@ -27,14 +26,14 @@ export const seedDatabase = async (): Promise<void> => {
 
 // Seed admin user
 export const seedAdminUser = async (): Promise<void> => {
-  const adminExists = await prisma.user.findUnique({
+  const adminExists = await database.user.findUnique({
     where: { email: 'admin@example.com' },
   });
 
   if (!adminExists) {
     const hashedPassword = await hashPassword('admin123');
 
-    await prisma.user.create({
+    await database.user.create({
       data: {
         fullName: 'Admin User',
         email: 'admin@example.com',
@@ -68,7 +67,7 @@ export const seedSettings = async (): Promise<void> => {
 export const clearDatabase = async (): Promise<void> => {
   try {
     logger.warn('🗑️  Clearing database...');
-    await prisma.user.deleteMany();
+    await database.user.deleteMany();
 
     logger.info('✅ Database cleared successfully');
   } catch (error) {
@@ -83,7 +82,7 @@ export const resetDatabase = async (): Promise<void> => {
   await seedDatabase();
 };
 
-// Close Prisma connection
-export const closePrisma = async (): Promise<void> => {
-  await prisma.$disconnect();
+// Close database connection
+export const closedatabase = async (): Promise<void> => {
+  await database.$disconnect();
 };

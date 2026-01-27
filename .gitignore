@@ -5,6 +5,4 @@ dist
 /logs
 .env
 .claude
-/generated/prisma
-
-/generated/prisma
+/prisma/generated/

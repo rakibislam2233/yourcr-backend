@@ -49,11 +49,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Export config
- const config = {
+const config = {
   // Environment
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '8082', 10),
-  socketPort: parseInt(process.env.SOCKET || '8082', 10),
 
   // Database
   database: {
@@ -95,7 +94,6 @@ if (process.env.NODE_ENV === 'development') {
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
   },
 
-
   // Email
   email: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -114,11 +112,8 @@ if (process.env.NODE_ENV === 'development') {
   // Backend
   backend: {
     ip: process.env.BACKEND_IP || '0.0.0.0',
-    baseUrl:
-      process.env.BACKEND_BASE_URL ||
-      `http://${process.env.BACKEND_IP || 'localhost'}:${process.env.PORT || '8082'}`,
+    baseUrl: `http://${process.env.BACKEND_IP || 'localhost'}:${process.env.PORT || '8082'}`,
   },
-
 
   // Cloudinary
   cloudinary: {
@@ -126,8 +121,6 @@ if (process.env.NODE_ENV === 'development') {
     apiKey: process.env.CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
-
-
 
   // CORS
   cors: {
