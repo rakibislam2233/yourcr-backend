@@ -112,7 +112,6 @@ export const createRateLimiter = (prefix: string, config: RateLimitConfig) => {
           message,
           retryAfter: limitInfo.resetTime.toISOString(),
           timestamp: new Date().toISOString(),
-          path: req.originalUrl,
         });
       }
 
@@ -223,7 +222,7 @@ export const resendOtpRateLimiter = createRateLimiter('resend-otp', {
 //forgot password rate limiter
 export const forgotPasswordRateLimiter = createRateLimiter('forgot-password', {
   windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 100, //default 5 but i am set for development mode 100
+  maxRequests: 5, //default 5 but i am set for development mode 100
   message: 'Too many forgot password requests. Please try again after 1 hour.',
 });
 
@@ -315,4 +314,3 @@ export const rateLimiters = {
   heavyOperationRateLimiter,
   burstProtectionLimiter,
 };
-

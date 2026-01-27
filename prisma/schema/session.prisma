@@ -1,5 +1,5 @@
 model Session {
-    id            String      @id @default(uuid())
+    id            String      @id @default(cuid())
     institutionId String
     institution   Institution @relation(fields: [institutionId], references: [id])
     name          String

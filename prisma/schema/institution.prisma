@@ -1,5 +1,5 @@
 model Address {
-    id           String        @id @default(uuid())
+    id           String        @id @default(cuid())
     street       String?
     city         String?
     district     String
@@ -13,7 +13,7 @@ model Address {
 }
 
 model Institution {
-    id              String           @id @default(uuid())
+    id              String           @id @default(cuid())
     name            String
     type            InstitutionType
     logo            String?
