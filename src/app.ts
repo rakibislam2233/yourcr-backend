@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import path from 'path';
 import config from './config';
+import { generalApiRateLimiter } from './middleware/rate-limit.middleware';
 import globalErrorHandler from './middleware/error.middleware';
 import notFound from './middleware/not-found.middleware';
 import version1Routes from './routes/v1';
@@ -296,6 +297,9 @@ app.use(getHppConfig());
 
 // Security logging middleware
 app.use(getSecurityLoggingMiddleware());
+
+// General API rate limiting
+app.use(generalApiRateLimiter);
 
 // Main API routes
 app.use('/api/v1', version1Routes);
