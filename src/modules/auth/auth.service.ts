@@ -7,8 +7,10 @@ import ApiError from '../../utils/ApiError';
 import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
 import {
+  IChangePasswordPayload,
   IForgotPasswordPayload,
   ILoginPayload,
+  ILogoutPayload,
   IRefreshTokenPayload,
   IRegisterPayload,
   IResendOtpPayload,
@@ -102,7 +104,6 @@ const login = async (payload: ILoginPayload) => {
 
   // 4. Successful match - clear attempts
   await RedisUtils.deleteCache(attemptKey);
-
 
   // 6. Check Email Verification
   if (!user.isEmailVerified) {
@@ -243,6 +244,35 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
   };
 };
 
+// --- Logout ---
+const logout = async (payload: ILogoutPayload) => {
+  const decoded = jwtHelper.verifyRefreshToken(payload.refreshToken);
+  await RedisUtils.deleteCache(AUTH_CACHE_KEY.REFRESH_TOKEN(decoded.userId));
+  return { message: 'Logged out successfully' };
+};
+
+// --- Change Password ---
+const changePassword = async (userId: string, payload: IChangePasswordPayload) => {
+  const { oldPassword, newPassword } = payload;
+  // 1. Get user
+  const user = await UserRepository.getUserById(userId);
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+
+  // 2. Verify old password
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+  if (!isMatch) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Old password is incorrect');
+  }
+  // 3. Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, config.bcrypt.saltRounds);
+  // 4. Update password
+  await database.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
+  return { message: 'Password changed successfully' };
+};
+
 export const AuthService = {
   register,
   login,
@@ -251,4 +281,6 @@ export const AuthService = {
   resendOtp,
   resetPassword,
   refreshToken,
+  logout,
+  changePassword,
 };

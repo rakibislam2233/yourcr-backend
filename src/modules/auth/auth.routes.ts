@@ -11,6 +11,8 @@ import {
   resetPasswordRateLimiter,
   refreshTokenRateLimiter,
 } from '../../middleware/rate-limit.middleware';
+import { auth } from '../../middleware/auth.middleware';
+import { UserRole } from '../../shared/enum/user.enum';
 
 const router = Router();
 
@@ -64,6 +66,15 @@ router.post(
   refreshTokenRateLimiter,
   validateRequest(AuthValidations.refreshToken),
   AuthController.refreshToken
+);
+
+router.post('/logout', validateRequest(AuthValidations.logout), AuthController.logout);
+
+router.post(
+  '/change-password',
+  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(AuthValidations.changePassword),
+  AuthController.changePassword
 );
 
 export const AuthRoutes = router;

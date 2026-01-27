@@ -72,6 +72,24 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.logout(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+  });
+});
+
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user;
+  const result = await AuthService.changePassword(userId, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+  });
+});
 export const AuthController = {
   register,
   login,
@@ -80,4 +98,6 @@ export const AuthController = {
   forgotPassword,
   resetPassword,
   refreshToken,
+  logout,
+  changePassword,
 };
