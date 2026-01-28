@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import config from '../../config';
 import { database } from '../../config/database.config';
-import { addEmailToQueue } from '../../queues/email.queue';
 import ApiError from '../../utils/ApiError';
 import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
@@ -22,6 +21,7 @@ import { hashPassword } from '../../utils/bcrypt.utils';
 import { OtpService } from '../otp/otp.service';
 import { OtpType } from '../otp/otp.interface';
 import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
+import { UserRole } from '../../shared/enum/user.enum';
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
@@ -37,7 +37,7 @@ const register = async (payload: IRegisterPayload) => {
   const hashedPassword = await hashPassword(password);
 
   //3. Create user
-  const result = await UserRepository.createCR({
+  const result = await UserRepository.createAccount({
     fullName,
     email,
     phoneNumber,
@@ -118,7 +118,37 @@ const login = async (payload: ILoginPayload) => {
     };
   }
 
-  // 7. Generate tokens
+  // 7. Check CR Registration Status
+  if (user.role === UserRole.STUDENT && user.isCrDetailsSubmitted && !user.isCrApproved) {
+    // Student has submitted CR details but not yet approved
+    return {
+      message: 'CR details submitted. Awaiting admin approval.',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          fullName: user.fullName,
+          isCrDetailsSubmitted: user.isCrDetailsSubmitted,
+          isCrApproved: user.isCrApproved,
+        },
+        redirect: '/cr-registration/pending', // Frontend should redirect to pending page
+      },
+    };
+  }
+
+  if (user.role === UserRole.STUDENT && user.isCrDetailsSubmitted && user.isCrApproved) {
+    // Update role to CR if approved
+    await database.user.update({
+      where: { id: user.id },
+      data: { role: UserRole.CR },
+    });
+    // Refresh user data
+    await UserRepository.updateUserById(user.id, { role: UserRole.CR });
+    user.role = UserRole.CR;
+  }
+
+  // 8. Generate tokens
   const accessToken = jwtHelper.generateAccessToken(user.id, user.email, user.role);
   const refreshToken = jwtHelper.generateRefreshToken(user.id, user.email, user.role);
 

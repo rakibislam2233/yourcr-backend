@@ -1,7 +1,7 @@
 import { database } from '../../config/database.config';
-import { ICreateCRPayload } from './user.interface';
+import { ICreateAccountPayload } from './user.interface';
 
-const createCR = async (payload: ICreateCRPayload) => {
+const createAccount = async (payload: ICreateAccountPayload) => {
   const user = await database.user.create({
     data: payload,
   });
@@ -32,6 +32,13 @@ const findUserByEmailWithLatestCr = async (email: string) => {
   });
 };
 
+const updateUserById = async (id: string, data: any) => {
+  return await database.user.update({
+    where: { id },
+    data,
+  });
+};
+
 const isEmailExists = async (email: string) => {
   const user = await database.user.findUnique({
     where: { email },
@@ -48,10 +55,11 @@ const setUserEmailVerified = async (email: string) => {
 };
 
 export const UserRepository = {
-  createCR,
+  createAccount,
   getUserByEmail,
   isEmailExists,
   getUserById,
   findUserByEmailWithLatestCr,
   setUserEmailVerified,
+  updateUserById,
 };

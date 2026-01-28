@@ -1,0 +1,5 @@
+export enum InstitutionType {
+  COLLEGE = 'COLLEGE',
+  POLYTECHNIC = 'POLYTECHNIC',
+  UNIVERSITY = 'UNIVERSITY',
+}
