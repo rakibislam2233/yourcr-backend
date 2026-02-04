@@ -6,7 +6,7 @@ import { NoticeService } from './notice.service';
 
 const createNotice = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await NoticeService.createNotice(req.body, userId);
+  const result = await NoticeService.createNotice(req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -43,8 +43,9 @@ const getAllNotices = catchAsync(async (req: Request, res: Response) => {
 
 const updateNotice = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { userId } = req.user;
   const noticeId = Array.isArray(id) ? id[0] : id;
-  const result = await NoticeService.updateNotice(noticeId, req.body);
+  const result = await NoticeService.updateNotice(noticeId, req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -56,8 +57,9 @@ const updateNotice = catchAsync(async (req: Request, res: Response) => {
 
 const deleteNotice = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { userId } = req.user;
   const noticeId = Array.isArray(id) ? id[0] : id;
-  await NoticeService.deleteNotice(noticeId);
+  await NoticeService.deleteNotice(noticeId, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

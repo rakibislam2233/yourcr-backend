@@ -6,10 +6,7 @@ import { ClassService } from './class.service';
 
 const createClass = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await ClassService.createClass({
-    ...req.body,
-    createdById: userId,
-  });
+  const result = await ClassService.createClass(req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

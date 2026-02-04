@@ -5,6 +5,7 @@ import { UserRepository } from '../modules/user/user.repository';
 import { NotificationRepository } from '../modules/notification/notification.repository';
 import { addEmailToQueue } from '../queues/email.queue';
 import { emitNotificationToUser } from '../socket/socket.service';
+import { getEmailTemplate } from '../templates/email.template';
 
 const notificationWorker = new Worker(
   QUEUE_NAMES.NOTIFICATION,
@@ -39,7 +40,7 @@ const notificationWorker = new Worker(
         await addEmailToQueue({
           to: user.email,
           subject: title,
-          html: `<p>${message}</p>`,
+          html: getEmailTemplate(title, message, type),
         });
       }
     }

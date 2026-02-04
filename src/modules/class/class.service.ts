@@ -4,8 +4,13 @@ import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 import { ClassRepository } from './class.repository';
 import { SubjectRepository } from '../subject/subject.repository';
 import { TeacherRepository } from '../teacher/teacher.repository';
+import { addNotificationJob } from '../../queues/notification.queue';
+import { createAuditLog } from '../../utils/audit.helper';
+import { Request } from 'express';
 
-const createClass = async (payload: ICreateClassPayload) => {
+const createClass = async (payload: ICreateClassPayload, actorId: string, req?: Request) => {
+  await createAuditLog(actorId, 'CREATE_CLASS', 'Class', undefined, { payload }, req);
+
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
     if (!subject) {
@@ -20,7 +25,18 @@ const createClass = async (payload: ICreateClassPayload) => {
     }
   }
 
-  return await ClassRepository.createClass(payload);
+  const classItem = await ClassRepository.createClass(payload);
+
+  // Notify students under this CR
+  await addNotificationJob({
+    title: `New Class: ${classItem.subject?.name || 'Class'} on ${classItem.classDate.toDateString()}`,
+    message: `Class scheduled at ${new Date(classItem.startTime).toLocaleTimeString()} - ${new Date(classItem.endTime).toLocaleTimeString()}`,
+    type: 'NOTICE',
+    relatedId: classItem.id,
+    crId: actorId,
+  });
+
+  return classItem;
 };
 
 const getClassById = async (id: string) => {

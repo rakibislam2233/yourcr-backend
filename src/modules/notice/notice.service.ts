@@ -5,8 +5,12 @@ import { NoticeRepository } from './notice.repository';
 import { UserRepository } from '../user/user.repository';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { UserRole } from '../../shared/enum/user.enum';
+import { createAuditLog } from '../../utils/audit.helper';
+import { Request } from 'express';
 
-const createNotice = async (payload: ICreateNoticePayload, actorId: string) => {
+const createNotice = async (payload: ICreateNoticePayload, actorId: string, req?: Request) => {
+  await createAuditLog(actorId, 'CREATE_NOTICE', 'Notice', undefined, { payload }, req);
+
   const notice = await NoticeRepository.createNotice({
     ...payload,
     postedById: actorId,
@@ -18,14 +22,13 @@ const createNotice = async (payload: ICreateNoticePayload, actorId: string) => {
   }
 
   // If CR posts, notify all students in same institution
-  if (actor.role === UserRole.CR && actor.institutionId) {
+  if (actor.role === UserRole.CR) {
     await addNotificationJob({
       title: notice.title,
       message: notice.content,
       type: 'NOTICE',
       relatedId: notice.id,
-      institutionId: actor.institutionId,
-      targetRole: UserRole.STUDENT,
+      crId: actor.id,
     });
   }
 
@@ -45,7 +48,9 @@ const getAllNotices = async (query: any) => {
   return await NoticeRepository.getAllNotices(query);
 };
 
-const updateNotice = async (id: string, payload: IUpdateNoticePayload) => {
+const updateNotice = async (id: string, payload: IUpdateNoticePayload, actorId: string, req?: Request) => {
+  await createAuditLog(actorId, 'UPDATE_NOTICE', 'Notice', id, { payload }, req);
+
   const existing = await NoticeRepository.getNoticeById(id);
   if (!existing) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Notice not found');
@@ -53,7 +58,9 @@ const updateNotice = async (id: string, payload: IUpdateNoticePayload) => {
   return await NoticeRepository.updateNotice(id, payload);
 };
 
-const deleteNotice = async (id: string) => {
+const deleteNotice = async (id: string, actorId: string, req?: Request) => {
+  await createAuditLog(actorId, 'DELETE_NOTICE', 'Notice', id, {}, req);
+
   const existing = await NoticeRepository.getNoticeById(id);
   if (!existing) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Notice not found');
