@@ -28,3 +28,9 @@ enum CRRegistrationStatus {
     APPROVED
     REJECTED
 }
+
+//============================ Routine Model Related enum ==============//
+enum RoutineType {
+    CLASS
+    EXAM
+}
