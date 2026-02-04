@@ -6,8 +6,14 @@ import { UserRepository } from '../user/user.repository';
 import { CRRegistrationRepository } from './crRegistration.repository';
 import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
 import { UserRole } from '../../shared/enum/user.enum';
+import { uploadFile } from '../../utils/storage.utils';
+import { upload_cr_registration_folder } from './crRegistration.constant';
 
-const completeCRRegistration = async (userId: string, payload: ICompleteCRRegistrationPayload) => {
+const completeCRRegistration = async (
+  userId: string, 
+  payload: { institutionInfo: any; academicInfo: any }, 
+  file: Express.Multer.File
+) => {
   // 1. Check if user exists
   const user = await UserRepository.getUserById(userId);
   if (!user) {
@@ -25,7 +31,15 @@ const completeCRRegistration = async (userId: string, payload: ICompleteCRRegist
     throw new ApiError(StatusCodes.CONFLICT, 'CR registration already exists or pending');
   }
 
-  // 4. Create or get institution
+  // 4. Upload file to Cloudinary
+  const uploadResult = await uploadFile(
+    file.buffer, 
+    upload_cr_registration_folder,
+    `cr_proof_${userId}_${Date.now()}`
+  );
+  const documentProofUrl = uploadResult.secure_url;
+
+  // 5. Create or get institution
   let institution = await database.institution.findFirst({
     where: {
       name: payload.institutionInfo.name,
@@ -39,14 +53,14 @@ const completeCRRegistration = async (userId: string, payload: ICompleteCRRegist
     });
   }
 
-  // 5. Create CR registration
+  // 6. Create CR registration
   const crRegistration = await CRRegistrationRepository.createCRRegistration({
     userId,
     institutionId: institution.id,
-    documentProof: payload.documentProof,
+    documentProof: documentProofUrl,
   });
 
-  // 6. Update user with CR info (Version 1: Simple)
+  // 7. Update user with CR info (Version 1: Simple)
   await database.user.update({
     where: { id: userId },
     data: {
@@ -65,6 +79,8 @@ const completeCRRegistration = async (userId: string, payload: ICompleteCRRegist
   return {
     email: user.email,
     crRegistrationStatus: crRegistration.status,
+    institution: institution.name,
+    academicInfo: payload.academicInfo,
   };
 };
 

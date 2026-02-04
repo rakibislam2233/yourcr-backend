@@ -12,7 +12,7 @@ router.post(
   '/',
   auth(UserRole.STUDENT),
   upload.single('documentProof'),
-  validateRequest(CRRegistrationValidations.completeRegistration),
+  validateRequest(CRRegistrationValidations.formDataRegistration),
   CRRegistrationController.completeCRRegistration
 );
 

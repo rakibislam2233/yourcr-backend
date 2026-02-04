@@ -4,30 +4,24 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { CRRegistrationService } from './crRegistration.service';
 import ApiError from '../../utils/ApiError';
-import { uploadFile } from '../../utils/storage.utils';
 
 const completeCRRegistration = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
   if (!userId) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
   }
-
-  // Handle file upload
-  let documentProofUrl = '';
-  if (req.file) {
-    const uploadResult = await uploadFile(req.file.buffer, 'yourcr/cr-documents', `cr_proof_${userId}_${Date.now()}`);
-    documentProofUrl = uploadResult.secure_url;
-  } else {
+  
+  // Parse form data and create structured object
+  const parsedData = parseFormData(req.body);
+  
+  // Validate file exists
+  if (!req.file) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Document proof is required');
   }
 
-  // Merge file URL with request body
-  const registrationData = {
-    ...req.body,
-    documentProof: documentProofUrl,
-  };
-
-  const result = await CRRegistrationService.completeCRRegistration(userId, registrationData);
+  // Call service with parsed data and file
+  const result = await CRRegistrationService.completeCRRegistration(userId, parsedData, req.file);
+  
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -35,6 +29,31 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
     data: result,
   });
 });
+
+// Helper function to parse form data into structured object
+const parseFormData = (formData: any) => {
+  const institutionInfo = {
+    name: formData['institutionInfo[name]'],
+    type: formData['institutionInfo[type]'],
+    contactEmail: formData['institutionInfo[contactEmail]'],
+    contactPhone: formData['institutionInfo[contactPhone]'],
+    address: formData['institutionInfo[address]'],
+  };
+
+  const academicInfo = {
+    program: formData['academicInfo[program]'],
+    year: formData['academicInfo[year]'],
+    semester: formData['academicInfo[semester]'],
+    department: formData['academicInfo[department]'],
+    studentId: formData['academicInfo[studentId]'],
+    batch: formData['academicInfo[batch]'],
+  };
+
+  return {
+    institutionInfo,
+    academicInfo,
+  };
+};
 
 
 const getAllCRRegistrations = catchAsync(async (req: Request, res: Response) => {
