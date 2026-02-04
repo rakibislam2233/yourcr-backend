@@ -30,20 +30,20 @@ model User {
   crId String?
 
   // Relationships
-  crRegistrations    CRRegistration[]
-  createdStudents    User[]           @relation("StudentCreator")
-  creator            User?            @relation("StudentCreator", fields: [crId], references: [id])
-  institution        Institution?     @relation(fields: [institutionId], references: [id])
-  createdTeachers    Teacher[]        @relation("TeacherCreatedBy")
-  createdSubjects    Subject[]        @relation("SubjectCreatedBy")
-  createdRoutines    Routine[]        @relation("RoutineCreatedBy")
-  postedNotices      Notice[]         @relation("NoticePostedBy")
-  createdAssessments Assessment[]     @relation("AssessmentCreatedBy")
-  reportedIssues     Issue[]          @relation("IssueStudent")
-  resolvedIssues     Issue[]          @relation("IssueResolvedBy")
-  notifications      Notification[]   @relation("UserNotification")
-  auditLogs          AuditLog[]       @relation("AuditLogUser")
-  createdClasses     Class[]          @relation("ClassCreatedBy")
+  crRegistrations       CRRegistration[]
+  createdStudents       User[]                 @relation("StudentCreator")
+  creator               User?                  @relation("StudentCreator", fields: [crId], references: [id])
+  institution           Institution?           @relation(fields: [institutionId], references: [id])
+  createdTeachers       Teacher[]              @relation("TeacherCreatedBy")
+  createdSubjects       Subject[]              @relation("SubjectCreatedBy")
+  createdRoutines       Routine[]              @relation("RoutineCreatedBy")
+  postedNotices         Notice[]               @relation("NoticePostedBy")
+  createdAssessments    Assessment[]           @relation("AssessmentCreatedBy")
+  reportedIssues        Issue[]                @relation("IssueStudent")
+  resolvedIssues        Issue[]                @relation("IssueResolvedBy")
+  notifications         Notification[]         @relation("UserNotification")
+  auditLogs             AuditLog[]             @relation("AuditLogUser")
+  createdClasses        Class[]                @relation("ClassCreatedBy")
   assessmentSubmissions AssessmentSubmission[] @relation("AssessmentSubmissionStudent")
 
   createdAt DateTime @default(now())

@@ -1,14 +1,14 @@
 model AssessmentSubmission {
-    id            String   @id @default(uuid())
-    assessmentId  String
-    assessment    Assessment @relation(fields: [assessmentId], references: [id])
-    studentId     String
-    student       User     @relation("AssessmentSubmissionStudent", fields: [studentId], references: [id])
-    content       String?
-    fileUrls      String[]
-    submittedAt   DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+  id           String     @id @default(uuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  studentId    String
+  student      User       @relation("AssessmentSubmissionStudent", fields: [studentId], references: [id])
+  content      String?
+  fileUrls     String[]
+  submittedAt  DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-    @@unique([assessmentId, studentId])
-    @@map("assessment_submissions")
+  @@unique([assessmentId, studentId])
+  @@map("assessment_submissions")
 }

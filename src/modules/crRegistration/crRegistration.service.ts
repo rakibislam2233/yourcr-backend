@@ -8,12 +8,19 @@ import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 import { uploadFile } from '../../utils/storage.utils';
 import { upload_cr_registration_folder } from './crRegistration.constant';
+import { sendPendingCRRegistrationEmail, sendCRRegistrationApprovedEmail, sendCRRegistrationRejectedEmail } from '../../utils/emailTemplates';
+import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { Request } from 'express';
 
 const completeCRRegistration = async (
   userId: string, 
   payload: { institutionInfo: any; academicInfo: any }, 
-  file: Express.Multer.File
+  file: Express.Multer.File,
+  req?: Request
 ) => {
+  await createAuditLog(userId, AuditAction.USER_REGISTERED, 'CRRegistration', undefined, { payload }, req);
+
   // 1. Check if user exists
   const user = await UserRepository.getUserById(userId);
   if (!user) {
@@ -76,6 +83,9 @@ const completeCRRegistration = async (
     },
   });
 
+  // 8. Send pending email
+  await sendPendingCRRegistrationEmail(user.email, user.fullName, institution.name);
+
   return {
     email: user.email,
     crRegistrationStatus: crRegistration.status,
@@ -89,7 +99,7 @@ const getAllCRRegistrations = async () => {
   return await CRRegistrationRepository.getAllCRRegistrations();
 };
 
-const approveCRRegistration = async (registrationId: string) => {
+const approveCRRegistration = async (registrationId: string, req?: Request) => {
   const registration = await CRRegistrationRepository.getCRRegistrationById(registrationId);
 
   if (!registration) {
@@ -112,10 +122,19 @@ const approveCRRegistration = async (registrationId: string) => {
     },
   });
 
+  // Send approval email
+  const user = await UserRepository.getUserById(registration.userId);
+  const institution = await database.institution.findUnique({ where: { id: registration.institutionId } });
+  
+  if (user && institution) {
+    await sendCRRegistrationApprovedEmail(user.email, user.fullName, institution.name);
+    await createAuditLog(registration.userId, AuditAction.CR_APPROVED, 'CRRegistration', registrationId, { institutionName: institution.name }, req);
+  }
+
   return updatedRegistration;
 };
 
-const rejectCRRegistration = async (registrationId: string, reason: string) => {
+const rejectCRRegistration = async (registrationId: string, reason: string, req?: Request) => {
   const registration = await CRRegistrationRepository.getCRRegistrationById(registrationId);
 
   if (!registration) {
@@ -145,6 +164,15 @@ const rejectCRRegistration = async (registrationId: string, reason: string) => {
       crApprovedAt: null,
     },
   });
+
+  // Send rejection email
+  const user = await UserRepository.getUserById(registration.userId);
+  const institution = await database.institution.findUnique({ where: { id: registration.institutionId } });
+  
+  if (user && institution) {
+    await sendCRRegistrationRejectedEmail(user.email, user.fullName, institution.name, reason);
+    await createAuditLog(registration.userId, AuditAction.CR_REJECTED, 'CRRegistration', registrationId, { institutionName: institution.name, reason }, req);
+  }
 
   return updatedRegistration;
 };

@@ -4,6 +4,10 @@ import ApiError from '../../utils/ApiError';
 import { uploadFile } from '../../utils/storage.utils';
 import { ICreateStudentPayload, IUserProfileResponse, UserQueryOptions } from './user.interface';
 import { UserRepository } from './user.repository';
+import { sendStudentCreatedEmail } from '../../utils/emailTemplates';
+import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { Request } from 'express';
 
 const getAllUsers = async (filters: any, options: any) => {
   return await UserRepository.getAllUsersForAdmin({ ...filters, ...options });
@@ -56,8 +60,11 @@ const updateMyProfile = async (
     bio?: string;
     dateOfBirth?: string;
   },
-  file?: Express.Multer.File
+  file?: Express.Multer.File,
+  req?: Request
 ) => {
+  await createAuditLog(userId, AuditAction.UPDATE_PROFILE, 'User', userId, { payload }, req);
+
   const existingUser = await UserRepository.getUserById(userId);
   if (!existingUser) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
@@ -84,7 +91,7 @@ const updateMyProfile = async (
   return updated;
 };
 
-const createStudent = async (crId: string, studentData: ICreateStudentPayload) => {
+const createStudent = async (crId: string, studentData: ICreateStudentPayload, req?: Request) => {
   const defaultPassword = 'Student@123';
   const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
@@ -113,6 +120,12 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload) =
     batch: studentData.batch,
     crId,
   });
+
+  // Send welcome email to student
+  await sendStudentCreatedEmail(student.email, student.fullName, cr.fullName, cr.institutionId ? 'Your Institution' : 'Your Institution');
+
+  // Audit log
+  await createAuditLog(crId, AuditAction.CREATE_ISSUE, 'User', student.id, { studentEmail: student.email }, req);
 
   const { password, ...studentWithoutPassword } = student;
 

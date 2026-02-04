@@ -11,6 +11,7 @@ model Teacher {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt()
   subjects    Subject[]
+  classes     Class[]
 
   @@map("teachers")
 }

@@ -75,7 +75,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not authenticated');
   }
 
-  const result = await UserService.updateMyProfile(userId, req.body, req.file);
+  const result = await UserService.updateMyProfile(userId, req.body, req.file, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
