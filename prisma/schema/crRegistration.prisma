@@ -1,15 +1,15 @@
 model CRRegistration {
-    id            String      @id @default(cuid())
-    userId        String
-    user          User        @relation(fields: [userId], references: [id])
-    institutionId String
-    institution   Institution @relation(fields: [institutionId], references: [id])
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
 
-    documentProof   String
-    status          CRRegistrationStatus @default(PENDING)
-    rejectionReason String?
-    createdAt       DateTime             @default(now())
-    updatedAt       DateTime             @updatedAt
+  documentProof   String
+  status          CRRegistrationStatus @default(PENDING)
+  rejectionReason String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-    @@map("cr_registrations")
+  @@map("cr_registrations")
 }

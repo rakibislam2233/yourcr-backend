@@ -182,6 +182,20 @@ const setUserEmailVerified = async (email: string) => {
   });
 };
 
+const getUsersByInstitutionAndRole = async (institutionId: string, role: string) => {
+  return await database.user.findMany({
+    where: {
+      institutionId,
+      role: role as any,
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+      email: true,
+    },
+  });
+};
+
 export const UserRepository = {
   createAccount,
   getUserByEmail,
@@ -189,6 +203,7 @@ export const UserRepository = {
   getUserById,
   findUserByEmailWithLatestCr,
   setUserEmailVerified,
+  getUsersByInstitutionAndRole,
   updateUserById,
   getAllUsersForAdmin,
   getUserByIdForResponse,

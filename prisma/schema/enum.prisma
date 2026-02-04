@@ -1,83 +1,83 @@
 //=============================== User related enum ==================//
 enum UserStatus {
-    ACTIVE
-    INACTIVE
-    BLOCKED
-    BANNED
-    DELETED
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  BANNED
+  DELETED
 }
 
 enum UserRole {
-    SUPER_ADMIN
-    ADMIN
-    CR
-    STUDENT
+  SUPER_ADMIN
+  ADMIN
+  CR
+  STUDENT
 }
 
 //============================= Institution Model ====================/
 
 enum InstitutionType {
-    COLLEGE
-    POLYTECHNIC
-    UNIVERSITY
+  COLLEGE
+  POLYTECHNIC
+  UNIVERSITY
 }
 
 //============================ CRRegistration  Model Related enum ==============//
 enum CRRegistrationStatus {
-    PENDING
-    APPROVED
-    REJECTED
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 //============================ Routine Model Related enum ==============//
 enum RoutineType {
-    CLASS
-    EXAM
+  CLASS
+  EXAM
 }
 
 //============================ Notice Model Related enum ==============//
 enum NoticeType {
-    GENERAL
-    URGENT
-    EVENT
-    EXAM
-    HOLIDAY
+  GENERAL
+  URGENT
+  EVENT
+  EXAM
+  HOLIDAY
 }
 
 //============================ Assessment Model Related enum ==============//
 enum AssessmentType {
-    EXAM
-    ASSIGNMENT
-    QUIZ
-    PROJECT
+  EXAM
+  ASSIGNMENT
+  QUIZ
+  PROJECT
 }
 
 //============================ Issue Model Related enum ==============//
 enum IssueType {
-    ACADEMIC
-    TECHNICAL
-    ADMINISTRATIVE
-    OTHER
+  ACADEMIC
+  TECHNICAL
+  ADMINISTRATIVE
+  OTHER
 }
 
 enum IssuePriority {
-    LOW
-    MEDIUM
-    HIGH
-    URGENT
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 enum IssueStatus {
-    NEW
-    IN_PROGRESS
-    RESOLVED
-    CLOSED
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }
 
 //============================ Notification Model Related enum ==============//
 enum NotificationType {
-    NOTICE
-    ASSESSMENT
-    ISSUE
-    SYSTEM
+  NOTICE
+  ASSESSMENT
+  ISSUE
+  SYSTEM
 }

@@ -1,51 +1,51 @@
 model User {
-    id              String           @id @default(cuid())
-    fullName        String
-    email           String           @unique
-    password        String
-    phoneNumber     String
-    profileImage    String?
-    bio             String?
-    dateOfBirth     DateTime?
-    lastLogin       DateTime         @default(now())
-    role            UserRole         @default(STUDENT)
-    status          UserStatus       @default(ACTIVE)
-    isEmailVerified Boolean          @default(false)
-    
-    // Academic Information
-    institutionId   String?
-    department      String?
-    program         String?
-    semester        String?
-    year            String?
-    studentId       String?
-    batch           String?
-    
-    // CR Specific Fields
-    isCr            Boolean          @default(false)
-    crApprovedAt    DateTime?
-    isCrDetailsSubmitted Boolean     @default(false)
-    
-    // Student Specific Fields
-    crId            String?
-    
-    // Relationships
-    crRegistrations     CRRegistration[]
-    createdStudents     User[]           @relation("StudentCreator")
-    creator             User?            @relation("StudentCreator", fields: [crId], references: [id])
-    institution         Institution?     @relation(fields: [institutionId], references: [id])
-    createdTeachers     Teacher[]        @relation("TeacherCreatedBy")
-    createdSubjects     Subject[]        @relation("SubjectCreatedBy")
-    createdRoutines     Routine[]        @relation("RoutineCreatedBy")
-    postedNotices       Notice[]         @relation("NoticePostedBy")
-    createdAssessments  Assessment[]     @relation("AssessmentCreatedBy")
-    reportedIssues      Issue[]          @relation("IssueStudent")
-    resolvedIssues      Issue[]          @relation("IssueResolvedBy")
-    notifications       Notification[]   @relation("UserNotification")
-    auditLogs           AuditLog[]       @relation("AuditLogUser")
+  id              String     @id @default(cuid())
+  fullName        String
+  email           String     @unique
+  password        String
+  phoneNumber     String
+  profileImage    String?
+  bio             String?
+  dateOfBirth     DateTime?
+  lastLogin       DateTime   @default(now())
+  role            UserRole   @default(STUDENT)
+  status          UserStatus @default(ACTIVE)
+  isEmailVerified Boolean    @default(false)
 
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
+  // Academic Information
+  institutionId String?
+  department    String?
+  program       String?
+  semester      String?
+  year          String?
+  studentId     String?
+  batch         String?
 
-    @@map("users")
+  // CR Specific Fields
+  isCr                 Boolean   @default(false)
+  crApprovedAt         DateTime?
+  isCrDetailsSubmitted Boolean   @default(false)
+
+  // Student Specific Fields
+  crId String?
+
+  // Relationships
+  crRegistrations    CRRegistration[]
+  createdStudents    User[]           @relation("StudentCreator")
+  creator            User?            @relation("StudentCreator", fields: [crId], references: [id])
+  institution        Institution?     @relation(fields: [institutionId], references: [id])
+  createdTeachers    Teacher[]        @relation("TeacherCreatedBy")
+  createdSubjects    Subject[]        @relation("SubjectCreatedBy")
+  createdRoutines    Routine[]        @relation("RoutineCreatedBy")
+  postedNotices      Notice[]         @relation("NoticePostedBy")
+  createdAssessments Assessment[]     @relation("AssessmentCreatedBy")
+  reportedIssues     Issue[]          @relation("IssueStudent")
+  resolvedIssues     Issue[]          @relation("IssueResolvedBy")
+  notifications      Notification[]   @relation("UserNotification")
+  auditLogs          AuditLog[]       @relation("AuditLogUser")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
 }

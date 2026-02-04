@@ -1,19 +1,19 @@
 model Issue {
-    id          String        @id @default(uuid())
-    studentId   String
-    student     User          @relation("IssueStudent", fields: [studentId], references: [id])
-    title       String
-    description String
-    type        IssueType
-    priority    IssuePriority
-    status      IssueStatus   @default(NEW)
-    fileUrl     String?
-    resolution  String?
-    resolvedById String?
-    resolvedBy  User?         @relation("IssueResolvedBy", fields: [resolvedById], references: [id])
-    resolvedAt  DateTime?
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @updatedAt()
+  id           String        @id @default(uuid())
+  studentId    String
+  student      User          @relation("IssueStudent", fields: [studentId], references: [id])
+  title        String
+  description  String
+  type         IssueType
+  priority     IssuePriority
+  status       IssueStatus   @default(NEW)
+  fileUrl      String?
+  resolution   String?
+  resolvedById String?
+  resolvedBy   User?         @relation("IssueResolvedBy", fields: [resolvedById], references: [id])
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt()
 
-    @@map("issues")
+  @@map("issues")
 }
