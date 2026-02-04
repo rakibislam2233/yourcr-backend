@@ -130,6 +130,7 @@ const login = async (payload: ILoginPayload) => {
     };
   }
 
+
   // 7. Check CR Registration Status
   if (user.role === UserRole.CR && user.isCr && user.isCrDetailsSubmitted) {
     // User has submitted CR registration but not yet approved

@@ -39,28 +39,7 @@ router.patch(
 );
 
 // Create student (CR only)
-router.post(
-  '/create-student',
-  auth(UserRole.CR),
-  validateRequest(UserValidations.createStudent),
-  catchAsync(async (req: Request, res: Response) => {
-    const crId = req.user?.id;
-    const studentData = req.body;
-
-    if (!crId) {
-      throw new Error('CR not authenticated');
-    }
-
-    const student = await UserController.createStudent(crId, studentData);
-
-    sendResponse(res, {
-      statusCode: httpStatus.CREATED,
-      success: true,
-      message: 'Student created successfully',
-      data: student,
-    });
-  })
-);
+router.post('/create-student', auth(UserRole.CR), validateRequest(UserValidations.createStudent));
 
 // Update user
 router.patch(

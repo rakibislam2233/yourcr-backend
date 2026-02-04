@@ -8,7 +8,15 @@ import pick from '../../utils/pick.utils';
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   // Just pick filters and options, pass to service
-  const filters = pick(req.query, ['fullName', 'email', 'phoneNumber', 'status', 'role', 'isEmailVerified', 'search']);
+  const filters = pick(req.query, [
+    'fullName',
+    'email',
+    'phoneNumber',
+    'status',
+    'role',
+    'isEmailVerified',
+    'search',
+  ]);
   const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
 
   const users = await UserService.getAllUsers(filters, options);
@@ -39,7 +47,7 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
 
 // Get user profile with academic info
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const { userId } = req.user;
 
   if (!userId) {
     throw new Error('User not authenticated');
@@ -61,7 +69,7 @@ const createStudent = async (crId: string, studentData: any) => {
 
 // Update my profile (self)
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const { userId } = req.user;
 
   if (!userId) {
     throw new Error('User not authenticated');

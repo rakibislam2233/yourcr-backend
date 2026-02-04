@@ -179,7 +179,7 @@ export const getRateLimitInfo = async (
 // Login rate limiter - IP based
 export const loginRateLimiter = createRateLimiter('login', {
   windowMs: 15 * 60 * 1000,
-  maxRequests: 5,
+  maxRequests: 10,
   message: 'Too many login attempts. Please try again after 15 minutes.',
 });
 

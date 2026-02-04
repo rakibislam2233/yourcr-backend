@@ -38,7 +38,6 @@ const auth =
 
       // Verify token and get decoded user
       const verifiedUser = verifyAccessToken(tokenValue);
-
       // ✅ Now verifiedUser has userId, email, role
       req.user = verifiedUser;
 
