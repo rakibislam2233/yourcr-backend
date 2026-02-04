@@ -1,5 +1,4 @@
 import { InstitutionType } from '../../shared/enum/institution.enum';
-import { SessionType } from '../../shared/enum/session.enum';
 
 export interface ICompleteCRRegistrationPayload {
   institutionInfo: {
@@ -9,10 +8,11 @@ export interface ICompleteCRRegistrationPayload {
     contactPhone?: string;
     address: string;
   };
-  sessionInfo: {
-    name: string;
-    sessionType: SessionType;
+  // Version 1: Simple CR Info
+  programInfo: {
+    programName: string;
     department: string;
     academicYear: string;
   };
+  documentProof: string; // File URL or base64 string
 }

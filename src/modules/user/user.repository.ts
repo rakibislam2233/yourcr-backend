@@ -3,7 +3,13 @@ import { ICreateAccountPayload } from './user.interface';
 
 const createAccount = async (payload: ICreateAccountPayload) => {
   const user = await database.user.create({
-    data: payload,
+    data: {
+      fullName: payload.fullName,
+      email: payload.email,
+      phoneNumber: payload.phoneNumber,
+      password: payload.password,
+      role: payload.role,
+    },
   });
   return user;
 };
@@ -26,7 +32,6 @@ const findUserByEmailWithLatestCr = async (email: string) => {
     include: {
       crRegistrations: {
         orderBy: { createdAt: 'desc' },
-        take: 1,
       },
     },
   });

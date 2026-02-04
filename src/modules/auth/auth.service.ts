@@ -25,7 +25,7 @@ import { UserRole } from '../../shared/enum/user.enum';
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
-  const { fullName, email, password, phoneNumber } = payload;
+  const { fullName, email, password, phoneNumber, role = UserRole.CR } = payload;
 
   //1.check if user already exists
   const user = await UserRepository.getUserByEmail(email);
@@ -33,25 +33,32 @@ const register = async (payload: IRegisterPayload) => {
     throw new ApiError(StatusCodes.CONFLICT, 'User already exists');
   }
 
-  //2. Hash password
+  // 2. Validate role - only CR allowed for self-registration
+  if (role !== UserRole.CR) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Only CR role is allowed for self-registration');
+  }
+
+  //3. Hash password
   const hashedPassword = await hashPassword(password);
 
-  //3. Create user
+  //4. Create user with CR role
   const result = await UserRepository.createAccount({
     fullName,
     email,
     phoneNumber,
     password: hashedPassword,
+    role: UserRole.CR, // Force CR role for self-registration
   });
 
-  // 4. Create OTP session
+  // 5. Create OTP session
   const sessionId = await OtpService.createOtpSession(result, OtpType.EMAIL_VERIFICATION);
 
   return {
-    message: 'User registered successfully! Please verify your email.',
+    message: 'CR registered successfully! Please verify your email.',
     data: {
       email: result.email,
       sessionId,
+      role: result.role,
     },
   };
 };
@@ -73,7 +80,12 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 2. Check user
-  const user = await UserRepository.findUserByEmailWithLatestCr(email);
+  const user = await database.user.findUnique({
+    where: { email },
+    include: {
+      crRegistrations: true,
+    },
+  });
 
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
@@ -119,32 +131,33 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 7. Check CR Registration Status
-  if (user.role === UserRole.STUDENT && user.isCrDetailsSubmitted && !user.isCrApproved) {
-    // Student has submitted CR details but not yet approved
-    return {
-      message: 'CR details submitted. Awaiting admin approval.',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          fullName: user.fullName,
-          isCrDetailsSubmitted: user.isCrDetailsSubmitted,
-          isCrApproved: user.isCrApproved,
+  if (user.role === UserRole.STUDENT && user.isCr) {
+    // User has submitted CR registration but not yet approved
+    if (!user.crApprovedAt) {
+      return {
+        message: 'CR registration submitted. Awaiting admin approval.',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName,
+            isCr: user.isCr,
+            crApprovedAt: user.crApprovedAt,
+          },
+          redirect: '/cr-registration/pending',
         },
-        redirect: '/cr-registration/pending', // Frontend should redirect to pending page
-      },
-    };
+      };
+    }
   }
 
-  if (user.role === UserRole.STUDENT && user.isCrDetailsSubmitted && user.isCrApproved) {
+  // 8. Check if user should be CR (approved but role not updated)
+  if (user.role === UserRole.STUDENT && user.isCr && user.crApprovedAt) {
     // Update role to CR if approved
     await database.user.update({
       where: { id: user.id },
       data: { role: UserRole.CR },
     });
-    // Refresh user data
-    await UserRepository.updateUserById(user.id, { role: UserRole.CR });
     user.role = UserRole.CR;
   }
 

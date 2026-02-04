@@ -5,31 +5,38 @@ model User {
     password        String
     phoneNumber     String
     profileImage    String?
-    department      String?
-    rollNumber      String?
     bio             String?
     dateOfBirth     DateTime?
     lastLogin       DateTime         @default(now())
     role            UserRole         @default(STUDENT)
     status          UserStatus       @default(ACTIVE)
-    isEmailVerified     Boolean          @default(false)
-    isCrDetailsSubmitted  Boolean          @default(false)  // Whether CR has submitted institution/session details
-    isCrApproved         Boolean          @default(false)  // Whether CR registration is approved by admin
+    isEmailVerified Boolean          @default(false)
     
-    // New fields for CR-admin system
-    createdBy           String?          // Who created this user (CR's ID)
-    currentSessionId    String?          // Current active session
+    // Academic Information (Common for CR & Student)
+    institutionId   String?          // ইনস্টিটিউশন ID
+    department      String?          // ডিপার্টমেন্ট
+    program         String?          // প্রোগ্রাম
+    semester        String?          // সেমিস্টার
+    year            String?          // একাডেমিক ইয়ার
+    rollNumber      String?          // রোল নম্বর
+    studentId       String?          // অফিসিয়াল স্টুডেন্ট ID
+    batch           String?          // ব্যাচ
     
-    createdAt           DateTime         @default(now())
-    updatedAt           DateTime         @updatedAt
+    // CR Specific Fields
+    isCr            Boolean          @default(false)
+    crApprovedAt    DateTime?        // CR অ্যাপ্রুভাল টাইম
+    
+    // Student Specific Fields
+    crId            String?          // কোন CR এর অধীনে
     
     // Relationships
     crRegistrations     CRRegistration[]
-    reviewedCRs         CRRegistration[] @relation("ReviewedCR")
-    sessions            Session[]
-    studentSessions     StudentSession[]    // New relationship for multi-session support
-    creator             User?            @relation("UserCreator", fields: [createdBy], references: [id])
-    createdUsers        User[]           @relation("UserCreator")
+    createdStudents     User[]           @relation("StudentCreator")
+    creator             User?            @relation("StudentCreator", fields: [crId], references: [id])
+    institution         Institution?     @relation(fields: [institutionId], references: [id])
+
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
 
     @@map("users")
 }

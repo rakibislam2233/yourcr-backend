@@ -10,8 +10,10 @@ model Institution {
     address         String
     createdAt       DateTime         @default(now())
     updatedAt       DateTime         @updatedAt
+    
+    // Relationships
     crRegistrations CRRegistration[]
-    sessions        Session[]
+    users           User[]           // Users associated with this institution
 
     @@map("institutions")
 }

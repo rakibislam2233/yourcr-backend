@@ -16,6 +16,7 @@ const register = z.object({
     phoneNumber: z
       .string({ error: 'Phone number is required and must be a string' })
       .min(8, 'Phone number must be at least 8 characters'),
+    role: z.enum(['CR']).optional().default('CR'), // Only CR role allowed for self-registration
   }),
 });
 
