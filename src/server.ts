@@ -8,6 +8,11 @@ import { closeRedis, redisClient } from './config/redis.config';
 import logger from './utils/logger';
 import { seedDatabase } from './utils/seed.utils';
 import './workers/email.worker';
+import './workers/notification.worker';
+import { Server as SocketIOServer } from 'socket.io';
+import { socketConfig } from './config/socket.config';
+import { setupSocket } from './socket/socket.handler';
+import { setSocketInstance } from './socket/socket.service';
 
 // Track if shutdown is in progress
 let isShuttingDown = false;
@@ -291,6 +296,14 @@ async function main() {
     // Step 4: Start HTTP server (NOW ASYNC)
     logger.info(colors.cyan('🌐 [4/5] Starting HTTP server...\n'));
     await startServer();
+
+    // Attach Socket.IO
+    if (server) {
+      const io = new SocketIOServer(server, socketConfig);
+      setSocketInstance(io);
+      setupSocket(io);
+      logger.info(colors.green('✅ Socket.IO initialized'));
+    }
 
     // Step 5: Start health monitoring (development only)
     if (config.env === 'development') {

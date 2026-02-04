@@ -15,8 +15,9 @@ const notificationWorker = new Worker(
     if (userIds?.length) {
       recipients = userIds;
     } else if (institutionId && targetRole) {
-      const users = await UserRepository.getUsersByInstitutionAndRole(institutionId, targetRole);
-      recipients = users.map((user) => user.id);
+      const users: Array<{ id: string; email: string | null }> =
+        await UserRepository.getUsersByInstitutionAndRole(institutionId, targetRole);
+      recipients = users.map(user => user.id);
     }
 
     for (const userId of recipients) {
