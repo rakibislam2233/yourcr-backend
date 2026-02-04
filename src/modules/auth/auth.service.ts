@@ -153,7 +153,12 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 8. Check if user should be CR (approved but role not updated)
-  if (user.role === UserRole.STUDENT && user.isCr && user.isCrDetailsSubmitted && user.crApprovedAt) {
+  if (
+    user.role === UserRole.STUDENT &&
+    user.isCr &&
+    user.isCrDetailsSubmitted &&
+    user.crApprovedAt
+  ) {
     // Update role to CR if approved
     await database.user.update({
       where: { id: user.id },
@@ -166,7 +171,7 @@ const login = async (payload: ILoginPayload) => {
   const [accessToken, refreshToken] = await Promise.all([
     jwtHelper.generateAccessToken(user.id, user.email, user.role),
     jwtHelper.generateRefreshToken(user.id, user.email, user.role),
-  ])
+  ]);
 
   // Store refresh token in Redis
   await RedisUtils.setCache(
@@ -197,17 +202,17 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
 
   if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
     const user = await UserRepository.setUserEmailVerified(otpResponse.email);
-      // 8. Generate tokens
-  const [accessToken, refreshToken] = await Promise.all([
-    jwtHelper.generateAccessToken(user.id, user.email, user.role),
-    jwtHelper.generateRefreshToken(user.id, user.email, user.role),
-  ])
-      // Store refresh token in Redis
-  await RedisUtils.setCache(
-    AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
-    refreshToken,
-    AUTH_CACHE_TTL.REFRESH_TOKEN
-  );
+    // 8. Generate tokens
+    const [accessToken, refreshToken] = await Promise.all([
+      jwtHelper.generateAccessToken(user.id, user.email, user.role),
+      jwtHelper.generateRefreshToken(user.id, user.email, user.role),
+    ]);
+    // Store refresh token in Redis
+    await RedisUtils.setCache(
+      AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
+      refreshToken,
+      AUTH_CACHE_TTL.REFRESH_TOKEN
+    );
     return {
       message: 'Email verified successfully',
       data: {
