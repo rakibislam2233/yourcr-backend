@@ -34,3 +34,50 @@ enum RoutineType {
     CLASS
     EXAM
 }
+
+//============================ Notice Model Related enum ==============//
+enum NoticeType {
+    GENERAL
+    URGENT
+    EVENT
+    EXAM
+    HOLIDAY
+}
+
+//============================ Assessment Model Related enum ==============//
+enum AssessmentType {
+    EXAM
+    ASSIGNMENT
+    QUIZ
+    PROJECT
+}
+
+//============================ Issue Model Related enum ==============//
+enum IssueType {
+    ACADEMIC
+    TECHNICAL
+    ADMINISTRATIVE
+    OTHER
+}
+
+enum IssuePriority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+}
+
+enum IssueStatus {
+    NEW
+    IN_PROGRESS
+    RESOLVED
+    CLOSED
+}
+
+//============================ Notification Model Related enum ==============//
+enum NotificationType {
+    NOTICE
+    ASSESSMENT
+    ISSUE
+    SYSTEM
+}
