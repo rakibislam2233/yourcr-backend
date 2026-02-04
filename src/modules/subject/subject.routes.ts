@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR),
   validateRequest(SubjectValidations.createSubject),
   SubjectController.createSubject
 );
@@ -20,15 +20,11 @@ router.get('/:id', SubjectController.getSubjectById);
 
 router.patch(
   '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR),
   validateRequest(SubjectValidations.updateSubject),
   SubjectController.updateSubject
 );
 
-router.delete(
-  '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  SubjectController.deleteSubject
-);
+router.delete('/:id', auth(UserRole.CR), SubjectController.deleteSubject);
 
 export const SubjectRoutes = router;

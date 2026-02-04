@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(TeacherValidations.createTeacher),
   TeacherController.createTeacher
 );
@@ -20,14 +20,14 @@ router.get('/:id', TeacherController.getTeacherById);
 
 router.patch(
   '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(TeacherValidations.updateTeacher),
   TeacherController.updateTeacher
 );
 
 router.delete(
   '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   TeacherController.deleteTeacher
 );
 

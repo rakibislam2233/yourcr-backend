@@ -8,6 +8,7 @@ import {
 } from '../../utils/pagination.utils';
 
 const createTeacher = async (payload: ICreateTeacherPayload) => {
+  console.log('Payload', payload);
   return await database.teacher.create({
     data: payload,
   });

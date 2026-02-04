@@ -6,6 +6,7 @@ import { TeacherService } from './teacher.service';
 
 const createTeacher = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
+
   const result = await TeacherService.createTeacher({
     ...req.body,
     createdById: userId,
