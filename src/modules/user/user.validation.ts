@@ -13,15 +13,30 @@ const createStudent = z.object({
     phoneNumber: z
       .string({ error: 'Phone number is required and must be a string' })
       .min(8, 'Phone number must be at least 8 characters'),
-    rollNumber: z
-      .string({ error: 'Roll number is required and must be a string' })
-      .min(1, 'Roll number is required'),
-    sessionId: z
-      .string({ error: 'Session ID is required and must be a string' })
-      .min(1, 'Session ID is required'),
+    institutionId: z
+      .string({ error: 'Institution ID is required and must be a string' })
+      .min(1, 'Institution ID is required'),
     department: z
       .string({ error: 'Department is required and must be a string' })
       .min(1, 'Department is required'),
+    program: z
+      .string({ error: 'Program is required and must be a string' })
+      .min(1, 'Program is required'),
+    year: z
+      .string({ error: 'Academic year is required and must be a string' })
+      .min(1, 'Academic year is required'),
+    rollNumber: z
+      .string({ error: 'Roll number is required and must be a string' })
+      .min(1, 'Roll number is required'),
+    studentId: z
+      .string({ error: 'Student ID must be a string' })
+      .optional(),
+    semester: z
+      .string({ error: 'Semester must be a string' })
+      .optional(),
+    batch: z
+      .string({ error: 'Batch must be a string' })
+      .optional(),
   }),
 });
 
