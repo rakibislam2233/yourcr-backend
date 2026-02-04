@@ -11,6 +11,7 @@ export interface NotificationJobData {
   institutionId?: string;
   targetRole?: string;
   userIds?: string[];
+  crId?: string;
 }
 
 const notificationQueue = new Queue(QUEUE_NAMES.NOTIFICATION, defaultQueueOptions);

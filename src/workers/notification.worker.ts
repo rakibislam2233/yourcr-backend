@@ -9,11 +9,14 @@ import { emitNotificationToUser } from '../socket/socket.service';
 const notificationWorker = new Worker(
   QUEUE_NAMES.NOTIFICATION,
   async (job: Job<NotificationJobData>) => {
-    const { title, message, type, relatedId, institutionId, targetRole, userIds } = job.data;
+    const { title, message, type, relatedId, institutionId, targetRole, userIds, crId } = job.data;
 
     let recipients: string[] = [];
     if (userIds?.length) {
       recipients = userIds;
+    } else if (crId) {
+      const users: Array<{ id: string; email: string | null }> = await UserRepository.getStudentsByCrId(crId);
+      recipients = users.map(user => user.id);
     } else if (institutionId && targetRole) {
       const users: Array<{ id: string; email: string | null }> =
         await UserRepository.getUsersByInstitutionAndRole(institutionId, targetRole);

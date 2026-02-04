@@ -43,6 +43,7 @@ model User {
   resolvedIssues     Issue[]          @relation("IssueResolvedBy")
   notifications      Notification[]   @relation("UserNotification")
   auditLogs          AuditLog[]       @relation("AuditLogUser")
+  createdClasses     Class[]          @relation("ClassCreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -81,3 +81,16 @@ enum NotificationType {
   ISSUE
   SYSTEM
 }
+
+//============================ Class Model Related enum ==============//
+enum ClassType {
+  ONLINE
+  OFFLINE
+}
+
+enum ClassStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}

@@ -1,0 +1,20 @@
+model Class {
+    id          String      @id @default(uuid())
+    subjectId   String?
+    subject     Subject?    @relation(fields: [subjectId], references: [id])
+    teacherId   String?
+    teacher     Teacher?    @relation(fields: [teacherId], references: [id])
+    classDate   DateTime
+    startTime   DateTime
+    endTime     DateTime
+    classType   ClassType   @default(OFFLINE)
+    status      ClassStatus @default(SCHEDULED)
+    roomNumber  String?
+    joinLink    String?
+    createdById String?
+    createdBy   User?       @relation("ClassCreatedBy", fields: [createdById], references: [id])
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt()
+
+    @@map("classes")
+}

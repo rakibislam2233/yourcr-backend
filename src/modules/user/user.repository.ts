@@ -196,6 +196,20 @@ const getUsersByInstitutionAndRole = async (institutionId: string, role: string)
   });
 };
 
+const getStudentsByCrId = async (crId: string) => {
+  return await database.user.findMany({
+    where: {
+      crId,
+      role: 'STUDENT',
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+      email: true,
+    },
+  });
+};
+
 export const UserRepository = {
   createAccount,
   getUserByEmail,
@@ -204,6 +218,7 @@ export const UserRepository = {
   findUserByEmailWithLatestCr,
   setUserEmailVerified,
   getUsersByInstitutionAndRole,
+  getStudentsByCrId,
   updateUserById,
   getAllUsersForAdmin,
   getUserByIdForResponse,
