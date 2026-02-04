@@ -1,0 +1,12 @@
+model StudentSession {
+    id        String   @id @default(cuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    sessionId String
+    session   Session  @relation(fields: [sessionId], references: [id])
+    isActive  Boolean  @default(true)
+    joinedAt  DateTime @default(now())
+    
+    @@unique([userId, sessionId])
+    @@map("student_sessions")
+}

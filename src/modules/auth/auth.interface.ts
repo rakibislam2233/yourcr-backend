@@ -1,8 +1,11 @@
+import { UserRole } from '../../shared/enum/user.enum';
+
 export interface IRegisterPayload {
   fullName: string;
   email: string;
   password: string;
   phoneNumber: string;
+  role?: UserRole;  // Optional, defaults to STUDENT, but only CR allowed for self-registration
 }
 
 export interface ILoginPayload {

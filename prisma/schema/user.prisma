@@ -15,11 +15,21 @@ model User {
     isEmailVerified     Boolean          @default(false)
     isCrDetailsSubmitted  Boolean          @default(false)  // Whether CR has submitted institution/session details
     isCrApproved         Boolean          @default(false)  // Whether CR registration is approved by admin
+    
+    // New fields for CR-admin system
+    createdBy           String?          // Who created this user (CR's ID)
+    currentSessionId    String?          // Current active session
+    
     createdAt           DateTime         @default(now())
     updatedAt           DateTime         @updatedAt
+    
+    // Relationships
     crRegistrations     CRRegistration[]
     reviewedCRs         CRRegistration[] @relation("ReviewedCR")
     sessions            Session[]
+    studentSessions     StudentSession[]    // New relationship for multi-session support
+    creator             User?            @relation("UserCreator", fields: [createdBy], references: [id])
+    createdUsers        User[]           @relation("UserCreator")
 
     @@map("users")
 }
