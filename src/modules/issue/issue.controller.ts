@@ -6,7 +6,7 @@ import { IssueService } from './issue.service';
 
 const createIssue = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await IssueService.createIssue(req.body, userId);
+  const result = await IssueService.createIssue(req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -43,8 +43,9 @@ const getAllIssues = catchAsync(async (req: Request, res: Response) => {
 
 const updateIssue = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { userId } = req.user;
   const issueId = Array.isArray(id) ? id[0] : id;
-  const result = await IssueService.updateIssue(issueId, req.body, req.user?.userId);
+  const result = await IssueService.updateIssue(issueId, req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

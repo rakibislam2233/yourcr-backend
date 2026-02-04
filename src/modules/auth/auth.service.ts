@@ -22,6 +22,9 @@ import { OtpService } from '../otp/otp.service';
 import { OtpType } from '../otp/otp.interface';
 import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
 import { UserRole } from '../../shared/enum/user.enum';
+import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { Request } from 'express';
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
@@ -64,7 +67,7 @@ const register = async (payload: IRegisterPayload) => {
 };
 
 // --- Login ---
-const login = async (payload: ILoginPayload) => {
+const login = async (payload: ILoginPayload, req?: Request) => {
   const { email, password } = payload;
 
   // 1. Check lockout
@@ -116,6 +119,9 @@ const login = async (payload: ILoginPayload) => {
 
   // 4. Successful match - clear attempts
   await RedisUtils.deleteCache(attemptKey);
+
+  // Audit log for successful login
+  await createAuditLog(user.id, AuditAction.LOGIN, 'User', user.id, { email }, req);
 
   // 6. Check Email Verification
   if (!user.isEmailVerified) {
@@ -303,14 +309,18 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
 };
 
 // --- Logout ---
-const logout = async (payload: ILogoutPayload) => {
+const logout = async (payload: ILogoutPayload, req?: Request) => {
   const decoded = jwtHelper.verifyRefreshToken(payload.refreshToken);
   await RedisUtils.deleteCache(AUTH_CACHE_KEY.REFRESH_TOKEN(decoded.userId));
+  
+  // Audit log for logout
+  await createAuditLog(decoded.userId, AuditAction.LOGOUT, 'User', decoded.userId, {}, req);
+  
   return { message: 'Logged out successfully' };
 };
 
 // --- Change Password ---
-const changePassword = async (userId: string, payload: IChangePasswordPayload) => {
+const changePassword = async (userId: string, payload: IChangePasswordPayload, req?: Request) => {
   const { oldPassword, newPassword } = payload;
   // 1. Get user
   const user = await UserRepository.getUserById(userId);
@@ -328,6 +338,10 @@ const changePassword = async (userId: string, payload: IChangePasswordPayload) =
     where: { id: userId },
     data: { password: hashedPassword },
   });
+
+  // Audit log for password change
+  await createAuditLog(userId, AuditAction.PASSWORD_CHANGE, 'User', userId, {}, req);
+
   return { message: 'Password changed successfully' };
 };
 

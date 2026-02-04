@@ -16,7 +16,7 @@ const register = catchAsync(async (req: Request, res: Response) => {
 });
 
 const login = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.login(req.body);
+  const result = await AuthService.login(req.body, req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -74,7 +74,7 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.logout(req.body);
+  const result = await AuthService.logout(req.body, req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -87,7 +87,7 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
   }
-  const result = await AuthService.changePassword(userId, req.body);
+  const result = await AuthService.changePassword(userId, req.body, req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

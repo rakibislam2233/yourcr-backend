@@ -4,12 +4,17 @@ import { ICreateIssuePayload, IUpdateIssuePayload } from './issue.interface';
 import { IssueRepository } from './issue.repository';
 import { UserRepository } from '../user/user.repository';
 import { UserRole } from '../../shared/enum/user.enum';
+import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { Request } from 'express';
 
-const createIssue = async (payload: ICreateIssuePayload, studentId: string) => {
+const createIssue = async (payload: ICreateIssuePayload, studentId: string, req?: Request) => {
   const student = await UserRepository.getUserById(studentId);
   if (!student || student.role !== UserRole.STUDENT) {
     throw new ApiError(StatusCodes.FORBIDDEN, 'Only students can create issues');
   }
+
+  await createAuditLog(studentId, AuditAction.CREATE_ISSUE, 'Issue', undefined, { payload }, req);
 
   return await IssueRepository.createIssue({
     ...payload,
@@ -29,7 +34,7 @@ const getAllIssues = async (query: any) => {
   return await IssueRepository.getAllIssues(query);
 };
 
-const updateIssue = async (id: string, payload: IUpdateIssuePayload, resolverId?: string) => {
+const updateIssue = async (id: string, payload: IUpdateIssuePayload, resolverId?: string, req?: Request) => {
   const existing = await IssueRepository.getIssueById(id);
   if (!existing) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Issue not found');
@@ -39,6 +44,11 @@ const updateIssue = async (id: string, payload: IUpdateIssuePayload, resolverId?
   if (payload.status === 'RESOLVED' && resolverId) {
     data.resolvedById = resolverId;
     data.resolvedAt = new Date().toISOString();
+  }
+
+  // Audit log for issue update/resolve
+  if (resolverId) {
+    await createAuditLog(resolverId, AuditAction.UPDATE_ISSUE, 'Issue', id, { payload }, req);
   }
 
   return await IssueRepository.updateIssue(id, data);
