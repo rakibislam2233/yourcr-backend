@@ -70,28 +70,3 @@ export const createPaginationResult = <T>(
     },
   };
 };
-
-export const buildWhereClause = <T extends Record<string, any>>(
-  filters: Partial<T>,
-  modelFields: (keyof T)[]
-): any => {
-  const where: any = {};
-
-  for (const key in filters) {
-    if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
-      if (modelFields.includes(key as keyof T)) {
-        // For string fields, use case-insensitive contains
-        if (typeof filters[key] === 'string') {
-          where[key] = {
-            contains: filters[key],
-            mode: 'insensitive',
-          };
-        } else {
-          where[key] = filters[key];
-        }
-      }
-    }
-  }
-
-  return where;
-};

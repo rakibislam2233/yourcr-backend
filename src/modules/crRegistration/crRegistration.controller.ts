@@ -39,7 +39,7 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
 
   // Call service with parsed data and file
   const result = await CRRegistrationService.completeCRRegistration(userId, parsedData, req.file);
-  
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -47,7 +47,6 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
     data: result,
   });
 });
-
 
 const getAllCRRegistrations = catchAsync(async (req: Request, res: Response) => {
   // Only admin can view all registrations

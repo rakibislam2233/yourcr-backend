@@ -1,5 +1,4 @@
 import multer from 'multer';
-import path from 'path';
 import { Request } from 'express';
 
 // Configure multer for file upload
@@ -12,10 +11,11 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     'image/jpeg',
     'image/jpg',
     'image/png',
+    'image/webp',
+    'image/avif',
     'image/gif',
     'application/pdf',
     'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ];
 
   if (allowedTypes.includes(file.mimetype)) {

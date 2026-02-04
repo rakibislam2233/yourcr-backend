@@ -163,8 +163,10 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 8. Generate tokens
-  const accessToken = jwtHelper.generateAccessToken(user.id, user.email, user.role);
-  const refreshToken = jwtHelper.generateRefreshToken(user.id, user.email, user.role);
+  const [accessToken, refreshToken] = await Promise.all([
+    jwtHelper.generateAccessToken(user.id, user.email, user.role),
+    jwtHelper.generateRefreshToken(user.id, user.email, user.role),
+  ])
 
   // Store refresh token in Redis
   await RedisUtils.setCache(
@@ -187,9 +189,7 @@ const login = async (payload: ILoginPayload) => {
   };
 };
 
-/**
- * --- Verify OTP ---
- */
+//--- Verify OTP ---
 const verifyOtp = async (payload: IVerifyOtpPayload) => {
   const { sessionId, code } = payload;
 
@@ -197,12 +197,23 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
 
   if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
     const user = await UserRepository.setUserEmailVerified(otpResponse.email);
-
+      // 8. Generate tokens
+  const [accessToken, refreshToken] = await Promise.all([
+    jwtHelper.generateAccessToken(user.id, user.email, user.role),
+    jwtHelper.generateRefreshToken(user.id, user.email, user.role),
+  ])
+      // Store refresh token in Redis
+  await RedisUtils.setCache(
+    AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
+    refreshToken,
+    AUTH_CACHE_TTL.REFRESH_TOKEN
+  );
     return {
       message: 'Email verified successfully',
       data: {
         email: user.email,
         isEmailVerified: user.isEmailVerified,
+        tokens: { accessToken, refreshToken },
       },
     };
   }
@@ -222,10 +233,7 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
   throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Unknown OTP type');
 };
 
-/**
- * --- Resend OTP ---
- * Rate Limit is handled by OtpService
- */
+//--- Resend OTP ---
 const resendOtp = async (payload: IResendOtpPayload) => {
   await OtpService.resendOtpSession(payload.sessionId);
   return { message: 'OTP resent successfully' };

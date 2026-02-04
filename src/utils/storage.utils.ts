@@ -24,6 +24,7 @@ export const uploadFile = async (
     });
     return result;
   } catch (error) {
+    console.error('Error uploading file to Cloudinary:', error);
     throw new Error('File upload failed');
   }
 };
@@ -64,13 +65,10 @@ export const compressVideo = async (
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
-        .upload_stream(
-          transformation,
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        )
+        .upload_stream(transformation, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        })
         .end(buffer);
     });
     return result;
@@ -103,13 +101,10 @@ export const optimizeImage = async (
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
-        .upload_stream(
-          transformation,
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        )
+        .upload_stream(transformation, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        })
         .end(buffer);
     });
     return result;
@@ -130,23 +125,23 @@ export const processImageWithSharp = async (
   }
 ): Promise<Buffer> => {
   const sharp = (await import('sharp')).default;
-  
+
   let processor = sharp(buffer);
-  
+
   if (options.resize && options.width && options.height) {
     processor = processor.resize(options.width, options.height, {
       fit: 'cover',
-      position: 'center'
+      position: 'center',
     });
   }
-  
+
   if (options.format) {
     processor = processor.toFormat(options.format);
   }
-  
+
   if (options.quality) {
     processor = processor.jpeg({ quality: options.quality });
   }
-  
+
   return await processor.toBuffer();
 };
