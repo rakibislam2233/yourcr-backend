@@ -51,28 +51,29 @@ const completeCRRegistration = async (userId: string, payload: ICompleteCRRegist
     where: { id: userId },
     data: {
       isCr: true,
+      isCrDetailsSubmitted: true,
       institutionId: institution.id,
-      department: payload.programInfo.department,
-      program: payload.programInfo.programName,
-      year: payload.programInfo.academicYear,
+      program: payload.academicInfo.program,
+      year: payload.academicInfo.year,
+      department: payload.academicInfo.department,
+      studentId: payload.academicInfo.studentId,
+      semester: payload.academicInfo.semester,
+      batch: payload.academicInfo.batch,
     },
   });
 
   return {
-    ...crRegistration,
-    programInfo: payload.programInfo,
+    email: user.email,
+    crRegistrationStatus: crRegistration.status,
   };
 };
 
-const getCRRegistrationByUserId = async (userId: string) => {
-  return await CRRegistrationRepository.getCRRegistrationByUserId(userId);
-};
 
 const getAllCRRegistrations = async () => {
   return await CRRegistrationRepository.getAllCRRegistrations();
 };
 
-const approveCRRegistration = async (registrationId: string, adminId: string) => {
+const approveCRRegistration = async (registrationId: string) => {
   const registration = await CRRegistrationRepository.getCRRegistrationById(registrationId);
 
   if (!registration) {
@@ -84,7 +85,7 @@ const approveCRRegistration = async (registrationId: string, adminId: string) =>
   }
 
   // Update registration status
-  const updatedRegistration = await CRRegistrationRepository.approveCRRegistration(registrationId, adminId);
+  const updatedRegistration = await CRRegistrationRepository.approveCRRegistration(registrationId);
 
   // Update user role to CR and set approval time
   await database.user.update({
@@ -98,7 +99,7 @@ const approveCRRegistration = async (registrationId: string, adminId: string) =>
   return updatedRegistration;
 };
 
-const rejectCRRegistration = async (registrationId: string, adminId: string, reason: string) => {
+const rejectCRRegistration = async (registrationId: string, reason: string) => {
   const registration = await CRRegistrationRepository.getCRRegistrationById(registrationId);
 
   if (!registration) {
@@ -110,13 +111,17 @@ const rejectCRRegistration = async (registrationId: string, adminId: string, rea
   }
 
   // Update registration status
-  const updatedRegistration = await CRRegistrationRepository.rejectCRRegistration(registrationId, adminId, reason);
+  const updatedRegistration = await CRRegistrationRepository.rejectCRRegistration(
+    registrationId,
+    reason
+  );
 
   // Reset user CR status
   await database.user.update({
     where: { id: registration.userId },
     data: {
       isCr: false,
+      isCrDetailsSubmitted: false,
       institutionId: null,
       department: null,
       program: null,
@@ -130,7 +135,6 @@ const rejectCRRegistration = async (registrationId: string, adminId: string, rea
 
 export const CRRegistrationService = {
   completeCRRegistration,
-  getCRRegistrationByUserId,
   getAllCRRegistrations,
   approveCRRegistration,
   rejectCRRegistration,

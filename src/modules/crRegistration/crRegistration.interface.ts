@@ -8,11 +8,14 @@ export interface ICompleteCRRegistrationPayload {
     contactPhone?: string;
     address: string;
   };
-  // Version 1: Simple CR Info
-  programInfo: {
-    programName: string;
+  //Academic Info
+  academicInfo: {
     department: string;
-    academicYear: string;
+    program: string;
+    semester: string;
+    year: string;
+    studentId: string;
+    batch: string;
   };
-  documentProof: string; // File URL or base64 string
+  documentProof: string; 
 }

@@ -12,22 +12,22 @@ model User {
     status          UserStatus       @default(ACTIVE)
     isEmailVerified Boolean          @default(false)
     
-    // Academic Information (Common for CR & Student)
-    institutionId   String?          // ইনস্টিটিউশন ID
-    department      String?          // ডিপার্টমেন্ট
-    program         String?          // প্রোগ্রাম
-    semester        String?          // সেমিস্টার
-    year            String?          // একাডেমিক ইয়ার
-    rollNumber      String?          // রোল নম্বর
-    studentId       String?          // অফিসিয়াল স্টুডেন্ট ID
-    batch           String?          // ব্যাচ
+    // Academic Information
+    institutionId   String?
+    department      String?
+    program         String?
+    semester        String?
+    year            String?
+    studentId       String?
+    batch           String?
     
     // CR Specific Fields
     isCr            Boolean          @default(false)
-    crApprovedAt    DateTime?        // CR অ্যাপ্রুভাল টাইম
+    crApprovedAt    DateTime?
+    isCrDetailsSubmitted Boolean     @default(false)
     
     // Student Specific Fields
-    crId            String?          // কোন CR এর অধীনে
+    crId            String?
     
     // Relationships
     crRegistrations     CRRegistration[]

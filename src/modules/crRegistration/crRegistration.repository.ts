@@ -13,7 +13,6 @@ const createCRRegistration = async (data: {
       institutionId: data.institutionId,
       documentProof: data.documentProof,
       status: CRRegistrationStatus.PENDING,
-      sessionId: 'default', // Temporary value until we remove sessionId from schema
     },
     include: {
       user: true,
@@ -67,13 +66,11 @@ const getAllCRRegistrations = async () => {
 };
 
 // Approve CR registration
-const approveCRRegistration = async (registrationId: string, adminId: string) => {
+const approveCRRegistration = async (registrationId: string) => {
   const updatedRegistration = await database.cRRegistration.update({
     where: { id: registrationId },
     data: {
       status: CRRegistrationStatus.APPROVED,
-      reviewedById: adminId,
-      reviewedAt: new Date(),
     },
     include: {
       user: true,
@@ -85,14 +82,12 @@ const approveCRRegistration = async (registrationId: string, adminId: string) =>
 };
 
 // Reject CR registration
-const rejectCRRegistration = async (registrationId: string, adminId: string, reason: string) => {
+const rejectCRRegistration = async (registrationId: string, reason: string) => {
   const updatedRegistration = await database.cRRegistration.update({
     where: { id: registrationId },
     data: {
       status: CRRegistrationStatus.REJECTED,
       rejectionReason: reason,
-      reviewedById: adminId,
-      reviewedAt: new Date(),
     },
     include: {
       user: true,

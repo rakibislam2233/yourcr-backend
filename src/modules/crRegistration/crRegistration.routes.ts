@@ -15,13 +15,6 @@ router.post(
   CRRegistrationController.completeCRRegistration
 );
 
-// Get user's own CR registration
-router.get(
-  '/my-registration',
-  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  CRRegistrationController.getMyCRRegistration
-);
-
 // Get all CR registrations (admin only)
 router.get(
   '/',

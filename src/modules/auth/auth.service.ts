@@ -131,7 +131,7 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 7. Check CR Registration Status
-  if (user.role === UserRole.STUDENT && user.isCr) {
+  if (user.role === UserRole.CR && user.isCr && user.isCrDetailsSubmitted) {
     // User has submitted CR registration but not yet approved
     if (!user.crApprovedAt) {
       return {
@@ -143,6 +143,7 @@ const login = async (payload: ILoginPayload) => {
             role: user.role,
             fullName: user.fullName,
             isCr: user.isCr,
+            isCrDetailsSubmitted: user.isCrDetailsSubmitted,
             crApprovedAt: user.crApprovedAt,
           },
           redirect: '/cr-registration/pending',
@@ -152,7 +153,7 @@ const login = async (payload: ILoginPayload) => {
   }
 
   // 8. Check if user should be CR (approved but role not updated)
-  if (user.role === UserRole.STUDENT && user.isCr && user.crApprovedAt) {
+  if (user.role === UserRole.STUDENT && user.isCr && user.isCrDetailsSubmitted && user.crApprovedAt) {
     // Update role to CR if approved
     await database.user.update({
       where: { id: user.id },

@@ -14,15 +14,6 @@ const getInstitutionById = async (id: string) => {
   const institution = await database.institution.findUnique({
     where: { id },
     include: {
-      users: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          role: true,
-          isCr: true,
-        },
-      },
       crRegistrations: {
         include: {
           user: {
@@ -45,7 +36,6 @@ const getAllInstitutions = async () => {
     include: {
       _count: {
         select: {
-          users: true,
           crRegistrations: true,
         },
       },
