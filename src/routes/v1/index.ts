@@ -3,6 +3,7 @@ import { UserRoutes } from '../../modules/user/user.routes';
 import { CRRegistrationRoutes } from '../../modules/crRegistration/crRegistration.routes';
 import { TeacherRoutes } from '../../modules/teacher/teacher.routes';
 import { SubjectRoutes } from '../../modules/subject/subject.routes';
+import { RoutineRoutes } from '../../modules/routine/routine.routes';
 import express from 'express';
 
 const router = express.Router();
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: '/subjects',
     route: SubjectRoutes,
+  },
+  {
+    path: '/routines',
+    route: RoutineRoutes,
   }
 ];
 

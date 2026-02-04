@@ -5,7 +5,11 @@ import sendResponse from '../../utils/sendResponse';
 import { TeacherService } from './teacher.service';
 
 const createTeacher = catchAsync(async (req: Request, res: Response) => {
-  const result = await TeacherService.createTeacher(req.body);
+  const { userId } = req.user;
+  const result = await TeacherService.createTeacher({
+    ...req.body,
+    createdById: userId,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -29,13 +33,14 @@ const getTeacherById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllTeachers = catchAsync(async (req: Request, res: Response) => {
-  const result = await TeacherService.getAllTeachers();
+  const result = await TeacherService.getAllTeachers(req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Teachers fetched successfully',
-    data: result,
+    data: result.data,
+    meta: result.pagination,
   });
 });
 

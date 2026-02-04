@@ -5,6 +5,7 @@ export interface ICreateTeacherPayload {
   photoUrl?: string;
   designation?: string;
   department?: string;
+  createdById?: string;
 }
 
 export interface IUpdateTeacherPayload {
@@ -14,4 +15,5 @@ export interface IUpdateTeacherPayload {
   photoUrl?: string;
   designation?: string;
   department?: string;
+  createdById?: string;
 }

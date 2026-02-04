@@ -22,8 +22,8 @@ const getTeacherById = async (id: string) => {
   return teacher;
 };
 
-const getAllTeachers = async () => {
-  return await TeacherRepository.getAllTeachers();
+const getAllTeachers = async (query: any) => {
+  return await TeacherRepository.getAllTeachers(query);
 };
 
 const updateTeacher = async (id: string, payload: IUpdateTeacherPayload) => {

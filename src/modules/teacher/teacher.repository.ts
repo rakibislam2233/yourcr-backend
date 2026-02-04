@@ -1,5 +1,11 @@
 import { database } from '../../config/database.config';
 import { ICreateTeacherPayload, IUpdateTeacherPayload } from './teacher.interface';
+import {
+  createPaginationResult,
+  PaginationResult,
+  parsePaginationOptions,
+  createPaginationQuery,
+} from '../../utils/pagination.utils';
 
 const createTeacher = async (payload: ICreateTeacherPayload) => {
   return await database.teacher.create({
@@ -18,19 +24,29 @@ const getTeacherById = async (id: string) => {
     where: { id },
     include: {
       subjects: true,
+      createdBy: true,
     },
   });
 };
 
-const getAllTeachers = async () => {
-  return await database.teacher.findMany({
-    include: {
-      subjects: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+const getAllTeachers = async (query: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(query);
+  const { skip, take, orderBy } = createPaginationQuery(pagination);
+
+  const [teachers, total] = await Promise.all([
+    database.teacher.findMany({
+      include: {
+        subjects: true,
+        createdBy: true,
+      },
+      skip,
+      take,
+      orderBy,
+    }),
+    database.teacher.count(),
+  ]);
+
+  return createPaginationResult(teachers, total, pagination);
 };
 
 const updateTeacher = async (id: string, payload: IUpdateTeacherPayload) => {

@@ -5,7 +5,11 @@ import sendResponse from '../../utils/sendResponse';
 import { SubjectService } from './subject.service';
 
 const createSubject = catchAsync(async (req: Request, res: Response) => {
-  const result = await SubjectService.createSubject(req.body);
+  const { userId } = req.user;
+  const result = await SubjectService.createSubject({
+    ...req.body,
+    createdById: userId,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -29,13 +33,14 @@ const getSubjectById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllSubjects = catchAsync(async (req: Request, res: Response) => {
-  const result = await SubjectService.getAllSubjects();
+  const result = await SubjectService.getAllSubjects(req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Subjects fetched successfully',
-    data: result,
+    data: result.data,
+    meta: result.pagination,
   });
 });
 
