@@ -10,6 +10,7 @@ import { IssueRoutes } from '../../modules/issue/issue.routes';
 import { NotificationRoutes } from '../../modules/notification/notification.routes';
 import { AuditLogRoutes } from '../../modules/auditLog/auditLog.routes';
 import { ClassRoutes } from '../../modules/class/class.routes';
+import { AssessmentSubmissionRoutes } from '../../modules/assessmentSubmission/assessmentSubmission.routes';
 import express from 'express';
 
 const router = express.Router();
@@ -62,6 +63,10 @@ const moduleRoutes = [
   {
     path: '/classes',
     route: ClassRoutes,
+  },
+  {
+    path: '/assessment-submissions',
+    route: AssessmentSubmissionRoutes,
   }
 ];
 

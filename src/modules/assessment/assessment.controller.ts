@@ -6,10 +6,7 @@ import { AssessmentService } from './assessment.service';
 
 const createAssessment = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await AssessmentService.createAssessment({
-    ...req.body,
-    createdById: userId,
-  });
+  const result = await AssessmentService.createAssessment(req.body, userId, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

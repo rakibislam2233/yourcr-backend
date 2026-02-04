@@ -6,10 +6,11 @@ import { UserRepository } from '../user/user.repository';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { UserRole } from '../../shared/enum/user.enum';
 import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
 
 const createNotice = async (payload: ICreateNoticePayload, actorId: string, req?: Request) => {
-  await createAuditLog(actorId, 'CREATE_NOTICE', 'Notice', undefined, { payload }, req);
+  await createAuditLog(actorId, AuditAction.CREATE_NOTICE, 'Notice', undefined, { payload }, req);
 
   const notice = await NoticeRepository.createNotice({
     ...payload,
@@ -49,7 +50,7 @@ const getAllNotices = async (query: any) => {
 };
 
 const updateNotice = async (id: string, payload: IUpdateNoticePayload, actorId: string, req?: Request) => {
-  await createAuditLog(actorId, 'UPDATE_NOTICE', 'Notice', id, { payload }, req);
+  await createAuditLog(actorId, AuditAction.UPDATE_NOTICE, 'Notice', id, { payload }, req);
 
   const existing = await NoticeRepository.getNoticeById(id);
   if (!existing) {
@@ -59,7 +60,7 @@ const updateNotice = async (id: string, payload: IUpdateNoticePayload, actorId: 
 };
 
 const deleteNotice = async (id: string, actorId: string, req?: Request) => {
-  await createAuditLog(actorId, 'DELETE_NOTICE', 'Notice', id, {}, req);
+  await createAuditLog(actorId, AuditAction.DELETE_NOTICE, 'Notice', id, {}, req);
 
   const existing = await NoticeRepository.getNoticeById(id);
   if (!existing) {

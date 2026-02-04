@@ -6,10 +6,11 @@ import { SubjectRepository } from '../subject/subject.repository';
 import { TeacherRepository } from '../teacher/teacher.repository';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
 
 const createClass = async (payload: ICreateClassPayload, actorId: string, req?: Request) => {
-  await createAuditLog(actorId, 'CREATE_CLASS', 'Class', undefined, { payload }, req);
+  await createAuditLog(actorId, AuditAction.CREATE_CLASS, 'Class', undefined, { payload }, req);
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);

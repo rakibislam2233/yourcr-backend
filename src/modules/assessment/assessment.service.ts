@@ -3,15 +3,33 @@ import ApiError from '../../utils/ApiError';
 import { ICreateAssessmentPayload, IUpdateAssessmentPayload } from './assessment.interface';
 import { AssessmentRepository } from './assessment.repository';
 import { SubjectRepository } from '../subject/subject.repository';
+import { addNotificationJob } from '../../queues/notification.queue';
+import { createAuditLog } from '../../utils/audit.helper';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { Request } from 'express';
 
-const createAssessment = async (payload: ICreateAssessmentPayload) => {
+const createAssessment = async (payload: ICreateAssessmentPayload, actorId: string, req?: Request) => {
+  await createAuditLog(actorId, AuditAction.CREATE_ASSESSMENT, 'Assessment', undefined, { payload }, req);
+
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
     if (!subject) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Subject not found');
     }
   }
-  return await AssessmentRepository.createAssessment(payload);
+
+  const assessment = await AssessmentRepository.createAssessment(payload);
+
+  // Notify students under this CR
+  await addNotificationJob({
+    title: `New Assessment: ${assessment.title}`,
+    message: `Deadline: ${new Date(assessment.deadline).toLocaleString()}`,
+    type: 'ASSESSMENT',
+    relatedId: assessment.id,
+    crId: actorId,
+  });
+
+  return assessment;
 };
 
 const getAssessmentById = async (id: string) => {

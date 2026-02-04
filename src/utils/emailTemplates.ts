@@ -208,7 +208,8 @@ const generateProfessionalEmailTemplate = (
           <!-- Header -->
           <tr>
             <td class="header">
-              <img src="https://i.ibb.co.com/dwnFctfX/logo.webp" alt="Easy Bet" />
+              <h1>YourCR</h1>
+              <p style="color: #64748b; font-size: 16px; margin: 8px 0 0 0;">Class Representative Management System</p>
             </td>
           </tr>
 
@@ -223,14 +224,14 @@ const generateProfessionalEmailTemplate = (
           <tr>
             <td class="footer">
               <p style="margin: 0 0 10px;">
-                <strong>Easy Bet</strong>
+                <strong>YourCR</strong>
               </p>
               <p style="margin: 0 0 8px;">
-                Email: <a href="mailto:support@easybet.com">support@easybet.com</a><br>
-                Website: <a href="https://www.easybet.com">www.easybet.com</a>
+                Email: <a href="mailto:support@yourcr.app">support@yourcr.app</a><br>
+                Website: <a href="https://yourcr.app">www.yourcr.app</a>
               </p>
               <p style="margin: 25px 0 0; color: #64748b; font-size: 12px;">
-                © ${new Date().getFullYear()} Easy Bet. All rights reserved.
+                © ${new Date().getFullYear()} YourCR. All rights reserved.
               </p>
             </td>
           </tr>
@@ -257,7 +258,7 @@ const generateHighlightBox = (html: string) => `
 `;
 const generateButton = (text: string, url: string) => `
   <div style="text-align:center; margin:32px 0;">
-    <a href="${url}" class="btn" target="_blank">${text}</a>
+    <a href="${url}" class="cta-button" target="_blank">${text}</a>
   </div>
 `;
 
@@ -335,6 +336,111 @@ export const sendOTPEmail = async (to: string, otp: string): Promise<void> => {
   const html = generateProfessionalEmailTemplate(content, {
     title: 'Your OTP Code',
     preheader: `Your code: ${otp}`,
+  });
+
+  await addEmailToQueue({ to, subject, html });
+};
+
+// ──────────────────────────────────────────────
+// CR Registration Emails
+export const sendPendingCRRegistrationEmail = async (to: string, name: string, institutionName: string): Promise<void> => {
+  const subject = 'CR Registration Received – Pending Approval';
+  const content = `
+    <h1>CR Registration Received</h1>
+    <p>Hi <strong>${name}</strong>,</p>
+    <p>Thank you for registering as a Class Representative for <strong>${institutionName}</strong>. Your registration is currently under review.</p>
+    ${generateHighlightBox(`
+      <p><strong>Registration Details:</strong></p>
+      <ul style="padding-left:24px; margin:16px 0;">
+        <li>Institution: ${institutionName}</li>
+        <li>Status: <span class="status-badge status-pending">Pending</span></li>
+      </ul>
+    `)}
+    <p>You will receive another email once your registration is approved or rejected.</p>
+    <p style="color: #6b7280; font-size: 14px;">This usually takes 1-2 business days.</p>
+  `;
+
+  const html = generateProfessionalEmailTemplate(content, {
+    title: 'CR Registration Pending',
+    preheader: `Your CR registration for ${institutionName} is under review`,
+  });
+
+  await addEmailToQueue({ to, subject, html });
+};
+
+export const sendCRRegistrationApprovedEmail = async (to: string, name: string, institutionName: string): Promise<void> => {
+  const subject = 'CR Registration Approved – Welcome to YourCR!';
+  const content = `
+    <h1>Registration Approved! 🎉</h1>
+    <p>Congratulations <strong>${name}</strong>,</p>
+    <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-approved">Approved</span>!</p>
+    ${generateHighlightBox(`
+      <p><strong>What you can now do:</strong></p>
+      <ul style="padding-left:24px; margin:16px 0;">
+        <li>Create and manage class notices</li>
+        <li>Schedule classes and assessments</li>
+        <li>Communicate with your students</li>
+        <li>Track student issues and resolutions</li>
+      </ul>
+    `)}
+    <p>Start managing your class right away!</p>
+    ${generateButton('Go to Dashboard', 'https://yourcr.app/dashboard')}
+  `;
+
+  const html = generateProfessionalEmailTemplate(content, {
+    title: 'CR Registration Approved',
+    preheader: `Your CR registration for ${institutionName} has been approved`,
+  });
+
+  await addEmailToQueue({ to, subject, html });
+};
+
+export const sendCRRegistrationRejectedEmail = async (to: string, name: string, institutionName: string, reason?: string): Promise<void> => {
+  const subject = 'CR Registration Update – Action Required';
+  const content = `
+    <h1>Registration Update</h1>
+    <p>Hi <strong>${name}</strong>,</p>
+    <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-rejected">Rejected</span>.</p>
+    ${reason ? generateHighlightBox(`
+      <p><strong>Reason:</strong></p>
+      <p>${reason}</p>
+    `) : ''}
+    <p>If you believe this is a mistake or would like to reapply with updated information, please contact our support team.</p>
+    ${generateButton('Contact Support', 'mailto:support@yourcr.app')}
+  `;
+
+  const html = generateProfessionalEmailTemplate(content, {
+    title: 'CR Registration Rejected',
+    preheader: `Your CR registration for ${institutionName} requires attention`,
+  });
+
+  await addEmailToQueue({ to, subject, html });
+};
+
+// ──────────────────────────────────────────────
+// Student Created Email
+export const sendStudentCreatedEmail = async (to: string, name: string, crName: string, institutionName: string): Promise<void> => {
+  const subject = 'Welcome to YourCR – Account Created';
+  const content = `
+    <h1>Welcome to YourCR! 👋</h1>
+    <p>Hi <strong>${name}</strong>,</p>
+    <p>Your account has been created on YourCR by your Class Representative <strong>${crName}</strong> from <strong>${institutionName}</strong>.</p>
+    ${generateHighlightBox(`
+      <p><strong>What you can do:</strong></p>
+      <ul style="padding-left:24px; margin:16px 0;">
+        <li>View class notices and updates</li>
+        <li>Access class schedules and routines</li>
+        <li>Submit assessments and assignments</li>
+        <li>Report issues to your CR</li>
+      </ul>
+    `)}
+    <p>You can now log in and start using the platform.</p>
+    ${generateButton('Log In to YourCR', 'https://yourcr.app/login')}
+  `;
+
+  const html = generateProfessionalEmailTemplate(content, {
+    title: 'Welcome to YourCR',
+    preheader: `Your account has been created by ${crName}`,
   });
 
   await addEmailToQueue({ to, subject, html });

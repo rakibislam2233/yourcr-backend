@@ -13,6 +13,7 @@ model Assessment {
   createdBy   User?          @relation("AssessmentCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt()
+  submissions AssessmentSubmission[]
 
   @@map("assessments")
 }
