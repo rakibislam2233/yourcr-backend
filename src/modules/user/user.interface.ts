@@ -13,14 +13,15 @@ export interface ICreateStudentPayload {
   fullName: string;
   email: string;
   phoneNumber: string;
+  password: string;
   institutionId: string;
   department: string;
   program: string;
   year: string;
-  rollNumber: string;
   studentId?: string;
   semester?: string;
   batch?: string;
+  crId: string;
 }
 
 // Interface for user profile
@@ -37,7 +38,6 @@ export interface IUserProfileResponse {
     department: string;
     program: string;
     year: string;
-    rollNumber: string;
     studentId?: string;
     semester?: string;
     batch?: string;

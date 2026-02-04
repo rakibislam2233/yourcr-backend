@@ -1,6 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateAccountPayload } from './user.interface';
-import { createPaginationResult, PaginationResult, parsePaginationOptions, createPaginationQuery } from '../../utils/pagination.utils';
+import { ICreateAccountPayload, ICreateStudentPayload } from './user.interface';
+import {
+  createPaginationResult,
+  PaginationResult,
+  parsePaginationOptions,
+  createPaginationQuery,
+} from '../../utils/pagination.utils';
 
 const createAccount = async (payload: ICreateAccountPayload) => {
   const user = await database.user.create({
@@ -49,10 +54,10 @@ const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> =
   // Use pagination utility for automatic defaults
   const pagination = parsePaginationOptions(query);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
-  
+
   // Build where clause from filters
   const where: any = {};
-  
+
   // String filters (case-insensitive contains)
   if (query.fullName) {
     where.fullName = { contains: query.fullName, mode: 'insensitive' };
@@ -63,7 +68,7 @@ const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> =
   if (query.phoneNumber) {
     where.phoneNumber = { contains: query.phoneNumber, mode: 'insensitive' };
   }
-  
+
   // Enum filters
   if (query.status) {
     where.status = query.status;
@@ -71,12 +76,12 @@ const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> =
   if (query.role) {
     where.role = query.role;
   }
-  
+
   // Boolean filter
   if (query.isEmailVerified !== undefined) {
     where.isEmailVerified = query.isEmailVerified === 'true' || query.isEmailVerified === true;
   }
-  
+
   // Global search
   if (query.search) {
     where.OR = [
@@ -85,7 +90,7 @@ const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> =
       { phoneNumber: { contains: query.search, mode: 'insensitive' } },
     ];
   }
-  
+
   const [users, total] = await Promise.all([
     database.user.findMany({
       where,
@@ -135,21 +140,7 @@ const getUserProfileById = async (id: string) => {
   });
 };
 
-const createStudentAccount = async (data: {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  password: string;
-  institutionId: string;
-  department: string;
-  program: string;
-  year: string;
-  rollNumber: string;
-  studentId?: string;
-  semester?: string;
-  batch?: string;
-  crId: string;
-}) => {
+const createStudentAccount = async (data: ICreateStudentPayload) => {
   return await database.user.create({
     data: {
       fullName: data.fullName,
@@ -160,7 +151,6 @@ const createStudentAccount = async (data: {
       department: data.department,
       program: data.program,
       year: data.year,
-      rollNumber: data.rollNumber,
       studentId: data.studentId,
       semester: data.semester,
       batch: data.batch,
@@ -171,8 +161,9 @@ const createStudentAccount = async (data: {
 };
 
 const deleteUserById = async (id: string) => {
-  return await database.user.delete({
+  return await database.user.update({
     where: { id },
+    data: { status: 'DELETED' },
   });
 };
 

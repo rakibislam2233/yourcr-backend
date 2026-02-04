@@ -25,9 +25,6 @@ const createStudent = z.object({
     year: z
       .string({ error: 'Academic year is required and must be a string' })
       .min(1, 'Academic year is required'),
-    rollNumber: z
-      .string({ error: 'Roll number is required and must be a string' })
-      .min(1, 'Roll number is required'),
     studentId: z
       .string({ error: 'Student ID must be a string' })
       .optional(),

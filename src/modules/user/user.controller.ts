@@ -114,6 +114,22 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteMyProfile = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  await UserService.deleteMyProfile(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Profile deleted successfully',
+  });
+});
+
 export const UserController = {
   getAllUsers,
   getUserById,
@@ -122,4 +138,5 @@ export const UserController = {
   createStudent,
   updateUser,
   deleteUser,
+  deleteMyProfile
 };

@@ -87,7 +87,6 @@ CREATE TABLE "users" (
     "phoneNumber" TEXT NOT NULL,
     "profileImage" TEXT,
     "department" TEXT,
-    "rollNumber" TEXT,
     "bio" TEXT,
     "dateOfBirth" TIMESTAMP(3),
     "lastLogin" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

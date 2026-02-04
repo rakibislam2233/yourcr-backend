@@ -40,7 +40,6 @@ const getUserProfile = async (userId: string): Promise<IUserProfileResponse> => 
           department: user.department || '',
           program: user.program || '',
           year: user.year || '',
-          rollNumber: user.rollNumber || '',
           studentId: user.studentId || undefined,
           semester: user.semester || undefined,
           batch: user.batch || undefined,
@@ -109,7 +108,6 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload) =
     department: studentData.department,
     program: studentData.program,
     year: studentData.year,
-    rollNumber: studentData.rollNumber,
     studentId: studentData.studentId,
     semester: studentData.semester,
     batch: studentData.batch,
@@ -144,6 +142,10 @@ const deleteUserById = async (id: string) => {
   await UserRepository.deleteUserById(id);
 };
 
+const deleteMyProfile = async (userId: string) => {
+  await UserRepository.deleteUserById(userId);
+};
+
 export const UserService = {
   getAllUsers,
   getUserById,
@@ -152,4 +154,5 @@ export const UserService = {
   createStudent,
   updateUserById,
   deleteUserById,
+  deleteMyProfile,
 };

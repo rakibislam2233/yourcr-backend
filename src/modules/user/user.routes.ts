@@ -23,20 +23,21 @@ router.get(
 );
 
 // Get user profile
-router.get(
-  '/profile/me',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
-  UserController.getUserProfile
-);
-
-// Update user profile with image upload
-router.patch(
-  '/profile/me',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
-  upload.single('profileImage'),
-  validateRequest(UserValidations.updateMyProfile),
-  UserController.updateMyProfile
-);
+router
+  .route('/profile/me')
+  .get(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    UserController.getUserProfile
+  )
+  .patch(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    validateRequest(UserValidations.updateMyProfile),
+    UserController.updateMyProfile
+  )
+  .delete(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    UserController.deleteMyProfile
+  );
 
 // Create student (CR only)
 router.post('/create-student', auth(UserRole.CR), validateRequest(UserValidations.createStudent));
