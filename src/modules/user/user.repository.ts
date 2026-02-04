@@ -1,5 +1,6 @@
 import { database } from '../../config/database.config';
 import { ICreateAccountPayload } from './user.interface';
+import { createPaginationResult, PaginationResult, parsePaginationOptions, createPaginationQuery } from '../../utils/pagination.utils';
 
 const createAccount = async (payload: ICreateAccountPayload) => {
   const user = await database.user.create({
@@ -44,21 +45,68 @@ const updateUserById = async (id: string, data: any) => {
   });
 };
 
-const getAllUsersForAdmin = async () => {
-  return await database.user.findMany({
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      phoneNumber: true,
-      isEmailVerified: true,
-      status: true,
-      createdAt: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> => {
+  // Use pagination utility for automatic defaults
+  const pagination = parsePaginationOptions(query);
+  const { skip, take, orderBy } = createPaginationQuery(pagination);
+  
+  // Build where clause from filters
+  const where: any = {};
+  
+  // String filters (case-insensitive contains)
+  if (query.fullName) {
+    where.fullName = { contains: query.fullName, mode: 'insensitive' };
+  }
+  if (query.email) {
+    where.email = { contains: query.email, mode: 'insensitive' };
+  }
+  if (query.phoneNumber) {
+    where.phoneNumber = { contains: query.phoneNumber, mode: 'insensitive' };
+  }
+  
+  // Enum filters
+  if (query.status) {
+    where.status = query.status;
+  }
+  if (query.role) {
+    where.role = query.role;
+  }
+  
+  // Boolean filter
+  if (query.isEmailVerified !== undefined) {
+    where.isEmailVerified = query.isEmailVerified === 'true' || query.isEmailVerified === true;
+  }
+  
+  // Global search
+  if (query.search) {
+    where.OR = [
+      { fullName: { contains: query.search, mode: 'insensitive' } },
+      { email: { contains: query.search, mode: 'insensitive' } },
+      { phoneNumber: { contains: query.search, mode: 'insensitive' } },
+    ];
+  }
+  
+  const [users, total] = await Promise.all([
+    database.user.findMany({
+      where,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phoneNumber: true,
+        isEmailVerified: true,
+        status: true,
+        role: true,
+        createdAt: true,
+      },
+      skip,
+      take,
+      orderBy,
+    }),
+    database.user.count({ where }),
+  ]);
+
+  return createPaginationResult(users, total, pagination);
 };
 
 const getUserByIdForResponse = async (id: string) => {

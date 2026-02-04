@@ -3,16 +3,22 @@ import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
+import pick from '../../utils/pick.utils';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await UserService.getAllUsers();
+  // Just pick filters and options, pass to service
+  const filters = pick(req.query, ['fullName', 'email', 'phoneNumber', 'status', 'role', 'isEmailVerified', 'search']);
+  const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+
+  const users = await UserService.getAllUsers(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Users fetched successfully',
-    data: users,
+    meta: users.pagination,
+    data: users.data,
   });
 });
 

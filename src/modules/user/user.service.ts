@@ -2,11 +2,11 @@ import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../utils/ApiError';
 import { uploadFile } from '../../utils/storage.utils';
-import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
+import { ICreateStudentPayload, IUserProfileResponse, UserQueryOptions } from './user.interface';
 import { UserRepository } from './user.repository';
 
-const getAllUsers = async () => {
-  return await UserRepository.getAllUsersForAdmin();
+const getAllUsers = async (filters: any, options: any) => {
+  return await UserRepository.getAllUsersForAdmin({ ...filters, ...options });
 };
 
 const getUserById = async (id: string) => {

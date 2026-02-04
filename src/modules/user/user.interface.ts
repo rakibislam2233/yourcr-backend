@@ -43,3 +43,22 @@ export interface IUserProfileResponse {
     batch?: string;
   };
 }
+
+// User filter options
+export interface UserFilterOptions {
+  fullName?: string;
+  email?: string;
+  phoneNumber?: string;
+  status?: string;
+  role?: string;
+  isEmailVerified?: boolean;
+  search?: string;
+}
+
+// User query options
+export interface UserQueryOptions extends UserFilterOptions {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
