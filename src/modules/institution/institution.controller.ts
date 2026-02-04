@@ -3,10 +3,17 @@ import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { InstitutionService } from './institution.service';
+import { uploadFile } from '../../utils/storage.utils';
 
 // Create institution (Admin only)
 const createInstitution = catchAsync(async (req: Request, res: Response) => {
   const institutionData = req.body;
+
+  // Handle logo upload if file is provided
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'yourcr/institutions', `logo_${Date.now()}`);
+    institutionData.logo = uploadResult.secure_url;
+  }
 
   const institution = await InstitutionService.createInstitution(institutionData);
 

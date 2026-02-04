@@ -6,6 +6,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
 import { UserRole } from '../../shared/enum/user.enum';
+import { uploadFile } from '../../utils/storage.utils';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
@@ -64,7 +65,7 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get user profile with current session
+// Get user profile with academic info
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id;
 
@@ -75,27 +76,13 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   const user = await database.user.findUnique({
     where: { id: userId },
     include: {
-      studentSessions: {
-        include: {
-          session: true,
-        },
-        where: {
-          isActive: true,
-        },
-      },
+      institution: true,
     },
   });
 
   if (!user) {
     throw new Error('User not found');
   }
-
-  // Get current session
-  const currentSession = user.currentSessionId
-    ? await database.session.findUnique({
-        where: { id: user.currentSessionId },
-      })
-    : null;
 
   const userProfile: IUserProfileResponse = {
     id: user.id,
@@ -104,21 +91,19 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
     phoneNumber: user.phoneNumber,
     role: user.role,
     status: user.status,
-    currentSession: currentSession
+    isCr: user.isCr,
+    academicInfo: user.institutionId
       ? {
-          id: currentSession.id,
-          name: currentSession.name,
-          department: currentSession.department,
-          academicYear: currentSession.academicYear,
+          institutionId: user.institutionId,
+          department: user.department || '',
+          program: user.program || '',
+          year: user.year || '',
+          rollNumber: user.rollNumber || '',
+          studentId: user.studentId || undefined,
+          semester: user.semester || undefined,
+          batch: user.batch || undefined,
         }
       : undefined,
-    allSessions: user.studentSessions.map(ss => ({
-      id: ss.session.id,
-      name: ss.session.name,
-      department: ss.session.department,
-      academicYear: ss.session.academicYear,
-      isActive: ss.isActive,
-    })),
   };
 
   sendResponse(res, {

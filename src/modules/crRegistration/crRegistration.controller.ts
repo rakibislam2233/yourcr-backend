@@ -4,6 +4,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { CRRegistrationService } from './crRegistration.service';
 import ApiError from '../../utils/ApiError';
+import { uploadFile } from '../../utils/storage.utils';
 
 const completeCRRegistration = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
@@ -11,7 +12,22 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
     throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
   }
 
-  const result = await CRRegistrationService.completeCRRegistration(userId, req.body);
+  // Handle file upload
+  let documentProofUrl = '';
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'yourcr/cr-documents', `cr_proof_${userId}_${Date.now()}`);
+    documentProofUrl = uploadResult.secure_url;
+  } else {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Document proof is required');
+  }
+
+  // Merge file URL with request body
+  const registrationData = {
+    ...req.body,
+    documentProof: documentProofUrl,
+  };
+
+  const result = await CRRegistrationService.completeCRRegistration(userId, registrationData);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -4,13 +4,14 @@ import { auth } from '../../middleware/auth.middleware';
 import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
 import { CRRegistrationValidations } from './crRegistration.validation';
+import upload from '../../utils/fileUpload.utils';
 
 const router = express.Router();
 
-// Complete CR registration with institution and session info
 router.post(
   '/',
-  auth(UserRole.CR),
+  auth(UserRole.STUDENT),
+  upload.single('documentProof'),
   validateRequest(CRRegistrationValidations.completeRegistration),
   CRRegistrationController.completeCRRegistration
 );

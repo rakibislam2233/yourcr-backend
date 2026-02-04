@@ -4,13 +4,15 @@ import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
 import { InstitutionValidations } from './institution.validation';
 import { InstitutionController } from './institution.controller';
+import { FileUploadMiddleware } from '../../utils/fileUpload.utils';
 
 const router = Router();
 
-// Create institution (Admin only)
+// Create institution (Admin only) with logo upload
 router.post(
   '/',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  FileUploadMiddleware.institutionLogo,
   validateRequest(InstitutionValidations.createInstitution),
   InstitutionController.createInstitution
 );
