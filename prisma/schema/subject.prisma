@@ -2,11 +2,12 @@ model Subject {
     id          String   @id @default(cuid())
     name        String
     code        String?
-    credit      String?
+    credit      Float?
     teacherId   String?
     teacher     Teacher? @relation(fields: [teacherId], references: [id])
-    description BigInt?
+    description String?
     roomNumber  String?
+    isDepartmental Boolean @default(true)
     isDeleted   Boolean  @default(false)
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt()

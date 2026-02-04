@@ -1,18 +1,20 @@
 export interface ICreateSubjectPayload {
   name: string;
   code?: string;
-  credit?: string;
+  credit?: number;
   teacherId?: string;
-  description?: bigint;
+  description?: string;
   roomNumber?: string;
+  isDepartmental?: boolean;
 }
 
 export interface IUpdateSubjectPayload {
   name?: string;
   code?: string;
-  credit?: string;
+  credit?: number;
   teacherId?: string;
-  description?: bigint;
+  description?: string;
   roomNumber?: string;
+  isDepartmental?: boolean;
   isDeleted?: boolean;
 }
