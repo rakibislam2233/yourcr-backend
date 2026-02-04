@@ -1,0 +1,15 @@
+model Subject {
+    id          String   @id @default(cuid())
+    name        String
+    code        String?
+    credit      String?
+    teacherId   String?
+    teacher     Teacher? @relation(fields: [teacherId], references: [id])
+    description BigInt?
+    roomNumber  String?
+    isDeleted   Boolean  @default(false)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt()
+
+    @@map("subjects")
+}
