@@ -1,29 +1,12 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
-import bcrypt from 'bcryptjs';
-import { database } from '../../config/database.config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
-import { UserRole } from '../../shared/enum/user.enum';
-import { uploadFile } from '../../utils/storage.utils';
+import { UserService } from './user.service';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await database.user.findMany({
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      phoneNumber: true,
-      isEmailVerified: true,
-      status: true,
-      createdAt: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  const users = await UserService.getAllUsers();
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,24 +21,7 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
 
-  const user = await database.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      phoneNumber: true,
-      profileImage: true,
-      isEmailVerified: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
-  }
+  const user = await UserService.getUserById(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -73,38 +39,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not authenticated');
   }
 
-  const user = await database.user.findUnique({
-    where: { id: userId },
-    include: {
-      institution: true,
-    },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
-  }
-
-  const userProfile: IUserProfileResponse = {
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-    role: user.role,
-    status: user.status,
-    isCr: user.isCr,
-    academicInfo: user.institutionId
-      ? {
-          institutionId: user.institutionId,
-          department: user.department || '',
-          program: user.program || '',
-          year: user.year || '',
-          rollNumber: user.rollNumber || '',
-          studentId: user.studentId || undefined,
-          semester: user.semester || undefined,
-          batch: user.batch || undefined,
-        }
-      : undefined,
-  };
+  const userProfile = await UserService.getUserProfile(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -114,90 +49,34 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Create student (CR only)
-const createStudent = async (crId: string, studentData: ICreateStudentPayload) => {
-  // Generate default password
-  const defaultPassword = 'Student@123';
-  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-
-  // Get CR info
-  const cr = await database.user.findUnique({
-    where: { id: crId },
-  });
-
-  if (!cr || !cr.isCr) {
-    throw new Error('Only CR can create students');
-  }
-
-  // Check if email already exists
-  const existingUser = await database.user.findUnique({
-    where: { email: studentData.email },
-  });
-  if (existingUser) {
-    throw new Error('Email already exists');
-  }
-
-  // Create student with academic info (Version 1: Simple)
-  const student = await database.user.create({
-    data: {
-      fullName: studentData.fullName,
-      email: studentData.email,
-      phoneNumber: studentData.phoneNumber,
-      password: hashedPassword,
-      institutionId: studentData.institutionId,
-      department: studentData.department,
-      program: studentData.program,
-      year: studentData.year,
-      rollNumber: studentData.rollNumber,
-      studentId: studentData.studentId,
-      semester: studentData.semester,
-      batch: studentData.batch,
-      crId: crId,
-      role: 'STUDENT',
-    },
-  });
-
-  // Return student data without password
-  const { password, ...studentWithoutPassword } = student;
-
-  return {
-    ...studentWithoutPassword,
-    defaultPassword,
-  };
+const createStudent = async (crId: string, studentData: any) => {
+  return await UserService.createStudent(crId, studentData);
 };
+
+// Update my profile (self)
+const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  const result = await UserService.updateMyProfile(userId, req.body, req.file);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Profile updated successfully',
+    data: result,
+  });
+});
 
 // Update user
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
-  const updateData = req.body;
 
-  // Check if user exists
-  const existingUser = await database.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!existingUser) {
-    throw new Error('User not found');
-  }
-
-  // Prevent updating email and password through this endpoint
-  const { email, password, ...allowedUpdates } = updateData;
-
-  const user = await database.user.update({
-    where: { id: userId },
-    data: allowedUpdates,
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      phoneNumber: true,
-      profileImage: true,
-      isEmailVerified: true,
-      status: true,
-      updatedAt: true,
-    },
-  });
+  const user = await UserService.updateUserById(userId, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -212,18 +91,7 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = Array.isArray(id) ? id[0] : id;
 
-  // Check if user exists
-  const existingUser = await database.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!existingUser) {
-    throw new Error('User not found');
-  }
-
-  await database.user.delete({
-    where: { id: userId },
-  });
+  await UserService.deleteUserById(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -236,6 +104,7 @@ export const UserController = {
   getAllUsers,
   getUserById,
   getUserProfile,
+  updateMyProfile,
   createStudent,
   updateUser,
   deleteUser,

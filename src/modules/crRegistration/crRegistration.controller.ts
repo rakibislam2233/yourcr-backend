@@ -10,14 +10,32 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
   if (!userId) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
   }
-  
-  // Parse form data and create structured object
-  const parsedData = parseFormData(req.body);
-  
+
   // Validate file exists
   if (!req.file) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Document proof is required');
   }
+
+  // Parse JSON strings from form-data
+  let institutionInfo: unknown;
+  let academicInfo: unknown;
+
+  try {
+    institutionInfo = JSON.parse(req.body.institutionInfo);
+  } catch {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'institutionInfo must be valid JSON');
+  }
+
+  try {
+    academicInfo = JSON.parse(req.body.academicInfo);
+  } catch {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'academicInfo must be valid JSON');
+  }
+
+  const parsedData = {
+    institutionInfo,
+    academicInfo,
+  };
 
   // Call service with parsed data and file
   const result = await CRRegistrationService.completeCRRegistration(userId, parsedData, req.file);
@@ -29,31 +47,6 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
     data: result,
   });
 });
-
-// Helper function to parse form data into structured object
-const parseFormData = (formData: any) => {
-  const institutionInfo = {
-    name: formData['institutionInfo[name]'],
-    type: formData['institutionInfo[type]'],
-    contactEmail: formData['institutionInfo[contactEmail]'],
-    contactPhone: formData['institutionInfo[contactPhone]'],
-    address: formData['institutionInfo[address]'],
-  };
-
-  const academicInfo = {
-    program: formData['academicInfo[program]'],
-    year: formData['academicInfo[year]'],
-    semester: formData['academicInfo[semester]'],
-    department: formData['academicInfo[department]'],
-    studentId: formData['academicInfo[studentId]'],
-    batch: formData['academicInfo[batch]'],
-  };
-
-  return {
-    institutionInfo,
-    academicInfo,
-  };
-};
 
 
 const getAllCRRegistrations = catchAsync(async (req: Request, res: Response) => {

@@ -44,6 +44,90 @@ const updateUserById = async (id: string, data: any) => {
   });
 };
 
+const getAllUsersForAdmin = async () => {
+  return await database.user.findMany({
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      phoneNumber: true,
+      isEmailVerified: true,
+      status: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
+
+const getUserByIdForResponse = async (id: string) => {
+  return await database.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      phoneNumber: true,
+      profileImage: true,
+      isEmailVerified: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+};
+
+const getUserProfileById = async (id: string) => {
+  return await database.user.findUnique({
+    where: { id },
+    include: {
+      institution: true,
+    },
+  });
+};
+
+const createStudentAccount = async (data: {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  institutionId: string;
+  department: string;
+  program: string;
+  year: string;
+  rollNumber: string;
+  studentId?: string;
+  semester?: string;
+  batch?: string;
+  crId: string;
+}) => {
+  return await database.user.create({
+    data: {
+      fullName: data.fullName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      password: data.password,
+      institutionId: data.institutionId,
+      department: data.department,
+      program: data.program,
+      year: data.year,
+      rollNumber: data.rollNumber,
+      studentId: data.studentId,
+      semester: data.semester,
+      batch: data.batch,
+      crId: data.crId,
+      role: 'STUDENT',
+    },
+  });
+};
+
+const deleteUserById = async (id: string) => {
+  return await database.user.delete({
+    where: { id },
+  });
+};
+
 const isEmailExists = async (email: string) => {
   const user = await database.user.findUnique({
     where: { email },
@@ -67,4 +151,9 @@ export const UserRepository = {
   findUserByEmailWithLatestCr,
   setUserEmailVerified,
   updateUserById,
+  getAllUsersForAdmin,
+  getUserByIdForResponse,
+  getUserProfileById,
+  createStudentAccount,
+  deleteUserById,
 };

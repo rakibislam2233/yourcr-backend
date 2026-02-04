@@ -1,39 +1,58 @@
 import { z } from 'zod';
 import { InstitutionType } from '../../shared/enum/institution.enum';
 
+const institutionInfoSchema = z.object({
+  name: z.string().min(1, 'Institution name is required'),
+  type: z.nativeEnum(InstitutionType, {
+    error: 'Invalid institution type',
+  }),
+  contactEmail: z
+    .string()
+    .email('Invalid contact email format')
+    .transform(v => v.toLowerCase()),
+  contactPhone: z.string().optional(),
+  address: z.string().min(1, 'Address is required'),
+});
+
+const academicInfoSchema = z.object({
+  program: z.string().min(1, 'Program is required'),
+  year: z.string().min(1, 'Academic year is required'),
+  semester: z.string().min(1, 'Semester is required'),
+  department: z.string().min(1, 'Department is required'),
+  studentId: z.string().optional(),
+  batch: z.string().optional(),
+});
+
+const jsonString = <T extends z.ZodTypeAny>(schema: T, fieldName: string) =>
+  z.string().min(1).superRefine((val, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(val);
+    } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${fieldName} must be valid JSON`,
+      });
+      return;
+    }
+
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: issue.message,
+          path: issue.path,
+        });
+      }
+    }
+  });
+
 // ── FormData Registration (for multipart/form-data) ─────────────────────────────────
 const formDataRegistration = z.object({
   body: z.object({
-    'institutionInfo[name]': z
-      .string({ error: 'Institution name is required and must be a string' })
-      .min(1, 'Institution name is required'),
-    'institutionInfo[type]': z.nativeEnum(InstitutionType, {
-      error: 'Invalid institution type',
-    }),
-    'institutionInfo[contactEmail]': z
-      .string({ error: 'Contact email is required and must be a string' })
-      .email('Invalid contact email format')
-      .transform(val => val.toLowerCase()),
-    'institutionInfo[contactPhone]': z
-      .string({ error: 'Contact phone must be a string' })
-      .optional(),
-    'institutionInfo[address]': z
-      .string({ error: 'Address is required and must be a string' })
-      .min(1, 'Address is required'),
-    'academicInfo[program]': z
-      .string({ error: 'Program is required and must be a string' })
-      .min(1, 'Program is required'),
-    'academicInfo[year]': z
-      .string({ error: 'Academic year is required and must be a string' })
-      .min(1, 'Academic year is required'),
-    'academicInfo[semester]': z
-      .string({ error: 'Semester is required and must be a string' })
-      .min(1, 'Semester is required'),
-    'academicInfo[department]': z
-      .string({ error: 'Department is required and must be a string' })
-      .min(1, 'Department is required'),
-    'academicInfo[studentId]': z.string({ error: 'Student ID must be a string' }).optional(),
-    'academicInfo[batch]': z.string({ error: 'Batch must be a string' }).optional(),
+    institutionInfo: jsonString(institutionInfoSchema, 'institutionInfo'),
+    academicInfo: jsonString(academicInfoSchema, 'academicInfo'),
   }),
 });
 
