@@ -73,6 +73,57 @@ const deleteBatch = async (id: string, req?: Request) => {
   return await BatchRepository.deleteBatch(id);
 };
 
+// ── Helper Methods ───────────────────────────────────────────────────
+const checkExistingBatch = async (filters: any) => {
+  const result = await BatchRepository.getAllBatches(
+    {
+      institutionId: filters.institutionId,
+      name: filters.name,
+      department: filters.department,
+      academicYear: filters.academicYear,
+    },
+    { page: 1, limit: 1, sortBy: 'createdAt', sortOrder: 'desc' }
+  );
+
+  return result.data.length > 0;
+};
+
+const getBatchesByInstitution = async (institutionId: string) => {
+  return await BatchRepository.getAllBatches(
+    { institutionId },
+    { page: 1, limit: 100, sortBy: 'createdAt', sortOrder: 'desc' }
+  );
+};
+
+const getUserBatches = async (userId: string) => {
+  const user = await UserRepository.getUserById(userId);
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  // If user has a current batch, return that batch
+  if (user.currentBatchId) {
+    const batch = await BatchRepository.getBatchById(user.currentBatchId);
+    return batch ? [batch] : [];
+  }
+  return [];
+};
+
+const getBatchCRs = async (batchId: string) => {
+  const batch = await BatchRepository.getBatchById(batchId);
+  if (!batch) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Batch not found');
+  }
+
+  // Return the CR associated with this batch
+  if (batch.crId) {
+    const cr = await UserRepository.getUserById(batch.crId);
+    return cr ? [cr] : [];
+  }
+
+  return [];
+};
+
 export const BatchService = {
   // Batch
   createBatch,
@@ -80,4 +131,9 @@ export const BatchService = {
   getAllBatches,
   updateBatch,
   deleteBatch,
+  // Helper methods
+  checkExistingBatch,
+  getBatchesByInstitution,
+  getUserBatches,
+  getBatchCRs,
 };

@@ -3,6 +3,7 @@ import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { BatchService } from './batch.service';
+import { BatchEnrollmentService } from '../batchEnrollment/batchEnrollment.service';
 import ApiError from '../../utils/ApiError';
 import { UserRole } from '../../shared/enum/user.enum';
 
@@ -100,10 +101,182 @@ const deleteBatch = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ── Batch Enrollment Controllers ─────────────────────────────────────────
+const checkExistingBatch = catchAsync(async (req: Request, res: Response) => {
+  const filters = {
+    institutionId: req.query.institutionId,
+    name: req.query.name,
+    department: req.query.department,
+    academicYear: req.query.academicYear,
+  };
+
+  const result = await BatchService.checkExistingBatch(filters);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch existence checked successfully',
+    data: result,
+  });
+});
+
+const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const { batchId } = req.params;
+  const { userId, role } = req.user;
+
+  // Only CR, ADMIN, or SUPER_ADMIN can enroll users in a batch
+  if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can enroll users in a batch');
+  }
+
+  const result = await BatchEnrollmentService.createBatchEnrollment({
+    batchId,
+    userId: req.body.userId,
+    enrolledBy: userId
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: 'User enrolled in batch successfully',
+    data: result,
+  });
+});
+
+const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) => {
+  const { batchId } = req.params;
+
+  const result = await BatchEnrollmentService.getAllBatchEnrollments({ batchId });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch enrollments fetched successfully',
+    data: result,
+  });
+});
+
+const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
+  const { batchId } = req.params;
+
+  const result = await BatchEnrollmentService.getBatchMembers({ batchId });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch members fetched successfully',
+    data: result,
+  });
+});
+
+const getBatchEnrollmentById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const enrollmentId = Array.isArray(id) ? id[0] : id;
+
+  const result = await BatchEnrollmentService.getBatchEnrollmentById(enrollmentId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch enrollment fetched successfully',
+    data: result,
+  });
+});
+
+const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { userId, role } = req.user;
+  const enrollmentId = Array.isArray(id) ? id[0] : id;
+
+  // Only CR, ADMIN, or SUPER_ADMIN can update batch enrollment
+  if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can update batch enrollment');
+  }
+
+  const result = await BatchEnrollmentService.updateBatchEnrollment(enrollmentId, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch enrollment updated successfully',
+    data: result,
+  });
+});
+
+const deleteBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { userId, role } = req.user;
+  const enrollmentId = Array.isArray(id) ? id[0] : id;
+
+  // Only CR, ADMIN, or SUPER_ADMIN can delete batch enrollment
+  if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can delete batch enrollment');
+  }
+
+  const result = await BatchEnrollmentService.deleteBatchEnrollment(enrollmentId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch enrollment deleted successfully',
+    data: result,
+  });
+});
+
+// ── Helper Controllers ───────────────────────────────────────────────────
+const getBatchesByInstitution = catchAsync(async (req: Request, res: Response) => {
+  const { institutionId } = req.params;
+
+  const result = await BatchService.getBatchesByInstitution(institutionId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batches fetched successfully',
+    data: result,
+  });
+});
+
+const getUserBatches = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  const result = await BatchService.getUserBatches(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User batches fetched successfully',
+    data: result,
+  });
+});
+
+const getBatchCRs = catchAsync(async (req: Request, res: Response) => {
+  const { batchId } = req.params;
+
+  const result = await BatchService.getBatchCRs(batchId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Batch CRs fetched successfully',
+    data: result,
+  });
+});
+
 export const BatchController = {
   createBatch,
   getBatchById,
   getAllBatches,
   updateBatch,
   deleteBatch,
+  checkExistingBatch,
+  createBatchEnrollment,
+  getAllBatchEnrollments,
+  getBatchMembers,
+  getBatchEnrollmentById,
+  updateBatchEnrollment,
+  deleteBatchEnrollment,
+  getBatchesByInstitution,
+  getUserBatches,
+  getBatchCRs,
 };

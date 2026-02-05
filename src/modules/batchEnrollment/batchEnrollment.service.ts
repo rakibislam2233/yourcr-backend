@@ -1,23 +1,19 @@
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../utils/ApiError';
 import {
   ICreateBatchEnrollmentPayload,
   IUpdateBatchEnrollmentPayload,
-  IBatchEnrollmentResponse,
   IBatchMemberResponse,
 } from './batchEnrollment.interface';
 import { database } from '../../config/database.config';
-import { PaginationOptions, PaginationResult } from '../../utils/pagination.utils';
+import { BatchEnrollmentRepository } from './batchEnrollment.repository';
 
 // Create batch enrollment
-const createBatchEnrollment = async (data: ICreateBatchEnrollmentPayload, enrolledById: string) => {
+const createBatchEnrollment = async (data: ICreateBatchEnrollmentPayload) => {
   return await database.batchEnrollment.create({
     data: {
       batchId: data.batchId,
       userId: data.userId,
       role: data.role || 'STUDENT',
       studentId: data.studentId,
-      enrolledBy: enrolledById,
     },
     include: {
       user: {
@@ -68,68 +64,20 @@ const getBatchEnrollmentById = async (id: string) => {
 };
 
 // Get all batch enrollments
-const getAllBatchEnrollments = async (
-  batchId: string,
-  options: PaginationOptions
-): Promise<PaginationResult<any>> => {
-  const { page, limit, sortBy, sortOrder } = options;
-  const skip = (page - 1) * limit;
-
-  const where: any = { batchId };
-
-  if (options.role) {
-    where.role = options.role;
-  }
-
-  const [enrollments, total] = await Promise.all([
-    database.batchEnrollment.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phoneNumber: true,
-            profileImage: true,
-          },
-        },
-        batch: true,
-        enrollmentAddedBy: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
-      skip,
-      take: limit,
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
-    }),
-    database.batchEnrollment.count({ where }),
-  ]);
-
-  return {
-    data: enrollments,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+const getAllBatchEnrollments = async (batchId: string, filters: any, options: any) => {
+  const result = await BatchEnrollmentRepository.getAllBatchEnrollments(batchId, {
+    ...filters,
+    ...options,
+  });
+  return result;
 };
 
 // Get batch members (with roles)
-const getBatchMembers = async (batchId: string, options?: any): Promise<IBatchMemberResponse[]> => {
+const getBatchMembers = async (params: { batchId: string }): Promise<IBatchMemberResponse[]> => {
+  const { batchId } = params;
+
   const enrollments = await database.batchEnrollment.findMany({
-    where: { 
-      batchId,
-      ...(options?.role && { role: options.role })
-    },
+    where: { batchId },
     include: {
       user: {
         select: {
@@ -140,9 +88,6 @@ const getBatchMembers = async (batchId: string, options?: any): Promise<IBatchMe
           profileImage: true,
         },
       },
-    },
-    orderBy: {
-      createdAt: 'asc',
     },
   });
 
@@ -197,7 +142,7 @@ const getUserEnrollments = async (userId: string) => {
       },
     },
     orderBy: {
-      createdAt: 'desc',
+      enrolledAt: 'desc',
     },
   });
 };

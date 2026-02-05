@@ -51,7 +51,6 @@ const updateUserById = async (id: string, data: any) => {
 };
 
 const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> => {
-  // Use pagination utility for automatic defaults
   const pagination = parsePaginationOptions(query);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
@@ -148,12 +147,6 @@ const createStudentAccount = async (data: ICreateStudentPayload) => {
       phoneNumber: data.phoneNumber,
       password: data.password,
       institutionId: data.institutionId,
-      department: data.department,
-      program: data.program,
-      year: data.year,
-      studentId: data.studentId,
-      semester: data.semester,
-      batch: data.batch,
       crId: data.crId,
       role: 'STUDENT',
     },

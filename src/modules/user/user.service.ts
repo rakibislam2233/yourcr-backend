@@ -38,17 +38,6 @@ const getUserProfile = async (userId: string): Promise<IUserProfileResponse> => 
     role: user.role,
     status: user.status,
     isCr: user.isCr,
-    academicInfo: user.institutionId
-      ? {
-          institutionId: user.institutionId,
-          department: user.department || '',
-          program: user.program || '',
-          year: user.year || '',
-          studentId: user.studentId || undefined,
-          semester: user.semester || undefined,
-          batch: user.batch || undefined,
-        }
-      : undefined,
   };
 };
 
@@ -122,10 +111,22 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload, r
   });
 
   // Send welcome email to student
-  await sendStudentCreatedEmail(student.email, student.fullName, cr.fullName, cr.institutionId ? 'Your Institution' : 'Your Institution');
+  await sendStudentCreatedEmail(
+    student.email,
+    student.fullName,
+    cr.fullName,
+    cr.institutionId ? 'Your Institution' : 'Your Institution'
+  );
 
   // Audit log
-  await createAuditLog(crId, AuditAction.CREATE_ISSUE, 'User', student.id, { studentEmail: student.email }, req);
+  await createAuditLog(
+    crId,
+    AuditAction.CREATE_ISSUE,
+    'User',
+    student.id,
+    { studentEmail: student.email },
+    req
+  );
 
   const { password, ...studentWithoutPassword } = student;
 

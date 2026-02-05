@@ -43,7 +43,13 @@ const completeCRRegistration = async (
 
   // 2. Check if user has verified email
   if (!user.isEmailVerified) {
-    throw new ApiError(StatusCodes.FORBIDDEN, 'Please verify your email first');
+    return {
+      message: 'Email not verified yet. Please verify your email first.',
+      data: {
+        email: user.email,
+        needVerifyMail: true,
+      },
+    };
   }
 
   // 3. Check if user already has CR registration
