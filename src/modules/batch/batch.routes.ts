@@ -7,29 +7,29 @@ import validateRequest from '../../middleware/validation.middleware';
 
 const router = Router();
 
-// Batch Routes
+// ── Batch Routes ───────────────────────────────────────────────────────
 router.post(
   '/',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(BatchValidations.createBatchValidation),
   BatchController.createBatch
 );
 
 router.get(
   '/',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
   BatchController.getAllBatches
 );
 
 router.get(
   '/:id',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
   BatchController.getBatchById
 );
 
 router.patch(
   '/:id',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(BatchValidations.updateBatchValidation),
   BatchController.updateBatch
 );
@@ -40,7 +40,15 @@ router.delete(
   BatchController.deleteBatch
 );
 
-// Batch Enrollment Routes
+// ── Check Existing Batch (for CR registration) ──────────────────────
+router.get(
+  '/check-existing',
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
+  validateRequest(BatchValidations.checkExistingBatchValidation),
+  BatchController.checkExistingBatch
+);
+
+// ── Batch Enrollment Routes ─────────────────────────────────────────────
 router.post(
   '/:batchId/enrollments',
   auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
@@ -52,6 +60,12 @@ router.get(
   '/:batchId/enrollments',
   auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
   BatchController.getAllBatchEnrollments
+);
+
+router.get(
+  '/:batchId/members',
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
+  BatchController.getBatchMembers
 );
 
 router.get(
@@ -69,21 +83,27 @@ router.patch(
 
 router.delete(
   '/enrollments/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   BatchController.deleteBatchEnrollment
 );
 
-// Helper Routes
+// ── Helper Routes ───────────────────────────────────────────────────────
 router.get(
-  '/cr/:crId/batches',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
-  BatchController.getBatchesByCrId
+  '/institution/:institutionId/batches',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  BatchController.getBatchesByInstitution
 );
 
 router.get(
-  '/student/:studentId/batches',
-  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT),
-  BatchController.getStudentBatches
+  '/user/:userId/batches',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  BatchController.getUserBatches
+);
+
+router.get(
+  '/:batchId/crs',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  BatchController.getBatchCRs
 );
 
 export const BatchRoutes = router;

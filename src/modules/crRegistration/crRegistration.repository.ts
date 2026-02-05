@@ -65,6 +65,41 @@ const getAllCRRegistrations = async () => {
   });
 };
 
+// Check existing batch with CRs
+const checkExistingBatchWithCRs = async (batchInfo: {
+  name: string;
+  department: string;
+  batchType: 'SEMESTER' | 'YEAR';
+  academicYear: string;
+}) => {
+  return await database.batch.findFirst({
+    where: {
+      name: batchInfo.name,
+      department: batchInfo.department,
+      batchType: batchInfo.batchType as any,
+      academicYear: batchInfo.academicYear,
+    },
+    include: {
+      enrollments: {
+        where: {
+          role: 'CR',
+          isActive: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
 // Approve CR registration
 const approveCRRegistration = async (registrationId: string) => {
   const updatedRegistration = await database.cRRegistration.update({
@@ -103,6 +138,7 @@ export const CRRegistrationRepository = {
   getCRRegistrationById,
   getCRRegistrationByUserId,
   getAllCRRegistrations,
+  checkExistingBatchWithCRs,
   approveCRRegistration,
   rejectCRRegistration,
 };

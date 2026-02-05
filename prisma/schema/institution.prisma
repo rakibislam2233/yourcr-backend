@@ -13,7 +13,7 @@ model Institution {
 
   // Relationships
   crRegistrations CRRegistration[]
-  users           User[] // Users associated with this institution
+  users           User[]
   batches         Batch[]
 
   @@map("institutions")

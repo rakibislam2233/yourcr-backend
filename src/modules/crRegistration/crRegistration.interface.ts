@@ -8,14 +8,6 @@ export interface ICompleteCRRegistrationPayload {
     contactPhone?: string;
     address: string;
   };
-  // Academic Info
-  academicInfo: {
-    department: string;
-    program: string;
-    semester: string;
-    year: string;
-    studentId: string; // Institution-provided student ID
-  };
   // Batch Info
   batchInfo: {
     name: string;
@@ -36,12 +28,5 @@ export interface ICRRegistrationWithBatchPayload {
     batchType: 'SEMESTER' | 'YEAR';
     department: string;
     academicYear: string;
-  };
-  academicInfo: {
-    department: string;
-    program: string;
-    semester: string;
-    year: string;
-    studentId: string;
   };
 }

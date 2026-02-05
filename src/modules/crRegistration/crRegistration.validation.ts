@@ -14,45 +14,46 @@ const institutionInfoSchema = z.object({
   address: z.string().min(1, 'Address is required'),
 });
 
-const academicInfoSchema = z.object({
-  program: z.string().min(1, 'Program is required'),
-  year: z.string().min(1, 'Academic year is required'),
-  semester: z.string().min(1, 'Semester is required'),
+const batchInformation = z.object({
+  name: z.string().min(1, 'Batch name is required'),
+  batchType: z.enum(['SEMESTER', 'YEAR'], { error: 'Batch type must be SEMESTER or YEAR' }),
   department: z.string().min(1, 'Department is required'),
-  studentId: z.string().optional(),
-  batch: z.string().optional(),
+  academicYear: z.string().min(1, 'Academic year is required'),
 });
 
 const jsonString = <T extends z.ZodTypeAny>(schema: T, fieldName: string) =>
-  z.string().min(1).superRefine((val, ctx) => {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(val);
-    } catch {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `${fieldName} must be valid JSON`,
-      });
-      return;
-    }
-
-    const result = schema.safeParse(parsed);
-    if (!result.success) {
-      for (const issue of result.error.issues) {
+  z
+    .string()
+    .min(1)
+    .superRefine((val, ctx) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(val);
+      } catch {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: issue.message,
-          path: issue.path,
+          message: `${fieldName} must be valid JSON`,
         });
+        return;
       }
-    }
-  });
+
+      const result = schema.safeParse(parsed);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: issue.path,
+          });
+        }
+      }
+    });
 
 // ── FormData Registration (for multipart/form-data) ─────────────────────────────────
 const formDataRegistration = z.object({
   body: z.object({
     institutionInfo: jsonString(institutionInfoSchema, 'institutionInfo'),
-    academicInfo: jsonString(academicInfoSchema, 'academicInfo'),
+    batchInformation: jsonString(batchInformation, 'batchInformation'),
   }),
 });
 

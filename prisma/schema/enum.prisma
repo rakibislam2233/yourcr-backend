@@ -94,3 +94,20 @@ enum ClassStatus {
   COMPLETED
   CANCELLED
 }
+
+enum BatchType {
+  SEMESTER
+  YEAR
+}
+
+enum BatchRole {
+  STUDENT
+  CR
+  ASSISTANT_CR
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
+  REMOVED
+}

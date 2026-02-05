@@ -1,25 +1,39 @@
 import { StatusCodes } from 'http-status-codes';
-import { database } from '../../config/database.config';
 import ApiError from '../../utils/ApiError';
 import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
 import { UserRepository } from '../user/user.repository';
 import { CRRegistrationRepository } from './crRegistration.repository';
+import { InstitutionRepository } from '../institution/institution.repository';
+import { BatchEnrollmentRepository } from '../batchEnrollment/batchEnrollment.repository';
+import { BatchRepository } from '../batch/batch.repository';
 import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 import { uploadFile } from '../../utils/storage.utils';
 import { upload_cr_registration_folder } from './crRegistration.constant';
-import { sendPendingCRRegistrationEmail, sendCRRegistrationApprovedEmail, sendCRRegistrationRejectedEmail } from '../../utils/emailTemplates';
+import {
+  sendPendingCRRegistrationEmail,
+  sendCRRegistrationApprovedEmail,
+  sendCRRegistrationRejectedEmail,
+} from '../../utils/emailTemplates';
 import { createAuditLog } from '../../utils/audit.helper';
 import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
 
 const completeCRRegistration = async (
-  userId: string, 
-  payload: { institutionInfo: any; academicInfo: any; batchInfo?: any }, 
+  userId: string,
+  payload: ICompleteCRRegistrationPayload,
   file: Express.Multer.File,
   req?: Request
 ) => {
-  await createAuditLog(userId, AuditAction.USER_REGISTERED, 'CRRegistration', undefined, { payload }, req);
+  // Audit log
+  await createAuditLog(
+    userId,
+    AuditAction.USER_REGISTERED,
+    'CRRegistration',
+    undefined,
+    { payload },
+    req
+  );
 
   // 1. Check if user exists
   const user = await UserRepository.getUserById(userId);
@@ -38,70 +52,51 @@ const completeCRRegistration = async (
     throw new ApiError(StatusCodes.CONFLICT, 'CR registration already exists or pending');
   }
 
-  // 4. Upload file to Cloudinary
+  // 4. Check if batch already exists
+  const existingBatch = await CRRegistrationRepository.checkExistingBatchWithCRs({
+    name: payload.batchInfo.name,
+    department: payload.batchInfo.department,
+    batchType: payload.batchInfo.batchType,
+    academicYear: payload.batchInfo.academicYear,
+  });
+
+  if (existingBatch && existingBatch.enrollments) {
+    const existingCRs = existingBatch.enrollments.map((enrollment: any) => enrollment.user);
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      `Batch already exists. Please contact existing CR(s): ${existingCRs.map((cr: any) => `${cr.fullName} (${cr.email})`).join(', ')}`
+    );
+  }
+
+  // 5. Upload file to Cloudinary
   const uploadResult = await uploadFile(
-    file.buffer, 
+    file.buffer,
     upload_cr_registration_folder,
     `cr_proof_${userId}_${Date.now()}`
   );
   const documentProofUrl = uploadResult.secure_url;
 
-  // 5. Create or get institution
-  let institution = await database.institution.findFirst({
-    where: {
-      name: payload.institutionInfo.name,
-      type: payload.institutionInfo.type,
-    },
-  });
+  // 6. Create or get institution using repository
+  let institution = await InstitutionRepository.getInstitutionByNameAndType(
+    payload.institutionInfo.name,
+    payload.institutionInfo.type
+  );
 
   if (!institution) {
-    institution = await database.institution.create({
-      data: payload.institutionInfo,
-    });
+    institution = await InstitutionRepository.createInstitution(payload.institutionInfo);
   }
 
-  // 6. Create batch if batchInfo provided
-  let batch = null;
-  if (payload.batchInfo) {
-    batch = await database.batch.create({
-      data: {
-        institutionId: institution.id,
-        name: payload.batchInfo.name,
-        batchType: payload.batchInfo.batchType,
-        department: payload.batchInfo.department,
-        academicYear: payload.batchInfo.academicYear,
-        crId: userId,
-      },
-    });
-
-    // Update user's current batch
-    await database.user.update({
-      where: { id: userId },
-      data: { currentBatchId: batch.id },
-    });
-  }
-
-  // 7. Create CR registration
+  // 7. Create CR registration using repository
   const crRegistration = await CRRegistrationRepository.createCRRegistration({
     userId,
     institutionId: institution.id,
     documentProof: documentProofUrl,
   });
 
-  // 8. Update user with CR info
-  await database.user.update({
-    where: { id: userId },
-    data: {
-      isCr: true,
-      isCrDetailsSubmitted: true,
-      institutionId: institution.id,
-      program: payload.academicInfo.program,
-      year: payload.academicInfo.year,
-      department: payload.academicInfo.department,
-      studentId: payload.academicInfo.studentId,
-      semester: payload.academicInfo.semester,
-      batch: payload.academicInfo.batch,
-    },
+  // 8. Update user with CR info using repository
+  await UserRepository.updateUserById(userId, {
+    isCrDetailsSubmitted: true,
+    institutionId: institution.id,
   });
 
   // 9. Send pending email
@@ -111,11 +106,9 @@ const completeCRRegistration = async (
     email: user.email,
     crRegistrationStatus: crRegistration.status,
     institution: institution.name,
-    academicInfo: payload.academicInfo,
-    batch: batch,
+    message: 'CR registration submitted successfully. Please wait for admin approval.',
   };
 };
-
 
 const getAllCRRegistrations = async () => {
   return await CRRegistrationRepository.getAllCRRegistrations();
@@ -136,21 +129,60 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
   const updatedRegistration = await CRRegistrationRepository.approveCRRegistration(registrationId);
 
   // Update user role to CR and set approval time
-  await database.user.update({
-    where: { id: registration.userId },
-    data: {
-      role: UserRole.CR,
-      crApprovedAt: new Date(),
-    },
+  await UserRepository.updateUserById(registration.userId, {
+    role: UserRole.CR,
+    isCr: true,
+    crApprovedAt: new Date(),
   });
+
+  // Create batch for the approved CR
+  const batch = await BatchRepository.createBatch({
+    institutionId: registration.institutionId,
+    name: `${registration.user.fullName}'s Batch`, // Default batch name
+    batchType: 'SEMESTER', // Default batch type
+    department: 'General', // Default department
+    academicYear: new Date().getFullYear().toString(), // Current year
+  });
+
+  // Add CR to batch enrollment
+  await BatchEnrollmentRepository.createBatchEnrollment({
+    batchId: batch.id,
+    userId: registration.userId,
+    role: 'CR',
+    studentId: registration.user.fullName, // Use name as student ID for now
+    enrolledBy: req?.user?.id, // Admin who approved
+  });
+
+  // Create student account for the CR (self-enrollment)
+  const studentData = {
+    fullName: registration.user.fullName,
+    email: registration.user.email,
+    phoneNumber: registration.user.phoneNumber || '',
+    password: 'tempPassword123', // You might want to generate a random password
+    institutionId: registration.institutionId,
+    department: 'General',
+    program: 'General Program',
+    year: new Date().getFullYear().toString(),
+    studentId: registration.user.fullName,
+    crId: registration.userId,
+  };
+
+  await UserRepository.createStudentAccount(studentData);
 
   // Send approval email
   const user = await UserRepository.getUserById(registration.userId);
-  const institution = await database.institution.findUnique({ where: { id: registration.institutionId } });
-  
+  const institution = await InstitutionRepository.getInstitutionById(registration.institutionId);
+
   if (user && institution) {
     await sendCRRegistrationApprovedEmail(user.email, user.fullName, institution.name);
-    await createAuditLog(registration.userId, AuditAction.CR_APPROVED, 'CRRegistration', registrationId, { institutionName: institution.name }, req);
+    await createAuditLog(
+      registration.userId,
+      AuditAction.CR_APPROVED,
+      'CRRegistration',
+      registrationId,
+      { institutionName: institution.name, batchId: batch.id },
+      req
+    );
   }
 
   return updatedRegistration;
@@ -174,26 +206,27 @@ const rejectCRRegistration = async (registrationId: string, reason: string, req?
   );
 
   // Reset user CR status
-  await database.user.update({
-    where: { id: registration.userId },
-    data: {
-      isCr: false,
-      isCrDetailsSubmitted: false,
-      institutionId: null,
-      department: null,
-      program: null,
-      year: null,
-      crApprovedAt: null,
-    },
+  await UserRepository.updateUserById(registration.userId, {
+    isCr: false,
+    isCrDetailsSubmitted: false,
+    institutionId: null,
+    crApprovedAt: null,
   });
 
   // Send rejection email
   const user = await UserRepository.getUserById(registration.userId);
-  const institution = await database.institution.findUnique({ where: { id: registration.institutionId } });
-  
+  const institution = await InstitutionRepository.getInstitutionById(registration.institutionId);
+
   if (user && institution) {
     await sendCRRegistrationRejectedEmail(user.email, user.fullName, institution.name, reason);
-    await createAuditLog(registration.userId, AuditAction.CR_REJECTED, 'CRRegistration', registrationId, { institutionName: institution.name, reason }, req);
+    await createAuditLog(
+      registration.userId,
+      AuditAction.CR_REJECTED,
+      'CRRegistration',
+      registrationId,
+      { institutionName: institution.name, reason },
+      req
+    );
   }
 
   return updatedRegistration;
