@@ -1,47 +1,40 @@
 model User {
-  id              String     @id @default(cuid())
-  fullName        String
-  email           String     @unique
-  password        String
-  phoneNumber     String
-  profileImage    String?
-  bio             String?
-  dateOfBirth     DateTime?
-  lastLogin       DateTime   @default(now())
-  role            UserRole   @default(STUDENT)
-  status          UserStatus @default(ACTIVE)
-  isEmailVerified Boolean    @default(false)
-
-  // CR Specific Fields
-  isCr                 Boolean   @default(false)
-  crApprovedAt         DateTime?
-  isCrDetailsSubmitted Boolean   @default(false)
-
-  // Add these missing fields:
-  crId          String? // For creator relation
-  institutionId String? // For institution relation
-
-  // Relationships
-  crRegistrations       CRRegistration[]
-  createdStudents       User[]                 @relation("StudentCreator")
-  creator               User?                  @relation("StudentCreator", fields: [crId], references: [id])
-  institution           Institution?           @relation(fields: [institutionId], references: [id])
-  createdTeachers       Teacher[]              @relation("TeacherCreatedBy")
-  createdSubjects       Subject[]              @relation("SubjectCreatedBy")
-  createdRoutines       Routine[]              @relation("RoutineCreatedBy")
-  postedNotices         Notice[]               @relation("NoticePostedBy")
-  createdAssessments    Assessment[]           @relation("AssessmentCreatedBy")
-  reportedIssues        Issue[]                @relation("IssueStudent")
-  resolvedIssues        Issue[]                @relation("IssueResolvedBy")
-  notifications         Notification[]         @relation("UserNotification")
-  auditLogs             AuditLog[]             @relation("AuditLogUser")
-  createdClasses        Class[]                @relation("ClassCreatedBy")
+  id                    String                 @id @default(cuid())
+  fullName              String
+  email                 String                 @unique
+  password              String
+  phoneNumber           String
+  profileImage          String?
+  bio                   String?
+  dateOfBirth           DateTime?
+  lastLogin             DateTime               @default(now())
+  role                  UserRole               @default(STUDENT)
+  status                UserStatus             @default(ACTIVE)
+  isEmailVerified       Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  crApprovedAt          DateTime?
+  crId                  String?
+  institutionId         String?
+  isCr                  Boolean                @default(false)
+  isCrDetailsSubmitted  Boolean                @default(false)
   assessmentSubmissions AssessmentSubmission[] @relation("AssessmentSubmissionStudent")
-  batchEnrollments      BatchEnrollment[]      @relation("StudentEnrollments")
+  createdAssessments    Assessment[]           @relation("AssessmentCreatedBy")
+  auditLogs             AuditLog[]             @relation("AuditLogUser")
   enrollmentAdded       BatchEnrollment[]      @relation("EnrollmentAddedBy")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  batchEnrollments      BatchEnrollment[]      @relation("StudentEnrollments")
+  createdClasses        Class[]                @relation("ClassCreatedBy")
+  crRegistrations       CRRegistration[]
+  resolvedIssues        Issue[]                @relation("IssueResolvedBy")
+  reportedIssues        Issue[]                @relation("IssueStudent")
+  postedNotices         Notice[]               @relation("NoticePostedBy")
+  notifications         Notification[]         @relation("UserNotification")
+  createdRoutines       Routine[]              @relation("RoutineCreatedBy")
+  createdSubjects       Subject[]              @relation("SubjectCreatedBy")
+  createdTeachers       Teacher[]              @relation("TeacherCreatedBy")
+  creator               User?                  @relation("StudentCreator", fields: [crId], references: [id])
+  createdStudents       User[]                 @relation("StudentCreator")
+  institution           Institution?           @relation(fields: [institutionId], references: [id])
 
   @@map("users")
 }

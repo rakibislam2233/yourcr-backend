@@ -1,26 +1,24 @@
 model Batch {
-  id            String      @id @default(uuid())
-  institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id])
-  name          String
-  batchType     BatchType
-  department    String
-  academicYear  String
-  isActive      Boolean     @default(true)
-  isArchived    Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt()
-
-  // Relations
+  id                    String                 @id @default(uuid())
+  institutionId         String
+  name                  String
+  batchType             BatchType
+  department            String
+  academicYear          String
+  isActive              Boolean                @default(true)
+  isArchived            Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  assessmentSubmissions AssessmentSubmission[]
+  assessments           Assessment[]
   enrollments           BatchEnrollment[]
+  institution           Institution            @relation(fields: [institutionId], references: [id])
+  classes               Class[]
+  issues                Issue[]
+  notices               Notice[]
+  routines              Routine[]
   subjects              Subject[]
   teachers              Teacher[]
-  routines              Routine[]
-  notices               Notice[]
-  assessments           Assessment[]
-  issues                Issue[]
-  classes               Class[]
-  assessmentSubmissions AssessmentSubmission[]
 
   @@map("batches")
 }
