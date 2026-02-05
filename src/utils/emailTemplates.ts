@@ -24,7 +24,7 @@ const generateProfessionalEmailTemplate = (
     }
     table { border-collapse: collapse; }
     .container { 
-      max-width: 600px; 
+      max-width: 520px; 
       margin: 30px auto; 
       background-color: #F9F9F9; 
       border-radius: 12px; 
@@ -35,7 +35,7 @@ const generateProfessionalEmailTemplate = (
       background: #F9F9F9;
       padding: 40px 30px; 
       text-align: center; 
-      border-bottom: 3px solid #65C257;
+      border-bottom: 3px solid #2456C4;
     }
     .header img { 
       max-width: 200px; 
@@ -54,7 +54,7 @@ const generateProfessionalEmailTemplate = (
       background-color: #F9F9F9;
     }
     .content h2 { 
-      color: #65C257; 
+      color: #2456C4; 
       font-size: 24px; 
       margin: 0 0 20px 0; 
       font-weight: 700; 
@@ -71,14 +71,14 @@ const generateProfessionalEmailTemplate = (
       color: #ffffff; 
       text-align: center; 
       padding: 25px; 
-      background: #65C257;
+      background: #2456C4;
       border-radius: 10px; 
       margin: 30px 0; 
       box-shadow: 0 4px 15px rgba(0, 214, 92, 0.3);
     }
     .highlight-box {
       background: #F9F9F9;
-      border-left: 4px solid #65C257; 
+      border-left: 4px solid #2456C4; 
       padding: 25px; 
       margin: 25px 0; 
       border-radius: 0 8px 8px 0; 
@@ -141,7 +141,7 @@ const generateProfessionalEmailTemplate = (
     .cta-button {
       display: inline-block;
       padding: 14px 32px;
-      background: #65C257;
+      background: #2456C4;
       color: #ffffff;
       text-decoration: none;
       border-radius: 8px;
@@ -158,11 +158,11 @@ const generateProfessionalEmailTemplate = (
       color: #94a3b8;
     }
     .footer strong {
-      color: #65C257;
+      color: #2456C4;
       font-size: 16px;
     }
     .footer a { 
-      color: #65C257; 
+      color: #2456C4; 
       text-decoration: none; 
       font-weight: 500;
     }
