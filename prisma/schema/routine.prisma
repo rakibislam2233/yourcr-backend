@@ -3,6 +3,8 @@ model Routine {
   name        String
   fileUrl     String
   type        RoutineType
+  batchId     String?
+  batch       Batch?      @relation(fields: [batchId], references: [id])
   createdById String?
   createdBy   User?       @relation("RoutineCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime    @default(now())

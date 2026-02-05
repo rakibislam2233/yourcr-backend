@@ -12,6 +12,8 @@ model Issue {
   resolvedById String?
   resolvedBy   User?         @relation("IssueResolvedBy", fields: [resolvedById], references: [id])
   resolvedAt   DateTime?
+  batchId      String?
+  batch        Batch?        @relation(fields: [batchId], references: [id])
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt()
 

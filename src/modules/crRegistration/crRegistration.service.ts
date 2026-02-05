@@ -15,7 +15,7 @@ import { Request } from 'express';
 
 const completeCRRegistration = async (
   userId: string, 
-  payload: { institutionInfo: any; academicInfo: any }, 
+  payload: { institutionInfo: any; academicInfo: any; batchInfo?: any }, 
   file: Express.Multer.File,
   req?: Request
 ) => {
@@ -60,14 +60,35 @@ const completeCRRegistration = async (
     });
   }
 
-  // 6. Create CR registration
+  // 6. Create batch if batchInfo provided
+  let batch = null;
+  if (payload.batchInfo) {
+    batch = await database.batch.create({
+      data: {
+        institutionId: institution.id,
+        name: payload.batchInfo.name,
+        batchType: payload.batchInfo.batchType,
+        department: payload.batchInfo.department,
+        academicYear: payload.batchInfo.academicYear,
+        crId: userId,
+      },
+    });
+
+    // Update user's current batch
+    await database.user.update({
+      where: { id: userId },
+      data: { currentBatchId: batch.id },
+    });
+  }
+
+  // 7. Create CR registration
   const crRegistration = await CRRegistrationRepository.createCRRegistration({
     userId,
     institutionId: institution.id,
     documentProof: documentProofUrl,
   });
 
-  // 7. Update user with CR info (Version 1: Simple)
+  // 8. Update user with CR info
   await database.user.update({
     where: { id: userId },
     data: {
@@ -83,7 +104,7 @@ const completeCRRegistration = async (
     },
   });
 
-  // 8. Send pending email
+  // 9. Send pending email
   await sendPendingCRRegistrationEmail(user.email, user.fullName, institution.name);
 
   return {
@@ -91,6 +112,7 @@ const completeCRRegistration = async (
     crRegistrationStatus: crRegistration.status,
     institution: institution.name,
     academicInfo: payload.academicInfo,
+    batch: batch,
   };
 };
 

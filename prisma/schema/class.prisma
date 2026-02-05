@@ -4,6 +4,8 @@ model Class {
   subject     Subject?    @relation(fields: [subjectId], references: [id])
   teacherId   String?
   teacher     Teacher?    @relation(fields: [teacherId], references: [id])
+  batchId     String?
+  batch       Batch?      @relation(fields: [batchId], references: [id])
   classDate   DateTime
   startTime   DateTime
   endTime     DateTime

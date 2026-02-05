@@ -6,6 +6,8 @@ model Notice {
   type       NoticeType
   isActive   Boolean    @default(true)
   viewCount  Int        @default(0)
+  batchId    String?
+  batch      Batch?     @relation(fields: [batchId], references: [id])
   postedById String?
   postedBy   User?      @relation("NoticePostedBy", fields: [postedById], references: [id])
   createdAt  DateTime   @default(now())

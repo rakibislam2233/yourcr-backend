@@ -1,0 +1,34 @@
+model Batch {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  name          String // e.g., "CSE 2024 Spring", "EEE 6th Semester"
+  batchType     BatchType // enum ["SEMESTER", "YEAR"]
+  department    String
+  academicYear  String // e.g., "2024-2025"
+  crId          String
+  cr            User        @relation("BatchCR", fields: [crId], references: [id])
+  isActive      Boolean     @default(true)
+  isArchived    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+
+  // Relations
+  enrollments           BatchEnrollment[]
+  subjects              Subject[]
+  teachers              Teacher[]
+  routines              Routine[]
+  notices               Notice[]
+  assessments           Assessment[]
+  issues                Issue[]
+  users                 User[]                 @relation("UserCurrentBatch")
+  classes               Class[] // Add this
+  assessmentSubmissions AssessmentSubmission[] // Add this
+
+  @@map("batches")
+}
+
+enum BatchType {
+  SEMESTER
+  YEAR
+}

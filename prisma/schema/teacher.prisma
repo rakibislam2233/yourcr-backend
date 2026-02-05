@@ -6,6 +6,8 @@ model Teacher {
   photoUrl    String?
   designation String?
   department  String?
+  batchId     String?
+  batch       Batch?    @relation(fields: [batchId], references: [id])
   createdById String?
   createdBy   User?     @relation("TeacherCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime  @default(now())

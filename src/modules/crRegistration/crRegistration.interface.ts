@@ -8,7 +8,7 @@ export interface ICompleteCRRegistrationPayload {
     contactPhone?: string;
     address: string;
   };
-  //Academic Info
+  // Academic Info
   academicInfo: {
     department: string;
     program: string;
@@ -16,6 +16,13 @@ export interface ICompleteCRRegistrationPayload {
     year: string;
     studentId: string;
     batch: string;
+  };
+  // Batch Info
+  batchInfo: {
+    name: string;
+    batchType: 'SEMESTER' | 'YEAR';
+    department: string;
+    academicYear: string;
   };
   documentProof: string; 
 }

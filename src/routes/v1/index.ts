@@ -1,9 +1,7 @@
 import { AuthRoutes } from '../../modules/auth/auth.routes';
 import { UserRoutes } from '../../modules/user/user.routes';
+import { InstitutionRoutes } from '../../modules/institution/institution.routes';
 import { CRRegistrationRoutes } from '../../modules/crRegistration/crRegistration.routes';
-import { TeacherRoutes } from '../../modules/teacher/teacher.routes';
-import { SubjectRoutes } from '../../modules/subject/subject.routes';
-import { RoutineRoutes } from '../../modules/routine/routine.routes';
 import { NoticeRoutes } from '../../modules/notice/notice.routes';
 import { AssessmentRoutes } from '../../modules/assessment/assessment.routes';
 import { IssueRoutes } from '../../modules/issue/issue.routes';
@@ -11,10 +9,21 @@ import { NotificationRoutes } from '../../modules/notification/notification.rout
 import { AuditLogRoutes } from '../../modules/auditLog/auditLog.routes';
 import { ClassRoutes } from '../../modules/class/class.routes';
 import { AssessmentSubmissionRoutes } from '../../modules/assessmentSubmission/assessmentSubmission.routes';
-import express from 'express';
+import { BatchRoutes } from '../../modules/batch/batch.routes';
+import { Router } from 'express';
 
-const router = express.Router();
+const router = Router();
 
+// Health check
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'YourCR API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Module routes
 const moduleRoutes = [
   {
     path: '/users',
@@ -25,20 +34,12 @@ const moduleRoutes = [
     route: AuthRoutes,
   },
   {
-    path: '/cr-registration',
+    path: '/institutions',
+    route: InstitutionRoutes,
+  },
+  {
+    path: '/cr-registrations',
     route: CRRegistrationRoutes,
-  },
-  {
-    path: '/teachers',
-    route: TeacherRoutes,
-  },
-  {
-    path: '/subjects',
-    route: SubjectRoutes,
-  },
-  {
-    path: '/routines',
-    route: RoutineRoutes,
   },
   {
     path: '/notices',
@@ -67,6 +68,10 @@ const moduleRoutes = [
   {
     path: '/assessment-submissions',
     route: AssessmentSubmissionRoutes,
+  },
+  {
+    path: '/batches',
+    route: BatchRoutes,
   }
 ];
 

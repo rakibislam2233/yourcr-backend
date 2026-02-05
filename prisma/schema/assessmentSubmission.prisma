@@ -6,6 +6,8 @@ model AssessmentSubmission {
   student      User       @relation("AssessmentSubmissionStudent", fields: [studentId], references: [id])
   content      String?
   fileUrls     String[]
+  batchId      String?
+  batch        Batch?     @relation(fields: [batchId], references: [id])
   submittedAt  DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

@@ -9,6 +9,8 @@ model Assessment {
   totalMarks  Decimal?
   date        DateTime
   deadline    DateTime
+  batchId     String?
+  batch       Batch?                 @relation(fields: [batchId], references: [id])
   createdById String?
   createdBy   User?                  @relation("AssessmentCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime               @default(now())

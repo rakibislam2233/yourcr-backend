@@ -12,22 +12,18 @@ model User {
   status          UserStatus @default(ACTIVE)
   isEmailVerified Boolean    @default(false)
 
-  // Academic Information
-  institutionId String?
-  department    String?
-  program       String?
-  semester      String?
-  year          String?
-  studentId     String?
-  batch         String?
+  // Current Batch
+  currentBatchId String?
+  currentBatch   Batch?  @relation("UserCurrentBatch", fields: [currentBatchId], references: [id])
 
   // CR Specific Fields
   isCr                 Boolean   @default(false)
   crApprovedAt         DateTime?
   isCrDetailsSubmitted Boolean   @default(false)
 
-  // Student Specific Fields
-  crId String?
+  // Add these missing fields:
+  crId          String? // For creator relation
+  institutionId String? // For institution relation
 
   // Relationships
   crRegistrations       CRRegistration[]
@@ -45,6 +41,9 @@ model User {
   auditLogs             AuditLog[]             @relation("AuditLogUser")
   createdClasses        Class[]                @relation("ClassCreatedBy")
   assessmentSubmissions AssessmentSubmission[] @relation("AssessmentSubmissionStudent")
+  batches               Batch[]                @relation("BatchCR")
+  batchEnrollments      BatchEnrollment[]      @relation("StudentEnrollments")
+  enrollmentAdded       BatchEnrollment[]      @relation("EnrollmentAddedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
