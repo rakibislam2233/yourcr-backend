@@ -9,13 +9,13 @@ export interface ICompleteCRRegistrationPayload {
     address: string;
   };
   // Batch Info
-  batchInfo: {
+  batchInformation: {
     name: string;
     batchType: 'SEMESTER' | 'YEAR';
     department: string;
     academicYear: string;
   };
-  documentProof: string; 
+  documentProof?: string;
 }
 
 // NEW: CR Registration with batch creation

@@ -4,6 +4,7 @@ export interface ICreateBatchPayload {
   batchType: 'SEMESTER' | 'YEAR';
   department: string;
   academicYear: string;
+  createdBy?: string;
 }
 
 export interface IUpdateBatchPayload {

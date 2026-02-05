@@ -4,8 +4,6 @@ import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
 import { UserRepository } from '../user/user.repository';
 import { CRRegistrationRepository } from './crRegistration.repository';
 import { InstitutionRepository } from '../institution/institution.repository';
-import { BatchEnrollmentRepository } from '../batchEnrollment/batchEnrollment.repository';
-import { BatchRepository } from '../batch/batch.repository';
 import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 import { uploadFile } from '../../utils/storage.utils';
@@ -18,6 +16,7 @@ import {
 import { createAuditLog } from '../../utils/audit.helper';
 import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
+import { database } from '../../config/database.config';
 
 const completeCRRegistration = async (
   userId: string,
@@ -55,34 +54,10 @@ const completeCRRegistration = async (
   // 3. Check if user already has CR registration
   const existingRegistration = await CRRegistrationRepository.getCRRegistrationByUserId(userId);
   if (existingRegistration) {
-    throw new ApiError(StatusCodes.CONFLICT, 'CR registration already exists or pending');
+    throw new ApiError(StatusCodes.CONFLICT, `CR registration already exists with status ${existingRegistration.status}`);
   }
 
-  // 4. Check if batch already exists
-  const existingBatch = await CRRegistrationRepository.checkExistingBatchWithCRs({
-    name: payload.batchInfo.name,
-    department: payload.batchInfo.department,
-    batchType: payload.batchInfo.batchType,
-    academicYear: payload.batchInfo.academicYear,
-  });
-
-  if (existingBatch && existingBatch.enrollments) {
-    const existingCRs = existingBatch.enrollments.map((enrollment: any) => enrollment.user);
-    throw new ApiError(
-      StatusCodes.CONFLICT,
-      `Batch already exists. Please contact existing CR(s): ${existingCRs.map((cr: any) => `${cr.fullName} (${cr.email})`).join(', ')}`
-    );
-  }
-
-  // 5. Upload file to Cloudinary
-  const uploadResult = await uploadFile(
-    file.buffer,
-    upload_cr_registration_folder,
-    `cr_proof_${userId}_${Date.now()}`
-  );
-  const documentProofUrl = uploadResult.secure_url;
-
-  // 6. Create or get institution using repository
+  // 4. Create or get institution first
   let institution = await InstitutionRepository.getInstitutionByNameAndType(
     payload.institutionInfo.name,
     payload.institutionInfo.type
@@ -92,26 +67,100 @@ const completeCRRegistration = async (
     institution = await InstitutionRepository.createInstitution(payload.institutionInfo);
   }
 
-  // 7. Create CR registration using repository
-  const crRegistration = await CRRegistrationRepository.createCRRegistration({
-    userId,
+  // 5. Check if batch already exists using session with institutionId
+  const existingBatch = await CRRegistrationRepository.checkExistingBatchWithCRs({
     institutionId: institution.id,
-    documentProof: documentProofUrl,
+    name: payload.batchInformation.name,
+    department: payload.batchInformation.department,
+    batchType: payload.batchInformation.batchType,
+    academicYear: payload.batchInformation.academicYear,
   });
 
-  // 8. Update user with CR info using repository
-  await UserRepository.updateUserById(userId, {
-    isCrDetailsSubmitted: true,
-    institutionId: institution.id,
+  // Only prevent CR registration if batch exists with ACTIVE CRs
+  if (existingBatch && existingBatch.enrollments && existingBatch.enrollments.length > 0) {
+    const activeCRs = existingBatch.enrollments.filter((enrollment: any) => 
+      enrollment.isActive && enrollment.role === 'CR'
+    );
+    
+    if (activeCRs.length > 0) {
+      const existingCRs = activeCRs.map((cr: any) => cr.user);
+      throw new ApiError(
+        StatusCodes.CONFLICT,
+        `Batch already has active CR(s): ${existingCRs.map((cr: any) => `${cr.fullName} (${cr.email})`).join(', ')}`
+      );
+    }
+  }
+
+  // 6. Upload file to Cloudinary
+  const uploadResult = await uploadFile(
+    file.buffer,
+    upload_cr_registration_folder,
+    `cr_proof_${userId}_${Date.now()}`
+  );
+  const documentProofUrl = uploadResult.secure_url;
+
+  // 7. Use Prisma transaction for data consistency
+  const result = await database.$transaction(async (tx: any) => {
+    // Create CR registration using transaction
+    const crRegistration = await tx.cRRegistration.create({
+      data: {
+        userId,
+        institutionId: institution.id,
+        documentProof: documentProofUrl,
+        status: CRRegistrationStatus.PENDING,
+      },
+      include: {
+        user: true,
+        institution: true,
+      },
+    });
+
+    // Update user with CR info using transaction
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        isCrDetailsSubmitted: true,
+        institutionId: institution.id,
+      },
+    });
+
+    // Create batch if it doesn't exist (transaction-based approach)
+    let batch;
+    if (!existingBatch) {
+      batch = await tx.batch.create({
+        data: {
+          institutionId: institution.id,
+          name: payload.batchInformation.name,
+          batchType: payload.batchInformation.batchType,
+          department: payload.batchInformation.department,
+          academicYear: payload.batchInformation.academicYear,
+          createdBy: userId,
+        },
+      });
+    } else {
+      batch = existingBatch;
+    }
+
+    return {
+      crRegistration,
+      batch,
+    };
   });
 
-  // 9. Send pending email
+  // 8. Send pending email (outside transaction)
   await sendPendingCRRegistrationEmail(user.email, user.fullName, institution.name);
 
   return {
     email: user.email,
-    crRegistrationStatus: crRegistration.status,
+    crRegistrationStatus: result.crRegistration.status,
     institution: institution.name,
+    batch: result.batch ? {
+      id: result.batch.id,
+      name: result.batch.name,
+      department: result.batch.department,
+      batchType: result.batch.batchType,
+      academicYear: result.batch.academicYear,
+    } : null,
     message: 'CR registration submitted successfully. Please wait for admin approval.',
   };
 };
@@ -131,51 +180,80 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
     throw new ApiError(StatusCodes.CONFLICT, 'CR registration already approved');
   }
 
-  // Update registration status
-  const updatedRegistration = await CRRegistrationRepository.approveCRRegistration(registrationId);
+  // Use Prisma transaction for approval process
+  const result = await database.$transaction(async (tx: any) => {
+    // Update registration status
+    const updatedRegistration = await tx.cRRegistration.update({
+      where: { id: registrationId },
+      data: {
+        status: CRRegistrationStatus.APPROVED,
+      },
+      include: {
+        user: true,
+        institution: true,
+      },
+    });
 
-  // Update user role to CR and set approval time
-  await UserRepository.updateUserById(registration.userId, {
-    role: UserRole.CR,
-    isCr: true,
-    crApprovedAt: new Date(),
+    // Update user role to CR and set approval time
+    await tx.user.update({
+      where: { id: registration.userId },
+      data: {
+        role: UserRole.CR,
+        isCr: true,
+        crApprovedAt: new Date(),
+      },
+    });
+
+    // Find existing batch for this user and institution, or create a new one
+    let batch;
+    
+    // First try to find a batch created by this user for this institution
+    const userCreatedBatches = await tx.batch.findMany({
+      where: {
+        institutionId: registration.institutionId,
+        createdBy: registration.userId,
+      },
+      take: 1,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (userCreatedBatches.length > 0) {
+      // Use the batch created by the user during registration
+      batch = userCreatedBatches[0];
+    } else {
+      // Create a new batch as fallback
+      batch = await tx.batch.create({
+        data: {
+          institutionId: registration.institutionId,
+          name: `${registration.user.fullName}'s Batch`,
+          batchType: 'SEMESTER',
+          department: 'General',
+          academicYear: new Date().getFullYear().toString(),
+          createdBy: registration.userId,
+        },
+      });
+    }
+
+    // Add CR to batch enrollment
+    await tx.batchEnrollment.create({
+      data: {
+        batchId: batch.id,
+        userId: registration.userId,
+        role: 'CR',
+        studentId: registration.user.fullName,
+        enrolledBy: req?.user?.id,
+      },
+    });
+
+    return {
+      updatedRegistration,
+      batch,
+    };
   });
 
-  // Create batch for the approved CR
-  const batch = await BatchRepository.createBatch({
-    institutionId: registration.institutionId,
-    name: `${registration.user.fullName}'s Batch`, // Default batch name
-    batchType: 'SEMESTER', // Default batch type
-    department: 'General', // Default department
-    academicYear: new Date().getFullYear().toString(), // Current year
-  });
-
-  // Add CR to batch enrollment
-  await BatchEnrollmentRepository.createBatchEnrollment({
-    batchId: batch.id,
-    userId: registration.userId,
-    role: 'CR',
-    studentId: registration.user.fullName, // Use name as student ID for now
-    enrolledBy: req?.user?.id, // Admin who approved
-  });
-
-  // Create student account for the CR (self-enrollment)
-  const studentData = {
-    fullName: registration.user.fullName,
-    email: registration.user.email,
-    phoneNumber: registration.user.phoneNumber || '',
-    password: 'tempPassword123', // You might want to generate a random password
-    institutionId: registration.institutionId,
-    department: 'General',
-    program: 'General Program',
-    year: new Date().getFullYear().toString(),
-    studentId: registration.user.fullName,
-    crId: registration.userId,
-  };
-
-  await UserRepository.createStudentAccount(studentData);
-
-  // Send approval email
+  // Send approval email (outside transaction)
   const user = await UserRepository.getUserById(registration.userId);
   const institution = await InstitutionRepository.getInstitutionById(registration.institutionId);
 
@@ -186,12 +264,12 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
       AuditAction.CR_APPROVED,
       'CRRegistration',
       registrationId,
-      { institutionName: institution.name, batchId: batch.id },
+      { institutionName: institution.name, batchId: result.batch.id },
       req
     );
   }
 
-  return updatedRegistration;
+  return result.updatedRegistration;
 };
 
 const rejectCRRegistration = async (registrationId: string, reason: string, req?: Request) => {
@@ -205,21 +283,36 @@ const rejectCRRegistration = async (registrationId: string, reason: string, req?
     throw new ApiError(StatusCodes.CONFLICT, 'CR registration already rejected');
   }
 
-  // Update registration status
-  const updatedRegistration = await CRRegistrationRepository.rejectCRRegistration(
-    registrationId,
-    reason
-  );
+  // Use Prisma transaction for rejection process
+  const updatedRegistration = await database.$transaction(async (tx: any) => {
+    // Update registration status
+    const result = await tx.cRRegistration.update({
+      where: { id: registrationId },
+      data: {
+        status: CRRegistrationStatus.REJECTED,
+        rejectionReason: reason,
+      },
+      include: {
+        user: true,
+        institution: true,
+      },
+    });
 
-  // Reset user CR status
-  await UserRepository.updateUserById(registration.userId, {
-    isCr: false,
-    isCrDetailsSubmitted: false,
-    institutionId: null,
-    crApprovedAt: null,
+    // Reset user CR status
+    await tx.user.update({
+      where: { id: registration.userId },
+      data: {
+        isCr: false,
+        isCrDetailsSubmitted: false,
+        institutionId: null,
+        crApprovedAt: null,
+      },
+    });
+
+    return result;
   });
 
-  // Send rejection email
+  // Send rejection email (outside transaction)
   const user = await UserRepository.getUserById(registration.userId);
   const institution = await InstitutionRepository.getInstitutionById(registration.institutionId);
 

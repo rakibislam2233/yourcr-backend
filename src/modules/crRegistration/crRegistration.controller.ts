@@ -15,10 +15,9 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
   if (!req.file) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Document proof is required');
   }
-
   // Parse JSON strings from form-data
-  let institutionInfo: unknown;
-  let academicInfo: unknown;
+  let institutionInfo;
+  let batchInformation;
 
   try {
     institutionInfo = JSON.parse(req.body.institutionInfo);
@@ -27,18 +26,23 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
   }
 
   try {
-    academicInfo = JSON.parse(req.body.academicInfo);
+    batchInformation = JSON.parse(req.body.batchInformation);
   } catch {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'academicInfo must be valid JSON');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'batchInformation must be valid JSON');
   }
 
   const parsedData = {
     institutionInfo,
-    academicInfo,
+    batchInformation,
   };
 
   // Call service with parsed data and file
-  const result = await CRRegistrationService.completeCRRegistration(userId, parsedData, req.file, req);
+  const result = await CRRegistrationService.completeCRRegistration(
+    userId,
+    parsedData,
+    req.file,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

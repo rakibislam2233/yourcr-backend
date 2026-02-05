@@ -6,6 +6,7 @@ import { UserRepository } from '../user/user.repository';
 import { createAuditLog } from '../../utils/audit.helper';
 import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
+import { database } from '../../config/database.config';
 
 // ── Batch Service ───────────────────────────────────────────────────
 const createBatch = async (payload: ICreateBatchPayload, req?: Request) => {
@@ -115,13 +116,26 @@ const getBatchCRs = async (batchId: string) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Batch not found');
   }
 
-  // Return the CR associated with this batch
-  if (batch.crId) {
-    const cr = await UserRepository.getUserById(batch.crId);
-    return cr ? [cr] : [];
-  }
+  // Return CRs from batch enrollments
+  const enrollments = await database.batchEnrollment.findMany({
+    where: {
+      batchId,
+      role: 'CR',
+      isActive: true,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phoneNumber: true,
+        },
+      },
+    },
+  });
 
-  return [];
+  return enrollments.map((enrollment: any) => enrollment.user);
 };
 
 export const BatchService = {
