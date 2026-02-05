@@ -12,10 +12,6 @@ model User {
   status          UserStatus @default(ACTIVE)
   isEmailVerified Boolean    @default(false)
 
-  // Current Batch
-  currentBatchId String?
-  currentBatch   Batch?  @relation("UserCurrentBatch", fields: [currentBatchId], references: [id])
-
   // CR Specific Fields
   isCr                 Boolean   @default(false)
   crApprovedAt         DateTime?
@@ -41,7 +37,6 @@ model User {
   auditLogs             AuditLog[]             @relation("AuditLogUser")
   createdClasses        Class[]                @relation("ClassCreatedBy")
   assessmentSubmissions AssessmentSubmission[] @relation("AssessmentSubmissionStudent")
-  batches               Batch[]                @relation("BatchCR")
   batchEnrollments      BatchEnrollment[]      @relation("StudentEnrollments")
   enrollmentAdded       BatchEnrollment[]      @relation("EnrollmentAddedBy")
 

@@ -9,7 +9,7 @@ model Subject {
   roomNumber     String?
   isDepartmental Boolean      @default(true)
   batchId        String?
-  batch          Batch?      @relation(fields: [batchId], references: [id])
+  batch          Batch?       @relation(fields: [batchId], references: [id])
   createdById    String?
   createdBy      User?        @relation("SubjectCreatedBy", fields: [createdById], references: [id])
   isDeleted      Boolean      @default(false)

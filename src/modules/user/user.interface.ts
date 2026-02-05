@@ -18,10 +18,20 @@ export interface ICreateStudentPayload {
   department: string;
   program: string;
   year: string;
-  studentId?: string;
+  studentId?: string; // Institution-provided student ID
   semester?: string;
   batch?: string;
   crId: string;
+}
+
+// NEW: User batch information
+export interface IUserBatchInfo {
+  batchId: string;
+  batchName: string;
+  role: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
+  studentId?: string;
+  enrolledAt: Date;
+  isActive: boolean;
 }
 
 // Interface for user profile

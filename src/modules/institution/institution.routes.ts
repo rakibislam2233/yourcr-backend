@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
 import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { InstitutionValidations } from './institution.validation';
 import { InstitutionController } from './institution.controller';
-import { FileUploadMiddleware } from '../../utils/fileUpload.utils';
+import { InstitutionValidations } from './institution.validation';
+import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
@@ -12,22 +12,16 @@ const router = Router();
 router.post(
   '/',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  FileUploadMiddleware.institutionLogo,
+  upload.single('logo'),
   validateRequest(InstitutionValidations.createInstitution),
   InstitutionController.createInstitution
 );
 
 // Get all institutions (Public)
-router.get(
-  '/',
-  InstitutionController.getAllInstitutions
-);
+router.get('/', InstitutionController.getAllInstitutions);
 
 // Get institution by ID (Public)
-router.get(
-  '/:id',
-  InstitutionController.getInstitutionById
-);
+router.get('/:id', InstitutionController.getInstitutionById);
 
 // Update institution (Admin only)
 router.patch(

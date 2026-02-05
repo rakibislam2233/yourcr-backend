@@ -15,7 +15,7 @@ export const socketConfig = {
   pingTimeout: 60000,
   pingInterval: 25000,
   maxHttpBufferSize: 1e8, // 100 MB
-  transports: ['websocket', 'polling'],
+  transports: ['websocket', 'polling'] as ['websocket', 'polling'],
   allowEIO3: true,
   connectTimeout: 45000,
   

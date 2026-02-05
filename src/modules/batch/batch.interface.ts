@@ -4,7 +4,6 @@ export interface ICreateBatchPayload {
   batchType: 'SEMESTER' | 'YEAR';
   department: string;
   academicYear: string;
-  crId: string;
 }
 
 export interface IUpdateBatchPayload {
@@ -12,19 +11,35 @@ export interface IUpdateBatchPayload {
   batchType?: 'SEMESTER' | 'YEAR';
   department?: string;
   academicYear?: string;
-  crId?: string;
   isActive?: boolean;
   isArchived?: boolean;
 }
 
 export interface IBatchEnrollmentPayload {
   batchId: string;
-  studentId: string;
-  studentRollNumber: string;
-  status?: 'ACTIVE' | 'INACTIVE' | 'REMOVED';
+  userId: string;
+  role?: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
+  studentId?: string; // Institution-provided student ID/roll number
 }
 
 export interface IUpdateBatchEnrollmentPayload {
-  studentRollNumber?: string;
-  status?: 'ACTIVE' | 'INACTIVE' | 'REMOVED';
+  role?: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
+  studentId?: string;
+  isActive?: boolean;
+}
+
+// NEW: Get batch members with roles
+export interface IBatchMemberResponse {
+  id: string;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    profileImage?: string;
+  };
+  role: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
+  studentId?: string;
+  enrolledAt: Date;
+  isActive: boolean;
 }

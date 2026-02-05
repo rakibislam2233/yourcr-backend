@@ -1,0 +1,16 @@
+model BatchEnrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation("StudentEnrollments", fields: [userId], references: [id])
+  batchId    String
+  batch      Batch    @relation(fields: [batchId], references: [id])
+  enrolledBy String? // ID of user who added the enrollment
+  enrolledAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  // Relations
+  enrollmentAddedBy User? @relation("EnrollmentAddedBy", fields: [enrolledBy], references: [id])
+
+  @@unique([userId, batchId]) // A user can only be enrolled in a batch once
+  @@map("batch_enrollments")
+}

@@ -14,8 +14,7 @@ export interface ICompleteCRRegistrationPayload {
     program: string;
     semester: string;
     year: string;
-    studentId: string;
-    batch: string;
+    studentId: string; // Institution-provided student ID
   };
   // Batch Info
   batchInfo: {
@@ -25,4 +24,24 @@ export interface ICompleteCRRegistrationPayload {
     academicYear: string;
   };
   documentProof: string; 
+}
+
+// NEW: CR Registration with batch creation
+export interface ICRRegistrationWithBatchPayload {
+  userId: string;
+  institutionId: string;
+  documentProof: string;
+  batchInfo: {
+    name: string;
+    batchType: 'SEMESTER' | 'YEAR';
+    department: string;
+    academicYear: string;
+  };
+  academicInfo: {
+    department: string;
+    program: string;
+    semester: string;
+    year: string;
+    studentId: string;
+  };
 }
