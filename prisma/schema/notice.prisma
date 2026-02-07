@@ -12,6 +12,7 @@ model Notice {
   postedBy   User?      @relation("NoticePostedBy", fields: [postedById], references: [id])
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt()
+  isDeleted  Boolean    @default(false)
 
   @@map("notices")
 }

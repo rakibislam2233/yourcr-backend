@@ -14,32 +14,23 @@ const createRoutine = async (payload: ICreateRoutinePayload, actor: IDecodedToke
 
 const getRoutineById = async (id: string) => {
   const routine = await RoutineRepository.getRoutineById(id);
-  if (!routine) {
+  if (!routine || (routine as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Routine not found');
   }
   return routine;
 };
 
-const getAllRoutines = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
-  return await RoutineRepository.getAllRoutines(query);
+const getAllRoutines = async (filters: any, options: any) => {
+  return await RoutineRepository.getAllRoutines(filters, options);
 };
 
 const updateRoutine = async (id: string, payload: IUpdateRoutinePayload) => {
-  const existing = await RoutineRepository.getRoutineById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Routine not found');
-  }
+  const existing = await RoutineService.getRoutineById(id);
   return await RoutineRepository.updateRoutine(id, payload);
 };
 
 const deleteRoutine = async (id: string) => {
-  const existing = await RoutineRepository.getRoutineById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Routine not found');
-  }
+  await RoutineService.getRoutineById(id);
   return await RoutineRepository.deleteRoutine(id);
 };
 

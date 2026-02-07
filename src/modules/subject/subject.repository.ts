@@ -23,19 +23,25 @@ const getSubjectById = async (id: string) => {
   });
 };
 
-const getAllSubjects = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllSubjects = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
   const where: any = { isDeleted: false };
-  if (query.teacherId) {
-    where.teacherId = query.teacherId;
+  if (filters.teacherId) {
+    where.teacherId = filters.teacherId;
   }
-  if (query.isDepartmental !== undefined) {
-    where.isDepartmental = query.isDepartmental === 'true' || query.isDepartmental === true;
+  if (filters.isDepartmental !== undefined) {
+    where.isDepartmental = filters.isDepartmental === 'true' || filters.isDepartmental === true;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
+  }
+  if (filters.search) {
+    where.OR = [
+      { name: { contains: filters.search, mode: 'insensitive' } },
+      { code: { contains: filters.search, mode: 'insensitive' } },
+    ];
   }
 
   const [subjects, total] = await Promise.all([

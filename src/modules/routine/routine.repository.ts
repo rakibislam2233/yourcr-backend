@@ -22,19 +22,22 @@ const getRoutineById = async (id: string) => {
   });
 };
 
-const getAllRoutines = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllRoutines = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.type) {
-    where.type = query.type;
+  const where: any = { isDeleted: false };
+  if (filters.type) {
+    where.type = filters.type;
   }
-  if (query.createdById) {
-    where.createdById = query.createdById;
+  if (filters.createdById) {
+    where.createdById = filters.createdById;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
+  }
+  if (filters.search) {
+    where.OR = [{ name: { contains: filters.search, mode: 'insensitive' } }];
   }
 
   const [routines, total] = await Promise.all([
@@ -61,8 +64,9 @@ const updateRoutine = async (id: string, payload: IUpdateRoutinePayload) => {
 };
 
 const deleteRoutine = async (id: string) => {
-  return await database.routine.delete({
+  return await database.routine.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

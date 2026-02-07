@@ -9,6 +9,7 @@ model Routine {
   createdBy   User?       @relation("RoutineCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt()
+  isDeleted   Boolean     @default(false)
 
   @@map("routines")
 }

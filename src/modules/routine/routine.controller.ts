@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
-import { RoutineService } from './routine.service';
-
 import { uploadFile } from '../../utils/storage.utils';
+import { RoutineService } from './routine.service';
 
 const createRoutine = catchAsync(async (req: Request, res: Response) => {
   const { batchId, userId } = req.user;
@@ -47,7 +47,15 @@ const getRoutineById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllRoutines = catchAsync(async (req: Request, res: Response) => {
-  const result = await RoutineService.getAllRoutines(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'type', 'createdById']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await RoutineService.getAllRoutines(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -70,7 +78,7 @@ const updateRoutine = catchAsync(async (req: Request, res: Response) => {
 
   const result = await RoutineService.updateRoutine(routineId, {
     ...req.body,
-    fileUrl: fileUrl || req.body.fileUrl,
+    fileUrl: fileUrl,
   });
 
   sendResponse(res, {

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
 import { SubjectService } from './subject.service';
 
@@ -34,7 +35,15 @@ const getSubjectById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllSubjects = catchAsync(async (req: Request, res: Response) => {
-  const result = await SubjectService.getAllSubjects(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'teacherId', 'isDepartmental']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await SubjectService.getAllSubjects(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

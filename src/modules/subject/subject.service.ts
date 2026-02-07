@@ -23,8 +23,8 @@ const getSubjectById = async (id: string) => {
   return subject;
 };
 
-const getAllSubjects = async (query: any) => {
-  return await SubjectRepository.getAllSubjects(query);
+const getAllSubjects = async (filters: any, options: any) => {
+  return await SubjectRepository.getAllSubjects(filters, options);
 };
 
 const updateSubject = async (id: string, payload: IUpdateSubjectPayload) => {
