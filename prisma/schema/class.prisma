@@ -17,6 +17,7 @@ model Class {
   createdBy   User?       @relation("ClassCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt()
+  isDeleted   Boolean     @default(false)
 
   @@map("classes")
 }

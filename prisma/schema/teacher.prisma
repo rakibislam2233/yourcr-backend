@@ -10,6 +10,7 @@ model Teacher {
   batch       Batch?    @relation(fields: [batchId], references: [id])
   createdById String?
   createdBy   User?     @relation("TeacherCreatedBy", fields: [createdById], references: [id])
+  isDeleted   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt()
   subjects    Subject[]

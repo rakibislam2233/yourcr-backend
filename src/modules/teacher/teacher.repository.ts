@@ -22,10 +22,6 @@ const getTeacherByEmail = async (email: string) => {
 const getTeacherById = async (id: string) => {
   return await database.teacher.findUnique({
     where: { id },
-    include: {
-      subjects: true,
-      createdBy: true,
-    },
   });
 };
 
@@ -62,8 +58,9 @@ const updateTeacher = async (id: string, payload: IUpdateTeacherPayload) => {
 };
 
 const deleteTeacher = async (id: string) => {
-  return await database.teacher.delete({
+  return await database.teacher.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

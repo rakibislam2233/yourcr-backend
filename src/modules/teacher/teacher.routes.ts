@@ -31,6 +31,7 @@ router.get(
 
 router.patch(
   '/:id',
+  upload.single('photo'),
   auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(TeacherValidations.updateTeacher),
   TeacherController.updateTeacher
