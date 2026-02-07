@@ -151,6 +151,7 @@ const createStudentAccount = async (
       institutionId: data.institutionId,
       crId: data.crId,
       currentBatchId: data.currentBatchId,
+      isRegistrationComplete: true, // Mark as ready since they are added by a CR
       role: 'STUDENT',
     },
   });

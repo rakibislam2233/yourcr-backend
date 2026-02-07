@@ -130,7 +130,7 @@ const completeCRRegistration = async (
     await tx.user.update({
       where: { id: userId },
       data: {
-        isCrDetailsSubmitted: true,
+        isRegistrationComplete: true,
         institutionId: institution.id,
       },
     });

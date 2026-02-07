@@ -24,8 +24,14 @@ export const requireCRRegistrationCompletion = async (
       throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
     }
 
+    // ✅ BYPASS: If student is already enrolled in a batch (added by CR), they skip registration
+    if (user.currentBatchId) {
+      return next();
+    }
+
     // If user has verified email but hasn't submitted CR details,
-    if (user.isEmailVerified && !user.isCrDetailsSubmitted) {
+    // they need to complete CR registration first
+    if (user.isEmailVerified && !user.isRegistrationComplete) {
       throw new ApiError(httpStatus.FORBIDDEN, 'Please complete CR registration first', [
         { path: 'crRegistration', message: 'CR registration required' },
       ]);
@@ -33,7 +39,7 @@ export const requireCRRegistrationCompletion = async (
 
     // If user has submitted CR details but not approved yet,
     // they cannot access regular student features
-    if (user.isCrDetailsSubmitted && !user.isCr) {
+    if (user.isRegistrationComplete && !user.isCr) {
       throw new ApiError(
         httpStatus.FORBIDDEN,
         'CR registration is pending approval. Please wait for admin approval.',

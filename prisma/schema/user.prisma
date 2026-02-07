@@ -15,7 +15,7 @@ model User {
   // CR Specific Fields
   isCr                 Boolean   @default(false)
   crApprovedAt         DateTime?
-  isCrDetailsSubmitted Boolean   @default(false)
+  isRegistrationComplete Boolean   @default(false)
 
   crId          String?
   institutionId String?

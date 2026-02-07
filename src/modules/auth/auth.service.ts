@@ -136,10 +136,10 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     };
   }
 
-  // 7. Check CR Registration Status
-  if (user.role === UserRole.STUDENT) {
+  // 7. Check CR Registration Status (Bypass if student is already enrolled in a batch)
+  if (user.role === UserRole.STUDENT && !user.currentBatchId) {
     // If not submitted details yet
-    if (!user.isCrDetailsSubmitted) {
+    if (!user.isRegistrationComplete) {
       return {
         message: 'Please complete your CR registration details.',
         data: {
@@ -155,7 +155,7 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     }
 
     // If submitted but not approved yet
-    if (user.isCrDetailsSubmitted && (!user.isCr || !user.crApprovedAt)) {
+    if (user.isRegistrationComplete && (!user.isCr || !user.crApprovedAt)) {
       return {
         message: 'CR registration is pending approval. Please wait for admin approval.',
         data: {
@@ -171,7 +171,7 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     }
 
     // Role migration: If approved but still has STUDENT role, update to CR
-    if (user.isCr && user.isCrDetailsSubmitted && user.crApprovedAt) {
+    if (user.isCr && user.isRegistrationComplete && user.crApprovedAt) {
       await database.user.update({
         where: { id: user.id },
         data: { role: UserRole.CR },
