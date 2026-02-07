@@ -26,19 +26,21 @@ const createAssessment = async (
     req
   );
 
+  let subjectName = 'General';
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
     if (!subject) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Subject not found');
     }
+    subjectName = subject.name;
   }
 
   const assessment = await AssessmentRepository.createAssessment(payload);
 
   // Immediate notification to students
   await addNotificationJob({
-    title: `New Assessment: ${assessment.title}`,
-    message: `Deadline: ${new Date(assessment.deadline).toLocaleString()}`,
+    title: `New Assessment: ${assessment.title} [${subjectName}]`,
+    message: `A new assessment for **${subjectName}** has been posted.\n\nTitle: ${assessment.title}\nDeadline: ${new Date(assessment.deadline).toLocaleString()}\n\nPlease check your dashboard for details.`,
     type: 'ASSESSMENT',
     relatedId: assessment.id,
     crId: actorId,
