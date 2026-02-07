@@ -70,13 +70,13 @@ const getAllCRRegistrations = catchAsync(async (req: Request, res: Response) => 
 
 const approveCRRegistration = catchAsync(async (req: Request, res: Response) => {
   // Only admin can approve
-  const { role, userId } = req.user;
+  const { role } = req.user;
   if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
-
   const { id } = req.params;
   const registrationId = Array.isArray(id) ? id[0] : id;
+
   const result = await CRRegistrationService.approveCRRegistration(registrationId, req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -87,8 +87,8 @@ const approveCRRegistration = catchAsync(async (req: Request, res: Response) => 
 });
 
 const rejectCRRegistration = catchAsync(async (req: Request, res: Response) => {
-  // Only admin can reject
   const { role } = req.user;
+  
   if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }

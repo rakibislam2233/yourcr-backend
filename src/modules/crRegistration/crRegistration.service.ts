@@ -54,7 +54,10 @@ const completeCRRegistration = async (
   // 3. Check if user already has CR registration
   const existingRegistration = await CRRegistrationRepository.getCRRegistrationByUserId(userId);
   if (existingRegistration) {
-    throw new ApiError(StatusCodes.CONFLICT, `CR registration already exists with status ${existingRegistration.status}`);
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      `CR registration already exists with status ${existingRegistration.status}`
+    );
   }
 
   // 4. Create or get institution first
@@ -78,10 +81,10 @@ const completeCRRegistration = async (
 
   // Only prevent CR registration if batch exists with ACTIVE CRs
   if (existingBatch && existingBatch.enrollments && existingBatch.enrollments.length > 0) {
-    const activeCRs = existingBatch.enrollments.filter((enrollment: any) => 
-      enrollment.isActive && enrollment.role === 'CR'
+    const activeCRs = existingBatch.enrollments.filter(
+      (enrollment: any) => enrollment.isActive && enrollment.role === 'CR'
     );
-    
+
     if (activeCRs.length > 0) {
       const existingCRs = activeCRs.map((cr: any) => cr.user);
       throw new ApiError(
@@ -154,13 +157,15 @@ const completeCRRegistration = async (
     email: user.email,
     crRegistrationStatus: result.crRegistration.status,
     institution: institution.name,
-    batch: result.batch ? {
-      id: result.batch.id,
-      name: result.batch.name,
-      department: result.batch.department,
-      batchType: result.batch.batchType,
-      academicYear: result.batch.academicYear,
-    } : null,
+    batch: result.batch
+      ? {
+          id: result.batch.id,
+          name: result.batch.name,
+          department: result.batch.department,
+          batchType: result.batch.batchType,
+          academicYear: result.batch.academicYear,
+        }
+      : null,
     message: 'CR registration submitted successfully. Please wait for admin approval.',
   };
 };
@@ -206,7 +211,7 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
 
     // Find existing batch for this user and institution, or create a new one
     let batch;
-    
+
     // First try to find a batch created by this user for this institution
     const userCreatedBatches = await tx.batch.findMany({
       where: {

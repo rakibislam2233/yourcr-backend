@@ -25,15 +25,16 @@ router.get(
 
 // Approve CR registration (admin only)
 router.patch(
-  '/:registrationId/approve',
+  '/approve/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   CRRegistrationController.approveCRRegistration
 );
 
 // Reject CR registration (admin only)
 router.patch(
-  '/:registrationId/reject',
+  '/reject/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(CRRegistrationValidations.rejectCRRegistration),
   CRRegistrationController.rejectCRRegistration
 );
 

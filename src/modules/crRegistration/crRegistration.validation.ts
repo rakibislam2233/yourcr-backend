@@ -57,6 +57,13 @@ const formDataRegistration = z.object({
   }),
 });
 
+const rejectCRRegistration = z.object({
+  body: z.object({
+    reason: z.string().min(1, 'Reason is required').optional(),
+  }),
+});
+
 export const CRRegistrationValidations = {
   formDataRegistration,
+  rejectCRRegistration
 };
