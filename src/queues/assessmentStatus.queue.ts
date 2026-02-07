@@ -1,8 +1,8 @@
-import { AssessmentStatus } from '@prisma/client';
 import { Queue } from 'bullmq';
 import colors from 'colors';
 import logger from '../utils/logger';
 import { defaultQueueOptions, QUEUE_NAMES } from './queue.config';
+import { AssessmentStatus } from '../../prisma/generated/enums';
 
 export interface AssessmentStatusJobData {
   assessmentId: string;

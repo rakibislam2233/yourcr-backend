@@ -59,6 +59,12 @@ enum AssessmentStatus {
   CANCELLED
 }
 
+enum SubmissionStatus {
+  SUBMITTED
+  LATE
+  MISSING
+}
+
 //============================ Issue Model Related enum ==============//
 enum IssueType {
   ACADEMIC

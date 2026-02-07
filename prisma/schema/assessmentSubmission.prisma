@@ -9,8 +9,9 @@ model AssessmentSubmission {
   batchId      String?
   batch        Batch?     @relation(fields: [batchId], references: [id])
   submittedAt  DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  isDeleted    Boolean    @default(false)
+  updatedAt    DateTime         @updatedAt
+  status       SubmissionStatus @default(SUBMITTED)
+  isDeleted    Boolean          @default(false)
 
   @@unique([assessmentId, studentId])
   @@map("assessment_submissions")
