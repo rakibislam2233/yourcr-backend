@@ -18,7 +18,12 @@ const reminderWorker = new Worker(
     await addNotificationJob({
       title,
       message,
-      type: type === 'ASSESSMENT_REMINDER' ? 'ASSESSMENT' : 'NOTICE',
+      type:
+        type === 'ASSESSMENT_REMINDER'
+          ? 'ASSESSMENT'
+          : type === 'CLASS_REMINDER'
+            ? 'CLASS'
+            : 'NOTICE',
       relatedId,
       userIds,
       crId,

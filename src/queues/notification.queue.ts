@@ -1,12 +1,12 @@
 import { Queue } from 'bullmq';
-import { defaultQueueOptions, QUEUE_NAMES } from './queue.config';
-import logger from '../utils/logger';
 import colors from 'colors';
+import logger from '../utils/logger';
+import { defaultQueueOptions, QUEUE_NAMES } from './queue.config';
 
 export interface NotificationJobData {
   title: string;
   message: string;
-  type: 'NOTICE' | 'ASSESSMENT' | 'ISSUE' | 'SYSTEM';
+  type: 'NOTICE' | 'ASSESSMENT' | 'ISSUE' | 'SYSTEM' | 'CLASS' | 'CLASS_UPDATE';
   relatedId?: string;
   institutionId?: string;
   targetRole?: string;

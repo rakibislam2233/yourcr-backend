@@ -32,11 +32,16 @@ const notificationWorker = new Worker(
 
     for (const userId of recipients) {
       // 1. Save to database
+      const dbType =
+        type === 'CLASS' || type === 'CLASS_UPDATE'
+          ? 'NOTICE'
+          : (type as 'NOTICE' | 'ASSESSMENT' | 'ISSUE' | 'SYSTEM');
+
       const notification = await NotificationRepository.createNotification({
         userId,
         title,
         message,
-        type,
+        type: dbType,
         relatedId,
       });
 
