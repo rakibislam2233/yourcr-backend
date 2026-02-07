@@ -68,7 +68,7 @@ const register = async (payload: IRegisterPayload) => {
 
 // --- Login ---
 const login = async (payload: ILoginPayload, req?: Request) => {
-  const { email, password } = payload;
+  const { email, password, fcmToken, webPushToken } = payload;
 
   // 1. Check lockout
   const lockKey = AUTH_CACHE_KEY.LOGIN_LOCK(email);
@@ -196,7 +196,34 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     };
   }
 
-  // 8. Generate tokens
+  // 8. Register device for push notifications (if tokens provided)
+  if (fcmToken || webPushToken) {
+    try {
+      const { UserDeviceService } = await import('../userDevice/userDevice.service');
+
+      // Extract device info from request
+      const userAgent = req?.headers['user-agent'] || '';
+      const deviceType = getDeviceType(userAgent, fcmToken, webPushToken);
+      const deviceName = getDeviceName(userAgent);
+      const deviceId = generateDeviceId(user.id, userAgent);
+
+      await UserDeviceService.registerDevice({
+        userId: user.id,
+        deviceType,
+        deviceName,
+        deviceId,
+        fcmToken,
+        webPushToken,
+        userAgent,
+        ipAddress: req?.ip,
+      });
+    } catch (error) {
+      // Don't fail login if device registration fails
+      console.error('Failed to register device:', error);
+    }
+  }
+
+  // 9. Generate tokens
   const [accessToken, refreshToken] = await Promise.all([
     jwtHelper.generateAccessToken(user.id, user.email, user.role, user.currentBatchId ?? undefined),
     jwtHelper.generateRefreshToken(
@@ -226,6 +253,44 @@ const login = async (payload: ILoginPayload, req?: Request) => {
       tokens: { accessToken, refreshToken },
     },
   };
+};
+
+// Helper functions for device detection
+const getDeviceType = (
+  userAgent: string,
+  fcmToken?: string,
+  webPushToken?: string
+): 'web' | 'android' | 'ios' => {
+  if (fcmToken) {
+    // FCM token usually comes from mobile apps
+    if (userAgent.toLowerCase().includes('android')) return 'android';
+    if (userAgent.toLowerCase().includes('iphone') || userAgent.toLowerCase().includes('ipad'))
+      return 'ios';
+    return 'android'; // Default to android for FCM
+  }
+  if (webPushToken) {
+    return 'web'; // Web Push is always from browsers
+  }
+  return 'web'; // Default
+};
+
+const getDeviceName = (userAgent: string): string => {
+  // Simple device name extraction
+  if (userAgent.includes('Chrome')) return 'Chrome Browser';
+  if (userAgent.includes('Firefox')) return 'Firefox Browser';
+  if (userAgent.includes('Safari')) return 'Safari Browser';
+  if (userAgent.includes('Edge')) return 'Edge Browser';
+  if (userAgent.includes('Android')) return 'Android Device';
+  if (userAgent.includes('iPhone')) return 'iPhone';
+  if (userAgent.includes('iPad')) return 'iPad';
+  return 'Unknown Device';
+};
+
+const generateDeviceId = (userId: string, userAgent: string): string => {
+  // Generate a consistent device ID based on user and user agent
+  const crypto = require('crypto');
+  const hash = crypto.createHash('md5').update(`${userId}-${userAgent}`).digest('hex');
+  return hash.substring(0, 16);
 };
 
 //--- Verify OTP ---

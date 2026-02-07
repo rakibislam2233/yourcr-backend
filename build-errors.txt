@@ -1,0 +1,32 @@
+src/modules/batch/batch.controller.ts(59,18): error TS2339: Property 'meta' does not exist on type 'PaginationResult<any>'.
+src/modules/batch/batch.controller.ts(133,5): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/batch/batch.controller.ts(149,47): error TS2554: Expected 3 arguments, but got 1.
+src/modules/batch/batch.controller.ts(162,65): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/batch/batch.controller.ts(230,61): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/batch/batch.controller.ts(243,52): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/batch/batch.controller.ts(256,49): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(19,79): error TS2554: Expected 1 arguments, but got 3.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(65,47): error TS2554: Expected 3 arguments, but got 2.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(71,18): error TS2339: Property 'meta' does not exist on type 'PaginationResult<any>'.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(97,82): error TS2554: Expected 1 arguments, but got 2.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(117,93): error TS2554: Expected 2 arguments, but got 3.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(137,83): error TS2554: Expected 1 arguments, but got 2.
+src/modules/batchEnrollment/batchEnrollment.controller.ts(157,66): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/userDevice/userDevice.repository.ts(29,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(38,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(47,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(59,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(74,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(87,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(101,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(114,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(124,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(137,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/modules/userDevice/userDevice.repository.ts(146,27): error TS2339: Property 'userDevice' does not exist on type 'PrismaClient<never, GlobalOmitConfig | undefined, DefaultArgs>'.
+src/utils/pushNotification.utils.ts(33,34): error TS7006: Parameter 'device' implicitly has an 'any' type.

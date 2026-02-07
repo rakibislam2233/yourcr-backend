@@ -43,6 +43,7 @@ model User {
   assessmentSubmissions AssessmentSubmission[] @relation("AssessmentSubmissionStudent")
   batchEnrollments      BatchEnrollment[]      @relation("StudentEnrollments")
   enrollmentAdded       BatchEnrollment[]      @relation("EnrollmentAddedBy")
+  devices               UserDevice[]           @relation("UserDevices")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

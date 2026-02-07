@@ -31,6 +31,10 @@ const login = z.object({
     password: z
       .string({ error: 'Password is required and must be a string' })
       .min(1, 'Password is required'),
+
+    // Optional push notification tokens
+    fcmToken: z.string().optional(),
+    webPushToken: z.string().optional(),
   }),
 });
 

@@ -1,7 +1,7 @@
 import colors from 'colors';
 import dotenv from 'dotenv';
-import ApiError from '../utils/ApiError';
 import { StatusCodes } from 'http-status-codes';
+import ApiError from '../utils/ApiError';
 
 dotenv.config();
 
@@ -30,7 +30,10 @@ if (missingEnvVars.length > 0) {
     console.error(
       colors.red(`❌ Missing required environment variables: ${missingEnvVars.join(', ')}`)
     );
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, `Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      `Missing required environment variables: ${missingEnvVars.join(', ')}`
+    );
   } else {
     console.warn(
       colors.yellow(
@@ -163,16 +166,36 @@ const config = {
     maxLimit: parseInt(process.env.PAGINATION_MAX_LIMIT || '100', 10),
     defaultPage: parseInt(process.env.PAGINATION_DEFAULT_PAGE || '1', 10),
   },
+
+  // Firebase (for mobile push notifications)
+  firebase: {
+    serviceAccountPath:
+      process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './firebase-service-account.json',
+    projectId: process.env.FIREBASE_PROJECT_ID || '',
+  },
+
+  // Web Push (for browser push notifications)
+  webPush: {
+    publicKey: process.env.WEB_PUSH_PUBLIC_KEY || '',
+    privateKey: process.env.WEB_PUSH_PRIVATE_KEY || '',
+    subject: process.env.WEB_PUSH_SUBJECT || 'mailto:your-email@example.com',
+  },
 };
 
 // Validate critical configurations
 if (config.env === 'production') {
   if (!config.jwt.accessSecret || config.jwt.accessSecret.length < 32) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'JWT_ACCESS_SECRET must be at least 32 characters in production');
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'JWT_ACCESS_SECRET must be at least 32 characters in production'
+    );
   }
 
   if (!config.jwt.refreshSecret || config.jwt.refreshSecret.length < 32) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'JWT_REFRESH_SECRET must be at least 32 characters in production');
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'JWT_REFRESH_SECRET must be at least 32 characters in production'
+    );
   }
 
   if (!config.redis.password) {

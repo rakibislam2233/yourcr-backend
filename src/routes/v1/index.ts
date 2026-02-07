@@ -15,17 +15,9 @@ import { RoutineRoutes } from '../../modules/routine/routine.routes';
 import { SubjectRoutes } from '../../modules/subject/subject.routes';
 import { TeacherRoutes } from '../../modules/teacher/teacher.routes';
 import { UserRoutes } from '../../modules/user/user.routes';
+import { UserDeviceRoutes } from '../../modules/userDevice/userDevice.routes';
 
 const router = Router();
-
-// Health check
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'YourCR API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // Module routes
 const moduleRoutes = [
@@ -92,6 +84,10 @@ const moduleRoutes = [
   {
     path: '/batch-enrollments',
     route: BatchEnrollmentRoutes,
+  },
+  {
+    path: '/user-devices',
+    route: UserDeviceRoutes,
   },
 ];
 

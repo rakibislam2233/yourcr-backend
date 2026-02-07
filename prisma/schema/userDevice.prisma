@@ -1,0 +1,29 @@
+model UserDevice {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserDevices", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Device Info
+  deviceType    String   
+  deviceName    String? 
+  deviceId      String? 
+  
+  // Push Notification Tokens
+  fcmToken      String?  @unique
+  webPushToken  String?  @unique 
+  
+  // Metadata
+  userAgent     String?
+  ipAddress     String?
+  lastUsedAt    DateTime @default(now())
+  isActive      Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([fcmToken])
+  @@index([webPushToken])
+  @@map("user_devices")
+}

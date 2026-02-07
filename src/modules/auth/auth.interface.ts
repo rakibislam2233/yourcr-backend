@@ -5,12 +5,14 @@ export interface IRegisterPayload {
   email: string;
   password: string;
   phoneNumber: string;
-  role?: UserRole;  // Optional, defaults to STUDENT, but only CR allowed for self-registration
+  role?: UserRole; // Optional, defaults to STUDENT, but only CR allowed for self-registration
 }
 
 export interface ILoginPayload {
   email: string;
   password: string;
+  fcmToken?: string;
+  webPushToken?: string;
 }
 
 export interface IVerifyOtpPayload {
