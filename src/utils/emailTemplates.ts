@@ -465,3 +465,59 @@ export const sendStudentCreatedEmail = async (
 
   await addEmailToQueue({ to, subject, html });
 };
+
+// ──────────────────────────────────────────────
+// Generic Notification Email Template
+export const getNotificationEmailHtml = (title: string, message: string, type: string): string => {
+  let badgeClass = 'status-badge';
+  let typeLabel = type;
+
+  // Map types to styles and labels
+  switch (type) {
+    case 'NOTICE':
+      badgeClass += ' badge-pending'; // Yellow/Orange
+      typeLabel = 'Notice';
+      break;
+    case 'ASSESSMENT':
+      badgeClass += ' badge-rejected'; // Red (Urgent/Important)
+      typeLabel = 'Assessment';
+      break;
+    case 'CLASS':
+    case 'CLASS_UPDATE':
+      badgeClass += ' badge-approved'; // Green
+      typeLabel = 'Class Update';
+      break;
+    case 'ISSUE':
+      badgeClass += ' badge-rejected';
+      typeLabel = 'Issue Reported';
+      break;
+    default:
+      badgeClass += ' badge-pending';
+      typeLabel = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  }
+
+  const content = `
+    <div style="margin-bottom: 24px;">
+      <span class="${badgeClass}">${typeLabel}</span>
+    </div>
+    
+    <p style="font-size: 18px; color: #334155; margin-bottom: 24px;">
+        ${title}
+    </p>
+
+    ${generateHighlightBox(`
+      <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+    `)}
+    
+    <p style="color: #64748B; font-size: 14px; margin-top: 24px;">
+      Log in to your dashboard to view full details and take necessary actions.
+    </p>
+    
+    ${generateButton('View Dashboard', 'https://yourcr.app/dashboard')}
+  `;
+
+  return generateProfessionalEmailTemplate(content, {
+    title: title,
+    preheader: message.substring(0, 150),
+  });
+};

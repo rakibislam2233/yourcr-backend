@@ -6,7 +6,7 @@ import { addEmailToQueue } from '../queues/email.queue';
 import { NotificationJobData } from '../queues/notification.queue';
 import { defaultWorkerOptions, QUEUE_NAMES } from '../queues/queue.config';
 import { emitNotificationToUser } from '../socket/socket.service';
-import { getEmailTemplate } from '../templates/email.template';
+import { getNotificationEmailHtml } from '../utils/emailTemplates';
 import logger from '../utils/logger';
 import { sendPushNotificationToUser } from '../utils/pushNotification.utils';
 
@@ -49,7 +49,7 @@ const notificationWorker = new Worker(
         await addEmailToQueue({
           to: user.email,
           subject: title,
-          html: getEmailTemplate(title, message, type),
+          html: getNotificationEmailHtml(title, message, type),
         });
       }
 
