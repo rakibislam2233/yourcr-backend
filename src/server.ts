@@ -11,6 +11,7 @@ import { setupSocket } from './socket/socket.handler';
 import { setSocketInstance } from './socket/socket.service';
 import logger from './utils/logger';
 import { seedDatabase } from './utils/seed.utils';
+import './workers/assessmentStatus.worker';
 import './workers/classStatus.worker';
 import './workers/email.worker';
 import './workers/notification.worker';

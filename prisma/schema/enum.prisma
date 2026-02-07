@@ -52,6 +52,13 @@ enum AssessmentType {
   PROJECT
 }
 
+enum AssessmentStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
 //============================ Issue Model Related enum ==============//
 enum IssueType {
   ACADEMIC

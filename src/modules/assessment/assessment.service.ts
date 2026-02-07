@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { scheduleAssessmentStatusUpdate } from '../../queues/assessmentStatus.queue';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { scheduleAssessmentReminder } from '../../queues/reminder.queue';
 import { AuditAction } from '../../shared/enum/audit.enum';
@@ -51,6 +52,11 @@ const createAssessment = async (
     actorId
   );
 
+  // Schedule automatic status updates (SCHEDULED -> ACTIVE -> COMPLETED)
+  const startTime = new Date(assessment.date);
+  const deadline = new Date(assessment.deadline);
+  await scheduleAssessmentStatusUpdate(assessment.id, startTime, deadline);
+
   return assessment;
 };
 
@@ -100,6 +106,15 @@ const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) =
         new Date(updatedAssessment.deadline),
         updatedAssessment.title,
         (updatedAssessment as any).createdById
+      );
+    }
+
+    // Reschedule status updates if date or deadline changed
+    if (payload.date || payload.deadline) {
+      await scheduleAssessmentStatusUpdate(
+        updatedAssessment.id,
+        new Date(updatedAssessment.date),
+        new Date(updatedAssessment.deadline)
       );
     }
   }

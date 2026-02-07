@@ -44,4 +44,5 @@ export const QUEUE_NAMES = {
   NOTIFICATION: 'notifications',
   REMINDER: 'reminders',
   CLASS_STATUS: 'class-status',
+  ASSESSMENT_STATUS: 'assessment-status',
 } as const;
