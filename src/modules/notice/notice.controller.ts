@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
-import { NoticeService } from './notice.service';
-
 import { uploadFile } from '../../utils/storage.utils';
+import { NoticeService } from './notice.service';
 
 const createNotice = catchAsync(async (req: Request, res: Response) => {
   const { batchId, userId } = req.user;
@@ -48,7 +48,15 @@ const getNoticeById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllNotices = catchAsync(async (req: Request, res: Response) => {
-  const result = await NoticeService.getAllNotices(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'type', 'isActive', 'postedById']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await NoticeService.getAllNotices(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -74,7 +82,7 @@ const updateNotice = catchAsync(async (req: Request, res: Response) => {
     noticeId,
     {
       ...req.body,
-      fileUrl,
+      fileUrl: fileUrl,
     },
     userId,
     req

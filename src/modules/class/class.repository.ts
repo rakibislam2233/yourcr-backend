@@ -32,28 +32,28 @@ const getClassById = async (id: string) => {
   });
 };
 
-const getAllClasses = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllClasses = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.subjectId) {
-    where.subjectId = query.subjectId;
+  const where: any = { isDeleted: false };
+  if (filters.subjectId) {
+    where.subjectId = filters.subjectId;
   }
-  if (query.teacherId) {
-    where.teacherId = query.teacherId;
+  if (filters.teacherId) {
+    where.teacherId = filters.teacherId;
   }
-  if (query.status) {
-    where.status = query.status;
+  if (filters.status) {
+    where.status = filters.status;
   }
-  if (query.classType) {
-    where.classType = query.classType;
+  if (filters.classType) {
+    where.classType = filters.classType;
   }
-  if (query.classDate) {
-    where.classDate = new Date(query.classDate);
+  if (filters.classDate) {
+    where.classDate = new Date(filters.classDate);
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
   }
 
   const [classes, total] = await Promise.all([
@@ -87,8 +87,9 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
 };
 
 const deleteClass = async (id: string) => {
-  return await database.class.delete({
+  return await database.class.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
-import { IssueService } from './issue.service';
-
 import { uploadFile } from '../../utils/storage.utils';
+import { IssueService } from './issue.service';
 
 const createIssue = catchAsync(async (req: Request, res: Response) => {
   const { userId, batchId } = req.user;
@@ -49,7 +49,15 @@ const getIssueById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllIssues = catchAsync(async (req: Request, res: Response) => {
-  const result = await IssueService.getAllIssues(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'status', 'type', 'priority', 'studentId']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await IssueService.getAllIssues(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -76,7 +84,7 @@ const updateIssue = catchAsync(async (req: Request, res: Response) => {
     issueId,
     {
       ...req.body,
-      fileUrl,
+      fileUrl: fileUrl,
     },
     userId,
     req

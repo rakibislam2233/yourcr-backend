@@ -23,25 +23,31 @@ const getIssueById = async (id: string) => {
   });
 };
 
-const getAllIssues = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllIssues = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.status) {
-    where.status = query.status;
+  const where: any = { isDeleted: false };
+  if (filters.status) {
+    where.status = filters.status;
   }
-  if (query.type) {
-    where.type = query.type;
+  if (filters.type) {
+    where.type = filters.type;
   }
-  if (query.priority) {
-    where.priority = query.priority;
+  if (filters.priority) {
+    where.priority = filters.priority;
   }
-  if (query.studentId) {
-    where.studentId = query.studentId;
+  if (filters.studentId) {
+    where.studentId = filters.studentId;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
+  }
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { description: { contains: filters.search, mode: 'insensitive' } },
+    ];
   }
 
   const [issues, total] = await Promise.all([
@@ -72,8 +78,9 @@ const updateIssue = async (id: string, payload: IUpdateIssuePayload) => {
 };
 
 const deleteIssue = async (id: string) => {
-  return await database.issue.delete({
+  return await database.issue.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

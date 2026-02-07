@@ -24,19 +24,14 @@ const createIssue = async (payload: ICreateIssuePayload, studentId: string, req?
 
 const getIssueById = async (id: string) => {
   const issue = await IssueRepository.getIssueById(id);
-  if (!issue) {
+  if (!issue || (issue as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Issue not found');
   }
   return issue;
 };
 
-import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
-
-const getAllIssues = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
-  return await IssueRepository.getAllIssues(query);
+const getAllIssues = async (filters: any, options: any) => {
+  return await IssueRepository.getAllIssues(filters, options);
 };
 
 const updateIssue = async (
@@ -45,10 +40,7 @@ const updateIssue = async (
   resolverId?: string,
   req?: Request
 ) => {
-  const existing = await IssueRepository.getIssueById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Issue not found');
-  }
+  await IssueService.getIssueById(id);
 
   const data: IUpdateIssuePayload = { ...payload };
   if (payload.status === 'RESOLVED' && resolverId) {
@@ -65,10 +57,7 @@ const updateIssue = async (
 };
 
 const deleteIssue = async (id: string) => {
-  const existing = await IssueRepository.getIssueById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Issue not found');
-  }
+  await IssueService.getIssueById(id);
   return await IssueRepository.deleteIssue(id);
 };
 

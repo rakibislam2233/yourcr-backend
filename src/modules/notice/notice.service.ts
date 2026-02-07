@@ -17,7 +17,7 @@ const createNotice = async (payload: ICreateNoticePayload, actor: IDecodedToken,
   const notice = await NoticeRepository.createNotice({
     ...payload,
     postedById: actorId,
-    batchId: actor.role === UserRole.CR ? actor.batchId || undefined : payload.batchId,
+    batchId: actor.role === UserRole.CR ? (actor.batchId as string) : payload.batchId,
   });
 
   const noticeCreator = await UserRepository.getUserById(actorId);
@@ -41,18 +41,15 @@ const createNotice = async (payload: ICreateNoticePayload, actor: IDecodedToken,
 
 const getNoticeById = async (id: string) => {
   const notice = await NoticeRepository.getNoticeById(id);
-  if (!notice) {
+  if (!notice || (notice as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Notice not found');
   }
   await NoticeRepository.incrementNoticeViews(id);
   return notice;
 };
 
-const getAllNotices = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
-  return await NoticeRepository.getAllNotices(query);
+const getAllNotices = async (filters: any, options: any) => {
+  return await NoticeRepository.getAllNotices(filters, options);
 };
 
 const updateNotice = async (
@@ -62,21 +59,13 @@ const updateNotice = async (
   req?: Request
 ) => {
   await createAuditLog(actorId, AuditAction.UPDATE_NOTICE, 'Notice', id, { payload }, req);
-
-  const existing = await NoticeRepository.getNoticeById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Notice not found');
-  }
+  await NoticeService.getNoticeById(id);
   return await NoticeRepository.updateNotice(id, payload);
 };
 
 const deleteNotice = async (id: string, actorId: string, req?: Request) => {
   await createAuditLog(actorId, AuditAction.DELETE_NOTICE, 'Notice', id, {}, req);
-
-  const existing = await NoticeRepository.getNoticeById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Notice not found');
-  }
+  await NoticeService.getNoticeById(id);
   return await NoticeRepository.deleteNotice(id);
 };
 

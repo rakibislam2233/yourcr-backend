@@ -22,22 +22,28 @@ const getNoticeById = async (id: string) => {
   });
 };
 
-const getAllNotices = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllNotices = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.type) {
-    where.type = query.type;
+  const where: any = { isDeleted: false };
+  if (filters.type) {
+    where.type = filters.type;
   }
-  if (query.isActive !== undefined) {
-    where.isActive = query.isActive === 'true' || query.isActive === true;
+  if (filters.isActive !== undefined) {
+    where.isActive = filters.isActive === 'true' || filters.isActive === true;
   }
-  if (query.postedById) {
-    where.postedById = query.postedById;
+  if (filters.postedById) {
+    where.postedById = filters.postedById;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
+  }
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { content: { contains: filters.search, mode: 'insensitive' } },
+    ];
   }
 
   const [notices, total] = await Promise.all([
@@ -64,8 +70,9 @@ const updateNotice = async (id: string, payload: IUpdateNoticePayload) => {
 };
 
 const deleteNotice = async (id: string) => {
-  return await database.notice.delete({
+  return await database.notice.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 
