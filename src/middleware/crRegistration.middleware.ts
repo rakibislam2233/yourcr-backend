@@ -4,8 +4,8 @@ import { database } from '../config/database.config';
 import ApiError from '../utils/ApiError';
 
 export const requireCRRegistrationCompletion = async (
-  req: Request, 
-  res: Response, 
+  req: Request,
+  res: Response,
   next: NextFunction
 ) => {
   const { userId, role } = req.user;
@@ -24,21 +24,18 @@ export const requireCRRegistrationCompletion = async (
       throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
     }
 
-    // If user has verified email but hasn't submitted CR details, 
-    // they need to complete CR registration first
+    // If user has verified email but hasn't submitted CR details,
     if (user.isEmailVerified && !user.isCrDetailsSubmitted) {
-      throw new ApiError(
-        httpStatus.FORBIDDEN, 
-        'Please complete CR registration first',
-        [{ path: 'crRegistration', message: 'CR registration required' }]
-      );
+      throw new ApiError(httpStatus.FORBIDDEN, 'Please complete CR registration first', [
+        { path: 'crRegistration', message: 'CR registration required' },
+      ]);
     }
 
-    // If user has submitted CR details but not approved yet, 
+    // If user has submitted CR details but not approved yet,
     // they cannot access regular student features
-    if (user.isCrDetailsSubmitted && !user.isCrApproved) {
+    if (user.isCrDetailsSubmitted && !user.isCr) {
       throw new ApiError(
-        httpStatus.FORBIDDEN, 
+        httpStatus.FORBIDDEN,
         'CR registration is pending approval. Please wait for admin approval.',
         [{ path: 'crRegistration', message: 'CR registration pending approval' }]
       );

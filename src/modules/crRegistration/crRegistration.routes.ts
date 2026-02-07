@@ -1,16 +1,16 @@
 import express from 'express';
-import { CRRegistrationController } from './crRegistration.controller';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { CRRegistrationValidations } from './crRegistration.validation';
+import { UserRole } from '../../shared/enum/user.enum';
 import upload from '../../utils/fileUpload.utils';
+import { CRRegistrationController } from './crRegistration.controller';
+import { CRRegistrationValidations } from './crRegistration.validation';
 
 const router = express.Router();
 
 router.post(
   '/',
-  auth(UserRole.CR),
+  auth(UserRole.STUDENT),
   upload.single('documentProof'),
   validateRequest(CRRegistrationValidations.formDataRegistration),
   CRRegistrationController.completeCRRegistration

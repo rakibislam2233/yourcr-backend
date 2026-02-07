@@ -28,7 +28,7 @@ import {
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
-  const { fullName, email, password, phoneNumber, role = UserRole.CR } = payload;
+  const { fullName, email, password, phoneNumber, role = UserRole.STUDENT } = payload;
 
   //1.check if user already exists
   const user = await UserRepository.getUserByEmail(email);
@@ -36,28 +36,28 @@ const register = async (payload: IRegisterPayload) => {
     throw new ApiError(StatusCodes.CONFLICT, 'User already exists');
   }
 
-  // 2. Validate role - only CR allowed for self-registration
-  if (role !== UserRole.CR) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Only CR role is allowed for self-registration');
+  // 2. Validate role - only STUDENT allowed for self-registration
+  if (role !== UserRole.STUDENT) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Only Student role is allowed for registration');
   }
 
   //3. Hash password
   const hashedPassword = await hashPassword(password);
 
-  //4. Create user with CR role
+  //4. Create user with STUDENT role
   const result = await UserRepository.createAccount({
     fullName,
     email,
     phoneNumber,
     password: hashedPassword,
-    role: UserRole.CR, // Force CR role for self-registration
+    role: UserRole.STUDENT, // Force STUDENT role for self-registration
   });
 
   // 5. Create OTP session
   const sessionId = await OtpService.createOtpSession(result, OtpType.EMAIL_VERIFICATION);
 
   return {
-    message: 'CR registered successfully! Please verify your email.',
+    message: 'User registered successfully! Please verify your email.',
     data: {
       email: result.email,
       sessionId,
@@ -137,40 +137,63 @@ const login = async (payload: ILoginPayload, req?: Request) => {
   }
 
   // 7. Check CR Registration Status
-  if (user.role === UserRole.CR && user.isCr && user.isCrDetailsSubmitted) {
-    // User has submitted CR registration but not yet approved
-    if (!user.crApprovedAt) {
+  if (user.role === UserRole.STUDENT) {
+    // If not submitted details yet
+    if (!user.isCrDetailsSubmitted) {
       return {
-        message: 'CR registration submitted. Awaiting admin approval.',
+        message: 'Please complete your CR registration details.',
         data: {
           user: {
             id: user.id,
             email: user.email,
             role: user.role,
             fullName: user.fullName,
-            isCr: user.isCr,
-            isCrDetailsSubmitted: user.isCrDetailsSubmitted,
-            crApprovedAt: user.crApprovedAt,
+          },
+          redirect: '/cr-registration/complete',
+        },
+      };
+    }
+
+    // If submitted but not approved yet
+    if (user.isCrDetailsSubmitted && (!user.isCr || !user.crApprovedAt)) {
+      return {
+        message: 'CR registration is pending approval. Please wait for admin approval.',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName,
           },
           redirect: '/cr-registration/pending',
         },
       };
     }
+
+    // Role migration: If approved but still has STUDENT role, update to CR
+    if (user.isCr && user.isCrDetailsSubmitted && user.crApprovedAt) {
+      await database.user.update({
+        where: { id: user.id },
+        data: { role: UserRole.CR },
+      });
+      user.role = UserRole.CR;
+    }
   }
 
-  // 8. Check if user should be CR (approved but role not updated)
-  if (
-    user.role === UserRole.STUDENT &&
-    user.isCr &&
-    user.isCrDetailsSubmitted &&
-    user.crApprovedAt
-  ) {
-    // Update role to CR if approved
-    await database.user.update({
-      where: { id: user.id },
-      data: { role: UserRole.CR },
-    });
-    user.role = UserRole.CR;
+  // Handle existing CR role but check for approval safety
+  if (user.role === UserRole.CR && !user.crApprovedAt) {
+    return {
+      message: 'CR registration submitted. Awaiting admin approval.',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          fullName: user.fullName,
+        },
+        redirect: '/cr-registration/pending',
+      },
+    };
   }
 
   // 8. Generate tokens

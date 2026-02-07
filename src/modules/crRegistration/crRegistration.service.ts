@@ -51,6 +51,19 @@ const completeCRRegistration = async (
     };
   }
 
+  // 3. Check if user already has CR registration or is already a CR
+  if (user.role === UserRole.CR) {
+    throw new ApiError(StatusCodes.CONFLICT, 'You are already registered as a CR.');
+  }
+
+  const existingRegistration = await CRRegistrationRepository.getCRRegistrationByUserId(userId);
+  if (existingRegistration) {
+    throw new ApiError(
+      StatusCodes.CONFLICT,
+      `CR registration already exists with status ${existingRegistration.status}`
+    );
+  }
+
   // 4. Create or get institution first (Trimmed and case-insensitive)
   const institutionName = payload.institutionInfo.name.trim();
   let institution = await InstitutionRepository.getInstitutionByNameAndType(

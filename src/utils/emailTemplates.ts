@@ -32,7 +32,7 @@ const generateProfessionalEmailTemplate = (
 
     .container {
       max-width: 600px;
-      margin: 30px; 
+      margin: 0 auto; 
       background-color: #FFFFFF;
       border-radius: 16px;
       overflow: hidden;
@@ -169,6 +169,23 @@ const generateProfessionalEmailTemplate = (
         opacity: 0.8;
     }
 
+    .social-links {
+      margin: 20px 0 24px;
+    }
+
+    .social-icon {
+      display: inline-block;
+      margin: 0 12px;
+      text-decoration: none;
+    }
+
+    .social-icon img {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 0;
+      opacity: 0.7;
+    }
+
     .footer a {
       color: #2456C4;
       text-decoration: none;
@@ -209,6 +226,20 @@ const generateProfessionalEmailTemplate = (
           <!-- Footer -->
           <tr>
             <td class="footer">
+              <img src="${logoUrl}" alt="YourCR Logo">
+              
+              <div class="social-links">
+                <a href="https://facebook.com/yourcr" class="social-icon">
+                  <img src="https://img.icons8.com/ios-filled/50/2456C4/facebook-new.png" alt="Facebook">
+                </a>
+                <a href="https://instagram.com/yourcr" class="social-icon">
+                  <img src="https://img.icons8.com/ios-filled/50/2456C4/instagram-new.png" alt="Instagram">
+                </a>
+                <a href="https://linkedin.com/company/yourcr" class="social-icon">
+                  <img src="https://img.icons8.com/ios-filled/50/2456C4/linkedin.png" alt="LinkedIn">
+                </a>
+              </div>
+
               <p style="margin: 0 0 8px;">
                 <a href="https://yourcr.app">www.yourcr.app</a> | <a href="mailto:support@yourcr.app">support@yourcr.app</a>
               </p>
