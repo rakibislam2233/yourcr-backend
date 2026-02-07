@@ -10,9 +10,16 @@ import { ICreateAssessmentPayload, IUpdateAssessmentPayload } from './assessment
 const createAssessment = async (payload: ICreateAssessmentPayload) => {
   return await database.assessment.create({
     data: {
-      ...payload,
+      subjectId: payload.subjectId,
+      title: payload.title,
+      type: payload.type,
+      description: payload.description,
+      fileUrls: payload.fileUrls,
+      totalMarks: payload.totalMarks,
       date: new Date(payload.date),
       deadline: new Date(payload.deadline),
+      batchId: payload.batchId,
+      createdById: payload.createdById,
     },
   });
 };

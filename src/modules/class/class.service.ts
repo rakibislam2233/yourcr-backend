@@ -93,7 +93,7 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
   if (changes.length > 0) {
     await addNotificationJob({
       title: `Class Updated: ${(existingClass as any).subject?.name || 'Class'}`,
-      message: `The following class details have been updated: ${changes.join(', ')}. \n\nNew Schedule: ${new Date(updatedClass.classDate).toDateString()} at ${new Date(updatedClass.startTime).toLocaleTimeString()}.\n\nPlease check your dashboard for the latest information.`,
+      message: `The following class details have been updated: ${changes.join(', ')}. \n\nNew Schedule: ${new Date(payload.classDate || updatedClass.classDate).toDateString()} at ${new Date(payload.startTime || updatedClass.startTime).toLocaleTimeString()} - ${new Date(payload.endTime || updatedClass.endTime).toLocaleTimeString()}.\n\nPlease check your dashboard for the latest information.`,
       type: 'CLASS_UPDATE',
       relatedId: id,
       crId: (existingClass as any).createdById,
