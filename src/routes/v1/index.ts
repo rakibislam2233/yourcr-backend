@@ -1,16 +1,20 @@
-import { AuthRoutes } from '../../modules/auth/auth.routes';
-import { UserRoutes } from '../../modules/user/user.routes';
-import { InstitutionRoutes } from '../../modules/institution/institution.routes';
-import { CRRegistrationRoutes } from '../../modules/crRegistration/crRegistration.routes';
-import { NoticeRoutes } from '../../modules/notice/notice.routes';
-import { AssessmentRoutes } from '../../modules/assessment/assessment.routes';
-import { IssueRoutes } from '../../modules/issue/issue.routes';
-import { NotificationRoutes } from '../../modules/notification/notification.routes';
-import { AuditLogRoutes } from '../../modules/auditLog/auditLog.routes';
-import { ClassRoutes } from '../../modules/class/class.routes';
-import { AssessmentSubmissionRoutes } from '../../modules/assessmentSubmission/assessmentSubmission.routes';
-import { BatchRoutes } from '../../modules/batch/batch.routes';
 import { Router } from 'express';
+import { AssessmentRoutes } from '../../modules/assessment/assessment.routes';
+import { AssessmentSubmissionRoutes } from '../../modules/assessmentSubmission/assessmentSubmission.routes';
+import { AuditLogRoutes } from '../../modules/auditLog/auditLog.routes';
+import { AuthRoutes } from '../../modules/auth/auth.routes';
+import { BatchRoutes } from '../../modules/batch/batch.routes';
+import { BatchEnrollmentRoutes } from '../../modules/batchEnrollment/batchEnrollment.routes';
+import { ClassRoutes } from '../../modules/class/class.routes';
+import { CRRegistrationRoutes } from '../../modules/crRegistration/crRegistration.routes';
+import { InstitutionRoutes } from '../../modules/institution/institution.routes';
+import { IssueRoutes } from '../../modules/issue/issue.routes';
+import { NoticeRoutes } from '../../modules/notice/notice.routes';
+import { NotificationRoutes } from '../../modules/notification/notification.routes';
+import { RoutineRoutes } from '../../modules/routine/routine.routes';
+import { SubjectRoutes } from '../../modules/subject/subject.routes';
+import { TeacherRoutes } from '../../modules/teacher/teacher.routes';
+import { UserRoutes } from '../../modules/user/user.routes';
 
 const router = Router();
 
@@ -72,7 +76,23 @@ const moduleRoutes = [
   {
     path: '/batches',
     route: BatchRoutes,
-  }
+  },
+  {
+    path: '/teachers',
+    route: TeacherRoutes,
+  },
+  {
+    path: '/subjects',
+    route: SubjectRoutes,
+  },
+  {
+    path: '/routines',
+    route: RoutineRoutes,
+  },
+  {
+    path: '/batch-enrollments',
+    route: BatchEnrollmentRoutes,
+  },
 ];
 
 moduleRoutes.forEach(route => router.use(route.path, route.route));

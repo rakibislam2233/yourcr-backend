@@ -5,6 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { TeacherService } from './teacher.service';
 
 import { uploadFile } from '../../utils/storage.utils';
+import pick from '../../utils/pick.utils';
 
 const createTeacher = catchAsync(async (req: Request, res: Response) => {
   const { userId, batchId } = req.user;
@@ -45,7 +46,13 @@ const getTeacherById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllTeachers = catchAsync(async (req: Request, res: Response) => {
-  const result = await TeacherService.getAllTeachers(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'department']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+  const result = await TeacherService.getAllTeachers(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

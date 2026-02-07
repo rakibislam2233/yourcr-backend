@@ -29,27 +29,21 @@ const getTeacherById = async (id: string) => {
   });
 };
 
-const getAllTeachers = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllTeachers = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
-
   const where: any = {};
-  if (query.batchId) where.batchId = query.batchId;
-  if (query.department) where.department = { contains: query.department, mode: 'insensitive' };
-  if (query.search) {
+  if (filters.batchId) where.batchId = filters.batchId;
+  if (filters.department) where.department = { contains: filters.department, mode: 'insensitive' };
+  if (filters.search) {
     where.OR = [
-      { name: { contains: query.search, mode: 'insensitive' } },
-      { email: { contains: query.search, mode: 'insensitive' } },
+      { name: { contains: filters.search, mode: 'insensitive' } },
+      { email: { contains: filters.search, mode: 'insensitive' } },
     ];
   }
-
   const [teachers, total] = await Promise.all([
     database.teacher.findMany({
       where,
-      include: {
-        subjects: true,
-        createdBy: true,
-      },
       skip,
       take,
       orderBy,

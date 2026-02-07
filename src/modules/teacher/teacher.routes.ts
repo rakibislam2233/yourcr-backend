@@ -17,9 +17,17 @@ router.post(
   TeacherController.createTeacher
 );
 
-router.get('/', TeacherController.getAllTeachers);
+router.get(
+  '/',
+  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  TeacherController.getAllTeachers
+);
 
-router.get('/:id', TeacherController.getTeacherById);
+router.get(
+  '/:id',
+  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  TeacherController.getTeacherById
+);
 
 router.patch(
   '/:id',

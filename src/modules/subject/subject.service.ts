@@ -23,13 +23,7 @@ const getSubjectById = async (id: string) => {
   return subject;
 };
 
-import { UserRole } from '../../shared/enum/user.enum';
-import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
-
-const getAllSubjects = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
+const getAllSubjects = async (query: any) => {
   return await SubjectRepository.getAllSubjects(query);
 };
 
