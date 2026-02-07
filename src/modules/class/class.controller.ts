@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
 import { ClassService } from './class.service';
 
@@ -38,7 +39,23 @@ const getClassById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllClasses = catchAsync(async (req: Request, res: Response) => {
-  const result = await ClassService.getAllClasses(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, [
+    'search',
+    'batchId',
+    'subjectId',
+    'teacherId',
+    'status',
+    'classType',
+    'classDate',
+  ]);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await ClassService.getAllClasses(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

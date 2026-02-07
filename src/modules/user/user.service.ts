@@ -11,13 +11,13 @@ import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
 import { UserRepository } from './user.repository';
 
 const getAllUsers = async (filters: any, options: any) => {
-  return await UserRepository.getAllUsersForAdmin({ ...filters, ...options });
+  return await UserRepository.getAllUsersForAdmin(filters, options);
 };
 
 const getUserById = async (id: string) => {
   const user = await UserRepository.getUserByIdForResponse(id);
 
-  if (!user) {
+  if (!user || user.isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
 

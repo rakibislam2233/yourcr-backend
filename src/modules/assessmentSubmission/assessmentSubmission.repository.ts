@@ -41,19 +41,19 @@ const getSubmissionByAssessmentAndStudent = async (assessmentId: string, student
   });
 };
 
-const getAllSubmissions = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllSubmissions = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.assessmentId) {
-    where.assessmentId = query.assessmentId;
+  const where: any = { isDeleted: false };
+  if (filters.assessmentId) {
+    where.assessmentId = filters.assessmentId;
   }
-  if (query.studentId) {
-    where.studentId = query.studentId;
+  if (filters.studentId) {
+    where.studentId = filters.studentId;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
   }
 
   const [submissions, total] = await Promise.all([
@@ -80,10 +80,18 @@ const updateSubmission = async (id: string, payload: IUpdateAssessmentSubmission
   });
 };
 
+const deleteSubmission = async (id: string) => {
+  return await database.assessmentSubmission.update({
+    where: { id },
+    data: { isDeleted: true },
+  });
+};
+
 export const AssessmentSubmissionRepository = {
   createAssessmentSubmission,
   getSubmissionById,
   getSubmissionByAssessmentAndStudent,
   getAllSubmissions,
   updateSubmission,
+  deleteSubmission,
 };

@@ -51,14 +51,14 @@ const submitAssessment = async (
 
 const getSubmissionById = async (id: string) => {
   const submission = await AssessmentSubmissionRepository.getSubmissionById(id);
-  if (!submission) {
+  if (!submission || (submission as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Submission not found');
   }
   return submission;
 };
 
-const getMySubmissions = async (studentId: string, query: any) => {
-  return await AssessmentSubmissionRepository.getAllSubmissions({ ...query, studentId });
+const getMySubmissions = async (studentId: string, filters: any, options: any) => {
+  return await AssessmentSubmissionRepository.getAllSubmissions({ ...filters, studentId }, options);
 };
 
 const updateSubmission = async (
@@ -66,24 +66,15 @@ const updateSubmission = async (
   payload: IUpdateAssessmentSubmissionPayload,
   studentId: string
 ) => {
-  const existing = await AssessmentSubmissionRepository.getSubmissionById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Submission not found');
-  }
+  const existing = await AssessmentSubmissionService.getSubmissionById(id);
   if (existing.studentId !== studentId) {
     throw new ApiError(StatusCodes.FORBIDDEN, 'You can only update your own submission');
   }
   return await AssessmentSubmissionRepository.updateSubmission(id, payload);
 };
 
-import { UserRole } from '../../shared/enum/user.enum';
-import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
-
-const getAllSubmissions = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR) {
-    query.batchId = user.batchId;
-  }
-  return await AssessmentSubmissionRepository.getAllSubmissions(query);
+const getAllSubmissions = async (filters: any, options: any) => {
+  return await AssessmentSubmissionRepository.getAllSubmissions(filters, options);
 };
 
 export const AssessmentSubmissionService = {

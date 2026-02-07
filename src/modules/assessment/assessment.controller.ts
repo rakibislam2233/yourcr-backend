@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
-import { AssessmentService } from './assessment.service';
-
 import { uploadFile } from '../../utils/storage.utils';
+import { AssessmentService } from './assessment.service';
 
 const createAssessment = catchAsync(async (req: Request, res: Response) => {
   const { batchId, userId } = req.user;
@@ -51,7 +51,15 @@ const getAssessmentById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllAssessments = catchAsync(async (req: Request, res: Response) => {
-  const result = await AssessmentService.getAllAssessments(req.query, req.user);
+  const { batchId } = req.user;
+  const filters = pick(req.query, ['search', 'batchId', 'subjectId', 'type', 'createdById']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await AssessmentService.getAllAssessments(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

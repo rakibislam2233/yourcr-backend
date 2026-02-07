@@ -50,43 +50,43 @@ const updateUserById = async (id: string, data: any) => {
   });
 };
 
-const getAllUsersForAdmin = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllUsersForAdmin = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
   // Build where clause from filters
-  const where: any = {};
+  const where: any = { isDeleted: false };
 
   // String filters (case-insensitive contains)
-  if (query.fullName) {
-    where.fullName = { contains: query.fullName, mode: 'insensitive' };
+  if (filters.fullName) {
+    where.fullName = { contains: filters.fullName, mode: 'insensitive' };
   }
-  if (query.email) {
-    where.email = { contains: query.email, mode: 'insensitive' };
+  if (filters.email) {
+    where.email = { contains: filters.email, mode: 'insensitive' };
   }
-  if (query.phoneNumber) {
-    where.phoneNumber = { contains: query.phoneNumber, mode: 'insensitive' };
+  if (filters.phoneNumber) {
+    where.phoneNumber = { contains: filters.phoneNumber, mode: 'insensitive' };
   }
 
   // Enum filters
-  if (query.status) {
-    where.status = query.status;
+  if (filters.status) {
+    where.status = filters.status;
   }
-  if (query.role) {
-    where.role = query.role;
+  if (filters.role) {
+    where.role = filters.role;
   }
 
   // Boolean filter
-  if (query.isEmailVerified !== undefined) {
-    where.isEmailVerified = query.isEmailVerified === 'true' || query.isEmailVerified === true;
+  if (filters.isEmailVerified !== undefined) {
+    where.isEmailVerified = filters.isEmailVerified === 'true' || filters.isEmailVerified === true;
   }
 
   // Global search
-  if (query.search) {
+  if (filters.search) {
     where.OR = [
-      { fullName: { contains: query.search, mode: 'insensitive' } },
-      { email: { contains: query.search, mode: 'insensitive' } },
-      { phoneNumber: { contains: query.search, mode: 'insensitive' } },
+      { fullName: { contains: filters.search, mode: 'insensitive' } },
+      { email: { contains: filters.search, mode: 'insensitive' } },
+      { phoneNumber: { contains: filters.search, mode: 'insensitive' } },
     ];
   }
 
@@ -126,6 +126,7 @@ const getUserByIdForResponse = async (id: string) => {
       status: true,
       createdAt: true,
       updatedAt: true,
+      isDeleted: true,
     },
   });
 };
@@ -160,7 +161,7 @@ const createStudentAccount = async (
 const deleteUserById = async (id: string) => {
   return await database.user.update({
     where: { id },
-    data: { status: 'DELETED' },
+    data: { isDeleted: true, status: 'DELETED' },
   });
 };
 

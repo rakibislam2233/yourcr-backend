@@ -17,13 +17,22 @@ router.post(
   NoticeController.createNotice
 );
 
-router.get('/', NoticeController.getAllNotices);
+router.get(
+  '/',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  NoticeController.getAllNotices
+);
 
-router.get('/:id', NoticeController.getNoticeById);
+router.get(
+  '/:id',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  NoticeController.getNoticeById
+);
 
 router.patch(
   '/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  upload.single('file'),
   validateRequest(NoticeValidations.updateNotice),
   NoticeController.updateNotice
 );

@@ -10,7 +10,6 @@ const createTeacher = async (payload: ICreateTeacherPayload) => {
       throw new ApiError(StatusCodes.CONFLICT, 'Teacher with this email already exists');
     }
   }
-
   return await TeacherRepository.createTeacher(payload);
 };
 

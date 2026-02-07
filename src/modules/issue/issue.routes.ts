@@ -32,6 +32,7 @@ router.get(
 router.patch(
   '/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
+  upload.single('file'),
   validateRequest(IssueValidations.updateIssue),
   IssueController.updateIssue
 );

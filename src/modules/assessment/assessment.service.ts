@@ -27,7 +27,7 @@ const createAssessment = async (
 
   // Enforce batch isolation for CR
   if (actor.role === UserRole.CR) {
-    payload.batchId = actor.batchId || undefined;
+    payload.batchId = actor.batchId as string;
   }
 
   if (payload.subjectId) {
@@ -53,24 +53,18 @@ const createAssessment = async (
 
 const getAssessmentById = async (id: string) => {
   const assessment = await AssessmentRepository.getAssessmentById(id);
-  if (!assessment) {
+  if (!assessment || (assessment as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Assessment not found');
   }
   return assessment;
 };
 
-const getAllAssessments = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
-  return await AssessmentRepository.getAllAssessments(query);
+const getAllAssessments = async (filters: any, options: any) => {
+  return await AssessmentRepository.getAllAssessments(filters, options);
 };
 
 const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) => {
-  const existing = await AssessmentRepository.getAssessmentById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Assessment not found');
-  }
+  await AssessmentService.getAssessmentById(id);
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
@@ -83,10 +77,7 @@ const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) =
 };
 
 const deleteAssessment = async (id: string) => {
-  const existing = await AssessmentRepository.getAssessmentById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Assessment not found');
-  }
+  await AssessmentService.getAssessmentById(id);
   return await AssessmentRepository.deleteAssessment(id);
 };
 

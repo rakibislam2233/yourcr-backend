@@ -27,22 +27,28 @@ const getAssessmentById = async (id: string) => {
   });
 };
 
-const getAllAssessments = async (query: any): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+const getAllAssessments = async (filters: any, options: any): Promise<PaginationResult<any>> => {
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = {};
-  if (query.subjectId) {
-    where.subjectId = query.subjectId;
+  const where: any = { isDeleted: false };
+  if (filters.subjectId) {
+    where.subjectId = filters.subjectId;
   }
-  if (query.type) {
-    where.type = query.type;
+  if (filters.type) {
+    where.type = filters.type;
   }
-  if (query.createdById) {
-    where.createdById = query.createdById;
+  if (filters.createdById) {
+    where.createdById = filters.createdById;
   }
-  if (query.batchId) {
-    where.batchId = query.batchId;
+  if (filters.batchId) {
+    where.batchId = filters.batchId;
+  }
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { description: { contains: filters.search, mode: 'insensitive' } },
+    ];
   }
 
   const [assessments, total] = await Promise.all([
@@ -74,8 +80,9 @@ const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) =
 };
 
 const deleteAssessment = async (id: string) => {
-  return await database.assessment.delete({
+  return await database.assessment.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

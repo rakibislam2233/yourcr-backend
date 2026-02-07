@@ -3,13 +3,11 @@ import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { TeacherService } from './teacher.service';
-
 import { uploadFile } from '../../utils/storage.utils';
 import pick from '../../utils/pick.utils';
 
 const createTeacher = catchAsync(async (req: Request, res: Response) => {
   const { userId, batchId } = req.user;
-
   // Handle file upload
   let photoUrl = req.body.photoUrl;
   if (req.file) {

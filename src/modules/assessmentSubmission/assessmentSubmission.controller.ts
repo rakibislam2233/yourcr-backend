@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
-import { AssessmentSubmissionService } from './assessmentSubmission.service';
-
 import { uploadFile } from '../../utils/storage.utils';
+import { AssessmentSubmissionService } from './assessmentSubmission.service';
 
 const submitAssessment = catchAsync(async (req: Request, res: Response) => {
   const { userId, batchId } = req.user;
@@ -50,7 +50,10 @@ const getSubmissionById = catchAsync(async (req: Request, res: Response) => {
 
 const getMySubmissions = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await AssessmentSubmissionService.getMySubmissions(userId, req.query);
+  const filters = pick(req.query, ['assessmentId']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  const result = await AssessmentSubmissionService.getMySubmissions(userId, filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -93,13 +96,14 @@ const updateSubmission = catchAsync(async (req: Request, res: Response) => {
 
 const getAllSubmissions = catchAsync(async (req: Request, res: Response) => {
   const { batchId } = req.user;
-  const result = await AssessmentSubmissionService.getAllSubmissions(
-    {
-      ...req.query,
-      batchId: batchId || req.query.batchId,
-    },
-    req.user
-  );
+  const filters = pick(req.query, ['assessmentId', 'studentId', 'batchId']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+  if (batchId) {
+    filters.batchId = batchId;
+  }
+
+  const result = await AssessmentSubmissionService.getAllSubmissions(filters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

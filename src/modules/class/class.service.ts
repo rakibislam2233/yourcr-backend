@@ -17,7 +17,7 @@ const createClass = async (payload: ICreateClassPayload, actor: IDecodedToken, r
 
   // Enforce batch isolation for CR
   if (actor.role === UserRole.CR) {
-    payload.batchId = actor.batchId || undefined;
+    payload.batchId = actor.batchId as string;
   }
 
   if (payload.subjectId) {
@@ -50,24 +50,18 @@ const createClass = async (payload: ICreateClassPayload, actor: IDecodedToken, r
 
 const getClassById = async (id: string) => {
   const classItem = await ClassRepository.getClassById(id);
-  if (!classItem) {
+  if (!classItem || (classItem as any).isDeleted) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Class not found');
   }
   return classItem;
 };
 
-const getAllClasses = async (query: any, user: IDecodedToken) => {
-  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
-    query.batchId = user.batchId;
-  }
-  return await ClassRepository.getAllClasses(query);
+const getAllClasses = async (filters: any, options: any) => {
+  return await ClassRepository.getAllClasses(filters, options);
 };
 
 const updateClass = async (id: string, payload: IUpdateClassPayload) => {
-  const existing = await ClassRepository.getClassById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Class not found');
-  }
+  await ClassService.getClassById(id);
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
@@ -87,10 +81,7 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
 };
 
 const deleteClass = async (id: string) => {
-  const existing = await ClassRepository.getClassById(id);
-  if (!existing) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Class not found');
-  }
+  await ClassService.getClassById(id);
   return await ClassRepository.deleteClass(id);
 };
 
