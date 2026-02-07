@@ -1,15 +1,18 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { TeacherValidations } from './teacher.validation';
+import { UserRole } from '../../shared/enum/user.enum';
 import { TeacherController } from './teacher.controller';
+import { TeacherValidations } from './teacher.validation';
+
+import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
 router.post(
   '/',
   auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  upload.single('photo'),
   validateRequest(TeacherValidations.createTeacher),
   TeacherController.createTeacher
 );

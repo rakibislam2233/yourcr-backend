@@ -11,8 +11,8 @@ export interface ICreateClassPayload {
   status?: ClassStatus;
   roomNumber?: string;
   joinLink?: string;
-  createdById?: string;
-  batchId?: string;
+  createdById: string;
+  batchId: string;
 }
 
 export interface IUpdateClassPayload {

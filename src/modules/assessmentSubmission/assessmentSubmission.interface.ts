@@ -1,6 +1,7 @@
 export interface ICreateAssessmentSubmissionPayload {
   assessmentId: string;
-  studentId?: string;
+  studentId: string;
+  batchId: string;
   content?: string;
   fileUrls?: string[];
 }
@@ -8,4 +9,5 @@ export interface ICreateAssessmentSubmissionPayload {
 export interface IUpdateAssessmentSubmissionPayload {
   content?: string;
   fileUrls?: string[];
+  batchId?: string;
 }

@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateIssuePayload, IUpdateIssuePayload } from './issue.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateIssuePayload, IUpdateIssuePayload } from './issue.interface';
 
 const createIssue = async (payload: ICreateIssuePayload) => {
   return await database.issue.create({
@@ -39,6 +39,9 @@ const getAllIssues = async (query: any): Promise<PaginationResult<any>> => {
   }
   if (query.studentId) {
     where.studentId = query.studentId;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [issues, total] = await Promise.all([

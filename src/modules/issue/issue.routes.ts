@@ -1,22 +1,33 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { IssueValidations } from './issue.validation';
+import { UserRole } from '../../shared/enum/user.enum';
 import { IssueController } from './issue.controller';
+import { IssueValidations } from './issue.validation';
+
+import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
 router.post(
   '/',
   auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  upload.single('file'),
   validateRequest(IssueValidations.createIssue),
   IssueController.createIssue
 );
 
-router.get('/', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR), IssueController.getAllIssues);
+router.get(
+  '/',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
+  IssueController.getAllIssues
+);
 
-router.get('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT), IssueController.getIssueById);
+router.get(
+  '/:id',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  IssueController.getIssueById
+);
 
 router.patch(
   '/:id',
@@ -25,10 +36,6 @@ router.patch(
   IssueController.updateIssue
 );
 
-router.delete(
-  '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  IssueController.deleteIssue
-);
+router.delete('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), IssueController.deleteIssue);
 
 export const IssueRoutes = router;

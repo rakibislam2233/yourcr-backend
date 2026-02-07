@@ -5,9 +5,10 @@ import sendResponse from '../../utils/sendResponse';
 import { SubjectService } from './subject.service';
 
 const createSubject = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
+  const { userId, batchId } = req.user;
   const result = await SubjectService.createSubject({
     ...req.body,
+    batchId: batchId || req.body.batchId,
     createdById: userId,
   });
 
@@ -33,7 +34,7 @@ const getSubjectById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllSubjects = catchAsync(async (req: Request, res: Response) => {
-  const result = await SubjectService.getAllSubjects(req.query);
+  const result = await SubjectService.getAllSubjects(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

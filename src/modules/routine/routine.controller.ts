@@ -4,8 +4,26 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { RoutineService } from './routine.service';
 
+import { uploadFile } from '../../utils/storage.utils';
+
 const createRoutine = catchAsync(async (req: Request, res: Response) => {
-  const result = await RoutineService.createRoutine(req.body, req.user);
+  const { batchId, userId } = req.user;
+
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'routines', `routine_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await RoutineService.createRoutine(
+    {
+      ...req.body,
+      fileUrl: fileUrl || req.body.fileUrl,
+      batchId: batchId || req.body.batchId,
+      createdById: userId,
+    },
+    req.user
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -43,7 +61,17 @@ const getAllRoutines = catchAsync(async (req: Request, res: Response) => {
 const updateRoutine = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const routineId = Array.isArray(id) ? id[0] : id;
-  const result = await RoutineService.updateRoutine(routineId, req.body);
+
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'routines', `routine_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await RoutineService.updateRoutine(routineId, {
+    ...req.body,
+    fileUrl: fileUrl || req.body.fileUrl,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

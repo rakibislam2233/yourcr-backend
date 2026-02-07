@@ -32,7 +32,7 @@ const generateProfessionalEmailTemplate = (
 
     .container {
       max-width: 600px;
-      margin: 0 auto; 
+      margin: 30px auto; 
       background-color: #FFFFFF;
       border-radius: 16px;
       overflow: hidden;
@@ -155,20 +155,13 @@ const generateProfessionalEmailTemplate = (
     }
 
     .footer {
-      background: #F8FAFC;
-      padding: 40px 40px;
+      background: #FFFFFF;
+      padding: 20px 40px;
       text-align: center;
       font-size: 14px;
       color: #64748B;
-      border-top: 1px solid #E2E8F0;
+      border-top: 1px solid #F1F5F9;
     }
-
-    .footer img {
-        height: 32px;
-        margin-bottom: 16px;
-        opacity: 0.8;
-    }
-
     .social-links {
       margin: 20px 0 24px;
     }
@@ -226,8 +219,6 @@ const generateProfessionalEmailTemplate = (
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <img src="${logoUrl}" alt="YourCR Logo">
-              
               <div class="social-links">
                 <a href="https://facebook.com/yourcr" class="social-icon">
                   <img src="https://img.icons8.com/ios-filled/50/2456C4/facebook-new.png" alt="Facebook">
@@ -305,7 +296,6 @@ export const sendWelcomeEmail = async (to: string, name: string): Promise<void> 
 export const sendVerificationEmail = async (to: string, otp: string): Promise<void> => {
   const subject = 'Verify Your Email – Your OTP Code';
   const content = `
-    <h2>Verify Your Email</h2>
     <p>Thank you for signing up! Please use the code below to verify your email address:</p>
     ${generateOTPSection(otp, 15)}
     <p style="color:var(--muted); font-size:14px;">If you didn’t request this, you can safely ignore this email.</p>
@@ -322,7 +312,6 @@ export const sendVerificationEmail = async (to: string, otp: string): Promise<vo
 export const sendResetPasswordEmail = async (to: string, otp: string): Promise<void> => {
   const subject = 'Password Reset Request – Your OTP Code';
   const content = `
-    <h2>Password Reset Request</h2>
     <p>You requested to reset your password. Use the OTP below to continue:</p>
     ${generateOTPSection(otp, 15)}
     <p style="color:var(--muted); font-size:14px;">If you didn’t request this, your password will remain unchanged.</p>
@@ -362,7 +351,6 @@ export const sendPendingCRRegistrationEmail = async (
 ): Promise<void> => {
   const subject = 'CR Registration Received – Pending Approval';
   const content = `
-    <h1>CR Registration Received</h1>
     <p>Hi <strong>${name}</strong>,</p>
     <p>Thank you for registering as a Class Representative for <strong>${institutionName}</strong>. Your registration is currently under review.</p>
     ${generateHighlightBox(`
@@ -391,7 +379,6 @@ export const sendCRRegistrationApprovedEmail = async (
 ): Promise<void> => {
   const subject = 'Your CR Registration has been Approved! 🎉';
   const content = `
-    <h1>Registration Approved! 🎉</h1>
     <p>Congratulations <strong>${name}</strong>,</p>
     <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-approved">Approved</span>.</p>
     ${generateHighlightBox(`
@@ -422,7 +409,6 @@ export const sendCRRegistrationRejectedEmail = async (
 ): Promise<void> => {
   const subject = 'CR Registration Rejected – Action Required';
   const content = `
-    <h1>Registration Rejected</h1>
     <p>Hi <strong>${name}</strong>,</p>
     <p>We regret to inform you that your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-rejected">Rejected</span>.</p>
     ${
@@ -456,7 +442,6 @@ export const sendStudentCreatedEmail = async (
 ): Promise<void> => {
   const subject = 'Welcome to YourCR – Account Created';
   const content = `
-    <h1>Welcome to YourCR! 👋</h1>
     <p>Hi <strong>${name}</strong>,</p>
     <p>Your account has been created on YourCR by your Class Representative <strong>${crName}</strong> from <strong>${institutionName}</strong>.</p>
     ${generateHighlightBox(`

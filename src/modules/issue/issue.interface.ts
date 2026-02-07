@@ -8,7 +8,8 @@ export interface ICreateIssuePayload {
   type: IssueType;
   priority: IssuePriority;
   fileUrl?: string;
-  studentId?: string;
+  studentId: string;
+  batchId: string;
 }
 
 export interface IUpdateIssuePayload {

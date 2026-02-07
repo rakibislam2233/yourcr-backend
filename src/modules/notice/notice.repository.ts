@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateNoticePayload, IUpdateNoticePayload } from './notice.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateNoticePayload, IUpdateNoticePayload } from './notice.interface';
 
 const createNotice = async (payload: ICreateNoticePayload) => {
   return await database.notice.create({
@@ -35,6 +35,9 @@ const getAllNotices = async (query: any): Promise<PaginationResult<any>> => {
   }
   if (query.postedById) {
     where.postedById = query.postedById;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [notices, total] = await Promise.all([

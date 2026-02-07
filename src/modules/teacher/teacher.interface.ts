@@ -5,7 +5,8 @@ export interface ICreateTeacherPayload {
   photoUrl?: string;
   designation?: string;
   department?: string;
-  createdById?: string;
+  createdById: string;
+  batchId: string;
 }
 
 export interface IUpdateTeacherPayload {
@@ -16,4 +17,5 @@ export interface IUpdateTeacherPayload {
   designation?: string;
   department?: string;
   createdById?: string;
+  batchId?: string;
 }

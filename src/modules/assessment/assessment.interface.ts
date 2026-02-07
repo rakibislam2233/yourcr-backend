@@ -9,8 +9,8 @@ export interface ICreateAssessmentPayload {
   totalMarks?: number;
   date: string;
   deadline: string;
-  createdById?: string;
-  batchId?: string;
+  createdById: string;
+  batchId: string;
 }
 
 export interface IUpdateAssessmentPayload {

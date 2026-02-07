@@ -52,6 +52,9 @@ const getAllClasses = async (query: any): Promise<PaginationResult<any>> => {
   if (query.classDate) {
     where.classDate = new Date(query.classDate);
   }
+  if (query.batchId) {
+    where.batchId = query.batchId;
+  }
 
   const [classes, total] = await Promise.all([
     database.class.findMany({

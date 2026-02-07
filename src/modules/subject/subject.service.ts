@@ -1,8 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../utils/ApiError';
+import { TeacherRepository } from '../teacher/teacher.repository';
 import { ICreateSubjectPayload, IUpdateSubjectPayload } from './subject.interface';
 import { SubjectRepository } from './subject.repository';
-import { TeacherRepository } from '../teacher/teacher.repository';
 
 const createSubject = async (payload: ICreateSubjectPayload) => {
   if (payload.teacherId) {
@@ -23,7 +23,13 @@ const getSubjectById = async (id: string) => {
   return subject;
 };
 
-const getAllSubjects = async (query: any) => {
+import { UserRole } from '../../shared/enum/user.enum';
+import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
+
+const getAllSubjects = async (query: any, user: IDecodedToken) => {
+  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
+    query.batchId = user.batchId;
+  }
   return await SubjectRepository.getAllSubjects(query);
 };
 

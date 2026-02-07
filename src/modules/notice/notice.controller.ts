@@ -4,8 +4,27 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { NoticeService } from './notice.service';
 
+import { uploadFile } from '../../utils/storage.utils';
+
 const createNotice = catchAsync(async (req: Request, res: Response) => {
-  const result = await NoticeService.createNotice(req.body, req.user, req);
+  const { batchId, userId } = req.user;
+
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'notices', `notice_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await NoticeService.createNotice(
+    {
+      ...req.body,
+      fileUrl,
+      batchId: batchId || req.body.batchId,
+      postedById: userId,
+    },
+    req.user,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -44,7 +63,22 @@ const updateNotice = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.user;
   const noticeId = Array.isArray(id) ? id[0] : id;
-  const result = await NoticeService.updateNotice(noticeId, req.body, userId, req);
+
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'notices', `notice_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await NoticeService.updateNotice(
+    noticeId,
+    {
+      ...req.body,
+      fileUrl,
+    },
+    userId,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -6,7 +6,8 @@ export interface ICreateSubjectPayload {
   description?: string;
   roomNumber?: string;
   isDepartmental?: boolean;
-  createdById?: string;
+  createdById: string;
+  batchId: string;
 }
 
 export interface IUpdateSubjectPayload {
@@ -19,4 +20,5 @@ export interface IUpdateSubjectPayload {
   isDepartmental?: boolean;
   isDeleted?: boolean;
   createdById?: string;
+  batchId?: string;
 }

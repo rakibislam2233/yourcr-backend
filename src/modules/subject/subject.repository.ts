@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateSubjectPayload, IUpdateSubjectPayload } from './subject.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateSubjectPayload, IUpdateSubjectPayload } from './subject.interface';
 
 const createSubject = async (payload: ICreateSubjectPayload) => {
   return await database.subject.create({
@@ -33,6 +33,9 @@ const getAllSubjects = async (query: any): Promise<PaginationResult<any>> => {
   }
   if (query.isDepartmental !== undefined) {
     where.isDepartmental = query.isDepartmental === 'true' || query.isDepartmental === true;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [subjects, total] = await Promise.all([

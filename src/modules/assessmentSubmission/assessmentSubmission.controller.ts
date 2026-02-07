@@ -4,9 +4,28 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AssessmentSubmissionService } from './assessmentSubmission.service';
 
+import { uploadFile } from '../../utils/storage.utils';
+
 const submitAssessment = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await AssessmentSubmissionService.submitAssessment(req.body, userId, req);
+  const { userId, batchId } = req.user;
+
+  const fileUrls: string[] = [];
+  if (req.files && Array.isArray(req.files)) {
+    for (const file of req.files) {
+      const uploadResult = await uploadFile(file.buffer, 'submissions', `submission_${Date.now()}`);
+      fileUrls.push(uploadResult.secure_url);
+    }
+  }
+
+  const result = await AssessmentSubmissionService.submitAssessment(
+    {
+      ...req.body,
+      fileUrls: fileUrls.length > 0 ? fileUrls : req.body.fileUrls,
+      batchId: batchId || req.body.batchId,
+    },
+    userId,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -46,7 +65,23 @@ const updateSubmission = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.user;
   const submissionId = Array.isArray(id) ? id[0] : id;
-  const result = await AssessmentSubmissionService.updateSubmission(submissionId, req.body, userId);
+
+  const fileUrls: string[] = [];
+  if (req.files && Array.isArray(req.files)) {
+    for (const file of req.files) {
+      const uploadResult = await uploadFile(file.buffer, 'submissions', `submission_${Date.now()}`);
+      fileUrls.push(uploadResult.secure_url);
+    }
+  }
+
+  const result = await AssessmentSubmissionService.updateSubmission(
+    submissionId,
+    {
+      ...req.body,
+      fileUrls: fileUrls.length > 0 ? fileUrls : req.body.fileUrls,
+    },
+    userId
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -56,9 +91,29 @@ const updateSubmission = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllSubmissions = catchAsync(async (req: Request, res: Response) => {
+  const { batchId } = req.user;
+  const result = await AssessmentSubmissionService.getAllSubmissions(
+    {
+      ...req.query,
+      batchId: batchId || req.query.batchId,
+    },
+    req.user
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Submissions fetched successfully',
+    data: result.data,
+    meta: result.pagination,
+  });
+});
+
 export const AssessmentSubmissionController = {
   submitAssessment,
   getSubmissionById,
   getMySubmissions,
+  getAllSubmissions,
   updateSubmission,
 };

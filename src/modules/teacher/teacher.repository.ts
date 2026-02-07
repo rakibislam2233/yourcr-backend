@@ -1,14 +1,13 @@
 import { database } from '../../config/database.config';
-import { ICreateTeacherPayload, IUpdateTeacherPayload } from './teacher.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateTeacherPayload, IUpdateTeacherPayload } from './teacher.interface';
 
 const createTeacher = async (payload: ICreateTeacherPayload) => {
-  console.log('Payload', payload);
   return await database.teacher.create({
     data: payload,
   });
@@ -34,8 +33,19 @@ const getAllTeachers = async (query: any): Promise<PaginationResult<any>> => {
   const pagination = parsePaginationOptions(query);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
+  const where: any = {};
+  if (query.batchId) where.batchId = query.batchId;
+  if (query.department) where.department = { contains: query.department, mode: 'insensitive' };
+  if (query.search) {
+    where.OR = [
+      { name: { contains: query.search, mode: 'insensitive' } },
+      { email: { contains: query.search, mode: 'insensitive' } },
+    ];
+  }
+
   const [teachers, total] = await Promise.all([
     database.teacher.findMany({
+      where,
       include: {
         subjects: true,
         createdBy: true,
@@ -44,7 +54,7 @@ const getAllTeachers = async (query: any): Promise<PaginationResult<any>> => {
       take,
       orderBy,
     }),
-    database.teacher.count(),
+    database.teacher.count({ where }),
   ]);
 
   return createPaginationResult(teachers, total, pagination);

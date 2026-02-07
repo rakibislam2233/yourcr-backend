@@ -1,12 +1,12 @@
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { UserRole } from '../../shared/enum/user.enum';
 import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { UserRepository } from '../user/user.repository';
 import { ICreateIssuePayload, IUpdateIssuePayload } from './issue.interface';
 import { IssueRepository } from './issue.repository';
-import { UserRepository } from '../user/user.repository';
-import { UserRole } from '../../shared/enum/user.enum';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
 
 const createIssue = async (payload: ICreateIssuePayload, studentId: string, req?: Request) => {
   const student = await UserRepository.getUserById(studentId);
@@ -30,11 +30,21 @@ const getIssueById = async (id: string) => {
   return issue;
 };
 
-const getAllIssues = async (query: any) => {
+import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
+
+const getAllIssues = async (query: any, user: IDecodedToken) => {
+  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
+    query.batchId = user.batchId;
+  }
   return await IssueRepository.getAllIssues(query);
 };
 
-const updateIssue = async (id: string, payload: IUpdateIssuePayload, resolverId?: string, req?: Request) => {
+const updateIssue = async (
+  id: string,
+  payload: IUpdateIssuePayload,
+  resolverId?: string,
+  req?: Request
+) => {
   const existing = await IssueRepository.getIssueById(id);
   if (!existing) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Issue not found');

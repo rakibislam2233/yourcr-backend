@@ -1,6 +1,11 @@
 import { database } from '../../config/database.config';
+import {
+  createPaginationQuery,
+  createPaginationResult,
+  PaginationResult,
+  parsePaginationOptions,
+} from '../../utils/pagination.utils';
 import { ICreateRoutinePayload, IUpdateRoutinePayload } from './routine.interface';
-import { createPaginationResult, PaginationResult, parsePaginationOptions, createPaginationQuery } from '../../utils/pagination.utils';
 
 const createRoutine = async (payload: ICreateRoutinePayload) => {
   return await database.routine.create({
@@ -27,6 +32,9 @@ const getAllRoutines = async (query: any): Promise<PaginationResult<any>> => {
   }
   if (query.createdById) {
     where.createdById = query.createdById;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [routines, total] = await Promise.all([

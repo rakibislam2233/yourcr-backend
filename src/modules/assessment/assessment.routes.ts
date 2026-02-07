@@ -1,15 +1,18 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { AssessmentValidations } from './assessment.validation';
+import { UserRole } from '../../shared/enum/user.enum';
 import { AssessmentController } from './assessment.controller';
+import { AssessmentValidations } from './assessment.validation';
+
+import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
 router.post(
   '/',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
+  upload.array('files', 5),
   validateRequest(AssessmentValidations.createAssessment),
   AssessmentController.createAssessment
 );

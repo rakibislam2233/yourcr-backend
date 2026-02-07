@@ -22,7 +22,13 @@ const getTeacherById = async (id: string) => {
   return teacher;
 };
 
-const getAllTeachers = async (query: any) => {
+import { UserRole } from '../../shared/enum/user.enum';
+import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
+
+const getAllTeachers = async (query: any, user: IDecodedToken) => {
+  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
+    query.batchId = user.batchId;
+  }
   return await TeacherRepository.getAllTeachers(query);
 };
 

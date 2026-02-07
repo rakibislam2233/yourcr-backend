@@ -4,9 +4,28 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { IssueService } from './issue.service';
 
+import { uploadFile } from '../../utils/storage.utils';
+
 const createIssue = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await IssueService.createIssue(req.body, userId, req);
+  const { userId, batchId } = req.user;
+
+  // Handle file upload
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'issues', `issue_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await IssueService.createIssue(
+    {
+      ...req.body,
+      fileUrl,
+      studentId: userId,
+      batchId: batchId || req.body.batchId,
+    },
+    userId,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -30,7 +49,7 @@ const getIssueById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllIssues = catchAsync(async (req: Request, res: Response) => {
-  const result = await IssueService.getAllIssues(req.query);
+  const result = await IssueService.getAllIssues(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -45,7 +64,23 @@ const updateIssue = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.user;
   const issueId = Array.isArray(id) ? id[0] : id;
-  const result = await IssueService.updateIssue(issueId, req.body, userId, req);
+
+  // Handle file upload
+  let fileUrl = req.body.fileUrl;
+  if (req.file) {
+    const uploadResult = await uploadFile(req.file.buffer, 'issues', `issue_${Date.now()}`);
+    fileUrl = uploadResult.secure_url;
+  }
+
+  const result = await IssueService.updateIssue(
+    issueId,
+    {
+      ...req.body,
+      fileUrl,
+    },
+    userId,
+    req
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

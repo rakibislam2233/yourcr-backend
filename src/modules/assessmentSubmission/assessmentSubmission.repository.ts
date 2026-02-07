@@ -1,11 +1,14 @@
 import { database } from '../../config/database.config';
-import { ICreateAssessmentSubmissionPayload, IUpdateAssessmentSubmissionPayload } from './assessmentSubmission.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import {
+  ICreateAssessmentSubmissionPayload,
+  IUpdateAssessmentSubmissionPayload,
+} from './assessmentSubmission.interface';
 
 const createAssessmentSubmission = async (payload: ICreateAssessmentSubmissionPayload) => {
   return await database.assessmentSubmission.create({
@@ -48,6 +51,9 @@ const getAllSubmissions = async (query: any): Promise<PaginationResult<any>> => 
   }
   if (query.studentId) {
     where.studentId = query.studentId;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [submissions, total] = await Promise.all([

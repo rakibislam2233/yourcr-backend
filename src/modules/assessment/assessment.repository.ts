@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateAssessmentPayload, IUpdateAssessmentPayload } from './assessment.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateAssessmentPayload, IUpdateAssessmentPayload } from './assessment.interface';
 
 const createAssessment = async (payload: ICreateAssessmentPayload) => {
   return await database.assessment.create({
@@ -40,6 +40,9 @@ const getAllAssessments = async (query: any): Promise<PaginationResult<any>> => 
   }
   if (query.createdById) {
     where.createdById = query.createdById;
+  }
+  if (query.batchId) {
+    where.batchId = query.batchId;
   }
 
   const [assessments, total] = await Promise.all([
