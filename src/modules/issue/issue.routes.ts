@@ -4,14 +4,13 @@ import validateRequest from '../../middleware/validation.middleware';
 import { UserRole } from '../../shared/enum/user.enum';
 import { IssueController } from './issue.controller';
 import { IssueValidations } from './issue.validation';
-
 import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
 router.post(
   '/',
-  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.STUDENT),
   upload.single('file'),
   validateRequest(IssueValidations.createIssue),
   IssueController.createIssue

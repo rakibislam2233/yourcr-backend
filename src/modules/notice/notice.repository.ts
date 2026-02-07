@@ -16,9 +16,6 @@ const createNotice = async (payload: ICreateNoticePayload) => {
 const getNoticeById = async (id: string) => {
   return await database.notice.findUnique({
     where: { id },
-    include: {
-      postedBy: true,
-    },
   });
 };
 
@@ -51,10 +48,7 @@ const getAllNotices = async (filters: any, options: any): Promise<PaginationResu
       where,
       skip,
       take,
-      orderBy,
-      include: {
-        postedBy: true,
-      },
+      orderBy
     }),
     database.notice.count({ where }),
   ]);
