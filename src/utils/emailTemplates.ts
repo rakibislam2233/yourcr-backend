@@ -260,7 +260,7 @@ const generateHighlightBox = (html: string) => `
 `;
 
 const generateButton = (text: string, url: string) => `
-  <div style="text-align:center; margin:32px 0;">
+  <div style="text-align:center; margin:10px 0;">
     <a href="${url}" class="button" target="_blank">${text}</a>
   </div>
 `;

@@ -230,6 +230,22 @@ const getUsersByInstitutionAndRole = async (institutionId: string, role: string)
   });
 };
 
+const getStudentsByCrId = async (crId: string) => {
+  const users = await database.user.findMany({
+    where: {
+      crId,
+      role: 'STUDENT',
+      status: 'ACTIVE',
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+      email: true,
+    },
+  });
+  return users;
+};
+
 export const UserRepository = {
   createAccount,
   getUserByEmail,
@@ -242,4 +258,5 @@ export const UserRepository = {
   getAllUsersForAdmin,
   createStudentAccount,
   deleteUserById,
+  getStudentsByCrId,
 };

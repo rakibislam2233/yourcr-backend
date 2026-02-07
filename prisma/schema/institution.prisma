@@ -16,7 +16,7 @@ model Institution {
   users           User[]
   batches         Batch[]
 
-  isDeleted Boolean @default(false)
+  isDeleted       Boolean         @default(false)
 
   @@map("institutions")
 }
