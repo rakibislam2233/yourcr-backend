@@ -11,8 +11,8 @@ const createInstitution = async (payload: ICreateInstitutionPayload) => {
 
 // Get institution by ID
 const getInstitutionById = async (id: string) => {
-  const institution = await database.institution.findUnique({
-    where: { id },
+  const institution = await database.institution.findFirst({
+    where: { id, isDeleted: false },
     include: {
       crRegistrations: {
         include: {
@@ -33,6 +33,7 @@ const getInstitutionById = async (id: string) => {
 // Get all institutions
 const getAllInstitutions = async () => {
   const institutions = await database.institution.findMany({
+    where: { isDeleted: false },
     include: {
       _count: {
         select: {
@@ -58,8 +59,9 @@ const updateInstitution = async (id: string, data: IUpdateInstitutionPayload) =>
 
 // Delete institution
 const deleteInstitution = async (id: string) => {
-  const institution = await database.institution.delete({
+  const institution = await database.institution.update({
     where: { id },
+    data: { isDeleted: true },
   });
   return institution;
 };
@@ -73,6 +75,7 @@ const getInstitutionByNameAndType = async (name: string, type: string) => {
         mode: 'insensitive',
       },
       type: type as any,
+      isDeleted: false,
     },
   });
   return institution;

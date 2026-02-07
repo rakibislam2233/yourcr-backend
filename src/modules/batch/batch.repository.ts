@@ -5,10 +5,10 @@ import { ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 // Batch CRUD
 const createBatch = async (payload: ICreateBatchPayload) => {
   return await database.batch.create({
-    data: payload,
+    data: payload as any,
     include: {
       institution: true,
-      cr: true,
+      creator: true,
     },
   });
 };
@@ -18,10 +18,10 @@ const getBatchById = async (id: string) => {
     where: { id, isDeleted: false },
     include: {
       institution: true,
-      cr: true,
+      creator: true,
       enrollments: {
         include: {
-          student: true,
+          user: true,
         },
       },
     },
@@ -32,7 +32,7 @@ const getAllBatches = async (
   filters: any,
   options: PaginationOptions
 ): Promise<PaginationResult<any>> => {
-  const { page, limit, sortBy, sortOrder } = options;
+  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;
   const skip = (page - 1) * limit;
 
   const where: any = { isDeleted: false };
@@ -69,10 +69,10 @@ const getAllBatches = async (
       where,
       include: {
         institution: true,
-        cr: true,
+        creator: true,
         enrollments: {
           include: {
-            student: true,
+            user: true,
           },
         },
       },
@@ -92,6 +92,8 @@ const getAllBatches = async (
       limit,
       total,
       totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1,
     },
   };
 };
@@ -99,10 +101,10 @@ const getAllBatches = async (
 const updateBatch = async (id: string, payload: IUpdateBatchPayload) => {
   return await database.batch.update({
     where: { id },
-    data: payload,
+    data: payload as any,
     include: {
       institution: true,
-      cr: true,
+      creator: true,
     },
   });
 };

@@ -3,7 +3,6 @@ import { database } from '../../config/database.config';
 import {
   createPaginationQuery,
   createPaginationResult,
-  PaginationOptions,
   PaginationResult,
   parsePaginationOptions,
 } from '../../utils/pagination.utils';
@@ -40,8 +39,8 @@ const createBatchEnrollment = async (data: {
 
 // Get batch enrollment by ID
 const getBatchEnrollmentById = async (id: string) => {
-  return await database.batchEnrollment.findUnique({
-    where: { id },
+  return await database.batchEnrollment.findFirst({
+    where: { id, isDeleted: false },
     include: {
       user: true,
       batch: true,
@@ -64,7 +63,7 @@ const getAllBatchEnrollments = async (
   const pagination = parsePaginationOptions(query);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
-  const where: any = { batchId };
+  const where: any = { batchId, isDeleted: false };
 
   if (query.role) {
     where.role = query.role;
@@ -115,15 +114,16 @@ const updateBatchEnrollment = async (id: string, data: any) => {
 
 // Delete batch enrollment
 const deleteBatchEnrollment = async (id: string) => {
-  return await database.batchEnrollment.delete({
+  return await database.batchEnrollment.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 
 // Get user enrollments
 const getUserEnrollments = async (userId: string) => {
   return await database.batchEnrollment.findMany({
-    where: { userId },
+    where: { userId, isDeleted: false },
     include: {
       batch: true,
       user: {
