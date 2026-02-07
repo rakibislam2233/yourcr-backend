@@ -14,9 +14,17 @@ router.post(
   SubjectController.createSubject
 );
 
-router.get('/', SubjectController.getAllSubjects);
+router.get(
+  '/',
+  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  SubjectController.getAllSubjects
+);
 
-router.get('/:id', SubjectController.getSubjectById);
+router.get(
+  '/:id',
+  auth(UserRole.STUDENT, UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  SubjectController.getSubjectById
+);
 
 router.patch(
   '/:id',

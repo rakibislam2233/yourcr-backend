@@ -15,11 +15,7 @@ const createSubject = async (payload: ICreateSubjectPayload) => {
 
 const getSubjectById = async (id: string) => {
   return await database.subject.findUnique({
-    where: { id },
-    include: {
-      teacher: true,
-      createdBy: true,
-    },
+    where: { id, isDeleted: false },
   });
 };
 
@@ -49,7 +45,6 @@ const getAllSubjects = async (filters: any, options: any): Promise<PaginationRes
       where,
       include: {
         teacher: true,
-        createdBy: true,
       },
       skip,
       take,
@@ -63,14 +58,14 @@ const getAllSubjects = async (filters: any, options: any): Promise<PaginationRes
 
 const updateSubject = async (id: string, payload: IUpdateSubjectPayload) => {
   return await database.subject.update({
-    where: { id },
+    where: { id, isDeleted: false },
     data: payload,
   });
 };
 
 const deleteSubject = async (id: string) => {
   return await database.subject.update({
-    where: { id },
+    where: { id, isDeleted: false },
     data: { isDeleted: true },
   });
 };
