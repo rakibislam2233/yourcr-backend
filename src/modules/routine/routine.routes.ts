@@ -17,13 +17,22 @@ router.post(
   RoutineController.createRoutine
 );
 
-router.get('/', RoutineController.getAllRoutines);
+router.get(
+  '/',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  RoutineController.getAllRoutines
+);
 
-router.get('/:id', RoutineController.getRoutineById);
+router.get(
+  '/:id',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  RoutineController.getRoutineById
+);
 
 router.patch(
   '/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
+  upload.single('file'),
   validateRequest(RoutineValidations.updateRoutine),
   RoutineController.updateRoutine
 );

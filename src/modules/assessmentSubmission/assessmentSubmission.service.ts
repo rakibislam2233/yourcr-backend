@@ -43,10 +43,7 @@ const submitAssessment = async (
     req
   );
 
-  return await AssessmentSubmissionRepository.createAssessmentSubmission({
-    ...payload,
-    studentId,
-  });
+  return await AssessmentSubmissionRepository.createAssessmentSubmission(payload);
 };
 
 const getSubmissionById = async (id: string) => {

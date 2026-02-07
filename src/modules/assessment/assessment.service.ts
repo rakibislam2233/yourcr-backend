@@ -2,7 +2,6 @@ import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { AuditAction } from '../../shared/enum/audit.enum';
-import { UserRole } from '../../shared/enum/user.enum';
 import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
@@ -24,11 +23,6 @@ const createAssessment = async (
     { payload },
     req
   );
-
-  // Enforce batch isolation for CR
-  if (actor.role === UserRole.CR) {
-    payload.batchId = actor.batchId as string;
-  }
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);

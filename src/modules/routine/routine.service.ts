@@ -1,14 +1,10 @@
 import { StatusCodes } from 'http-status-codes';
-import { UserRole } from '../../shared/enum/user.enum';
 import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
 import { ICreateRoutinePayload, IUpdateRoutinePayload } from './routine.interface';
 import { RoutineRepository } from './routine.repository';
 
 const createRoutine = async (payload: ICreateRoutinePayload, actor: IDecodedToken) => {
-  if (actor.role === UserRole.CR) {
-    payload.batchId = actor.batchId || undefined;
-  }
   return await RoutineRepository.createRoutine(payload);
 };
 

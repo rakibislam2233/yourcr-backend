@@ -16,10 +16,7 @@ const createIssue = async (payload: ICreateIssuePayload, studentId: string, req?
 
   await createAuditLog(studentId, AuditAction.CREATE_ISSUE, 'Issue', undefined, { payload }, req);
 
-  return await IssueRepository.createIssue({
-    ...payload,
-    studentId,
-  });
+  return await IssueRepository.createIssue(payload);
 };
 
 const getIssueById = async (id: string) => {

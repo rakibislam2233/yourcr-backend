@@ -14,11 +14,7 @@ const createNotice = async (payload: ICreateNoticePayload, actor: IDecodedToken,
   const actorId = actor.userId;
   await createAuditLog(actorId, AuditAction.CREATE_NOTICE, 'Notice', undefined, { payload }, req);
 
-  const notice = await NoticeRepository.createNotice({
-    ...payload,
-    postedById: actorId,
-    batchId: actor.role === UserRole.CR ? (actor.batchId as string) : payload.batchId,
-  });
+  const notice = await NoticeRepository.createNotice(payload);
 
   const noticeCreator = await UserRepository.getUserById(actorId);
   if (!noticeCreator) {

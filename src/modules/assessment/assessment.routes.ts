@@ -17,13 +17,22 @@ router.post(
   AssessmentController.createAssessment
 );
 
-router.get('/', AssessmentController.getAllAssessments);
+router.get(
+  '/',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  AssessmentController.getAllAssessments
+);
 
-router.get('/:id', AssessmentController.getAssessmentById);
+router.get(
+  '/:id',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  AssessmentController.getAssessmentById
+);
 
 router.patch(
   '/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
+  upload.array('files', 5),
   validateRequest(AssessmentValidations.updateAssessment),
   AssessmentController.updateAssessment
 );

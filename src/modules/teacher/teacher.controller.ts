@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import { TeacherService } from './teacher.service';
-import { uploadFile } from '../../utils/storage.utils';
 import pick from '../../utils/pick.utils';
+import sendResponse from '../../utils/sendResponse';
+import { uploadFile } from '../../utils/storage.utils';
+import { TeacherService } from './teacher.service';
 
 const createTeacher = catchAsync(async (req: Request, res: Response) => {
   const { userId, batchId } = req.user;
@@ -74,7 +74,7 @@ const updateTeacher = catchAsync(async (req: Request, res: Response) => {
 
   const result = await TeacherService.updateTeacher(teacherId, {
     ...req.body,
-    photoUrl,
+    photoUrl: photoUrl,
   });
 
   sendResponse(res, {

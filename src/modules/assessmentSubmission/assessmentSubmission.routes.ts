@@ -34,6 +34,7 @@ router.get(
 router.patch(
   '/:id',
   auth(UserRole.STUDENT),
+  upload.array('files', 5),
   validateRequest(AssessmentSubmissionValidations.updateAssessmentSubmission),
   AssessmentSubmissionController.updateSubmission
 );

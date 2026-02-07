@@ -22,6 +22,7 @@ const submitAssessment = catchAsync(async (req: Request, res: Response) => {
       ...req.body,
       fileUrls: fileUrls.length > 0 ? fileUrls : req.body.fileUrls,
       batchId: batchId || req.body.batchId,
+      studentId: userId,
     },
     userId,
     req
