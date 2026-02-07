@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { addNotificationJob } from '../../queues/notification.queue';
+import { scheduleAssessmentReminder } from '../../queues/reminder.queue';
 import { AuditAction } from '../../shared/enum/audit.enum';
 import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
@@ -33,7 +34,7 @@ const createAssessment = async (
 
   const assessment = await AssessmentRepository.createAssessment(payload);
 
-  // Notify students under this CR
+  // Immediate notification to students
   await addNotificationJob({
     title: `New Assessment: ${assessment.title}`,
     message: `Deadline: ${new Date(assessment.deadline).toLocaleString()}`,
@@ -41,6 +42,14 @@ const createAssessment = async (
     relatedId: assessment.id,
     crId: actorId,
   });
+
+  // Schedule reminder 1 day before deadline
+  await scheduleAssessmentReminder(
+    assessment.id,
+    new Date(assessment.deadline),
+    assessment.title,
+    actorId
+  );
 
   return assessment;
 };
@@ -58,7 +67,7 @@ const getAllAssessments = async (filters: any, options: any) => {
 };
 
 const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) => {
-  await AssessmentService.getAssessmentById(id);
+  const existingAssessment = await AssessmentService.getAssessmentById(id);
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
@@ -67,7 +76,35 @@ const updateAssessment = async (id: string, payload: IUpdateAssessmentPayload) =
     }
   }
 
-  return await AssessmentRepository.updateAssessment(id, payload);
+  const updatedAssessment = await AssessmentRepository.updateAssessment(id, payload);
+
+  // Notify students about the update
+  const changes: string[] = [];
+  if (payload.title) changes.push('title');
+  if (payload.deadline) changes.push('deadline');
+  if (payload.description) changes.push('description');
+
+  if (changes.length > 0) {
+    await addNotificationJob({
+      title: `Assessment Updated: ${updatedAssessment.title}`,
+      message: `Assessment details have been updated (${changes.join(', ')}). Please check the latest information.`,
+      type: 'ASSESSMENT',
+      relatedId: id,
+      crId: (existingAssessment as any).createdById,
+    });
+
+    // Reschedule reminder if deadline changed
+    if (payload.deadline) {
+      await scheduleAssessmentReminder(
+        updatedAssessment.id,
+        new Date(updatedAssessment.deadline),
+        updatedAssessment.title,
+        (updatedAssessment as any).createdById
+      );
+    }
+  }
+
+  return updatedAssessment;
 };
 
 const deleteAssessment = async (id: string) => {

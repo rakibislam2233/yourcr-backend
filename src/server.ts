@@ -1,18 +1,19 @@
 import colors from 'colors';
 import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import app from './app';
 import config from './config';
 import { closeDB, connectDB } from './config/database.config';
 import { emailConfig } from './config/email.config';
 import { closeRedis, redisClient } from './config/redis.config';
+import { socketConfig } from './config/socket.config';
+import { setupSocket } from './socket/socket.handler';
+import { setSocketInstance } from './socket/socket.service';
 import logger from './utils/logger';
 import { seedDatabase } from './utils/seed.utils';
 import './workers/email.worker';
 import './workers/notification.worker';
-import { Server as SocketIOServer } from 'socket.io';
-import { socketConfig } from './config/socket.config';
-import { setupSocket } from './socket/socket.handler';
-import { setSocketInstance } from './socket/socket.service';
+import './workers/reminder.worker';
 
 // Track if shutdown is in progress
 let isShuttingDown = false;
