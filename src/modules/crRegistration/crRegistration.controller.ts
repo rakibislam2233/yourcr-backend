@@ -88,13 +88,11 @@ const approveCRRegistration = catchAsync(async (req: Request, res: Response) => 
 
 const rejectCRRegistration = catchAsync(async (req: Request, res: Response) => {
   const { role } = req.user;
-  
   if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
-  const registrationId = Array.isArray(req.params.registrationId)
-    ? req.params.registrationId[0]
-    : req.params.registrationId;
+  const { id } = req.params;
+  const registrationId = Array.isArray(id) ? id[0] : id;
   const { reason } = req.body;
   const result = await CRRegistrationService.rejectCRRegistration(registrationId, reason, req);
   sendResponse(res, {

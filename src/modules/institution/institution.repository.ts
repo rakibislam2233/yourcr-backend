@@ -68,7 +68,10 @@ const deleteInstitution = async (id: string) => {
 const getInstitutionByNameAndType = async (name: string, type: string) => {
   const institution = await database.institution.findFirst({
     where: {
-      name,
+      name: {
+        equals: name,
+        mode: 'insensitive',
+      },
       type: type as any,
     },
   });

@@ -51,23 +51,18 @@ const completeCRRegistration = async (
     };
   }
 
-  // 3. Check if user already has CR registration
-  const existingRegistration = await CRRegistrationRepository.getCRRegistrationByUserId(userId);
-  if (existingRegistration) {
-    throw new ApiError(
-      StatusCodes.CONFLICT,
-      `CR registration already exists with status ${existingRegistration.status}`
-    );
-  }
-
-  // 4. Create or get institution first
+  // 4. Create or get institution first (Trimmed and case-insensitive)
+  const institutionName = payload.institutionInfo.name.trim();
   let institution = await InstitutionRepository.getInstitutionByNameAndType(
-    payload.institutionInfo.name,
+    institutionName,
     payload.institutionInfo.type
   );
 
   if (!institution) {
-    institution = await InstitutionRepository.createInstitution(payload.institutionInfo);
+    institution = await InstitutionRepository.createInstitution({
+      ...payload.institutionInfo,
+      name: institutionName,
+    });
   }
 
   // 5. Check if batch already exists using session with institutionId
@@ -285,56 +280,57 @@ const rejectCRRegistration = async (registrationId: string, reason: string, req?
     throw new ApiError(StatusCodes.NOT_FOUND, 'CR registration not found');
   }
 
-  if (registration.status === CRRegistrationStatus.REJECTED) {
-    throw new ApiError(StatusCodes.CONFLICT, 'CR registration already rejected');
-  }
-
-  // Use Prisma transaction for rejection process
-  const updatedRegistration = await database.$transaction(async (tx: any) => {
-    // Update registration status
-    const result = await tx.cRRegistration.update({
-      where: { id: registrationId },
-      data: {
-        status: CRRegistrationStatus.REJECTED,
-        rejectionReason: reason,
-      },
-      include: {
-        user: true,
-        institution: true,
-      },
-    });
-
-    // Reset user CR status
-    await tx.user.update({
-      where: { id: registration.userId },
-      data: {
-        isCr: false,
-        isCrDetailsSubmitted: false,
-        institutionId: null,
-        crApprovedAt: null,
-      },
-    });
-
-    return result;
-  });
-
-  // Send rejection email (outside transaction)
+  // Fetch user and institution info before deletion to send email and logs
   const user = await UserRepository.getUserById(registration.userId);
   const institution = await InstitutionRepository.getInstitutionById(registration.institutionId);
 
-  if (user && institution) {
-    await sendCRRegistrationRejectedEmail(user.email, user.fullName, institution.name, reason);
-    await createAuditLog(
-      registration.userId,
-      AuditAction.CR_REJECTED,
-      'CRRegistration',
-      registrationId,
-      { institutionName: institution.name, reason },
-      req
-    );
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  return updatedRegistration;
+  // 1. Send rejection email (do this before deleting the user)
+  if (institution) {
+    await sendCRRegistrationRejectedEmail(user.email, user.fullName, institution.name, reason);
+  }
+
+  // 2. Clear Audit Log association (optional, but good for data integrity)
+  // 3. Remove from database as requested
+  await database.$transaction(async (tx: any) => {
+    // Delete any batches created by this user for this registration (optional cleanup)
+    await tx.batch.deleteMany({
+      where: {
+        createdBy: registration.userId,
+        institutionId: registration.institutionId,
+      },
+    });
+
+    // Delete registration record
+    await tx.cRRegistration.delete({
+      where: { id: registrationId },
+    });
+
+    // Delete user record
+    await tx.user.delete({
+      where: { id: registration.userId },
+    });
+  });
+
+  // 4. Audit log (without user relation)
+  await createAuditLog(
+    null as any, // User is deleted
+    AuditAction.CR_REJECTED,
+    'CRRegistration',
+    registrationId,
+    {
+      institutionName: institution?.name,
+      reason,
+      rejectedUserEmail: user.email,
+      rejectedUserName: user.fullName,
+    },
+    req
+  );
+
+  return { message: 'Registration rejected and user removed successfully' };
 };
 
 export const CRRegistrationService = {

@@ -5,11 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { RoutineService } from './routine.service';
 
 const createRoutine = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await RoutineService.createRoutine({
-    ...req.body,
-    createdById: userId,
-  });
+  const result = await RoutineService.createRoutine(req.body, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

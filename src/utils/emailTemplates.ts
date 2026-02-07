@@ -5,6 +5,7 @@ const generateProfessionalEmailTemplate = (
   options: { title: string; preheader?: string }
 ): string => {
   const { title, preheader = '' } = options;
+  const logoUrl = 'https://res.cloudinary.com/dwddmg323/image/upload/v1770434490/logo_sddfri.png';
 
   return `
 <!DOCTYPE html>
@@ -17,217 +18,166 @@ const generateProfessionalEmailTemplate = (
     body {
       margin: 0;
       padding: 0;
-      background: #F6F6F6;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      color: #2d3748;
+      background: #F8FAFC;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1E293B;
       line-height: 1.6;
     }
     table { border-collapse: collapse; }
 
     .email-wrapper {
-      background: #F6F6F6;
+      background: #F8FAFC;
       padding: 40px 20px;
     }
 
     .container {
-      max-width: 520px;
-      margin: 30px auto; 
+      max-width: 600px;
+      margin: 30px; 
       background-color: #FFFFFF;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     }
 
     .logo-section {
       text-align: center;
-      padding: 15px;
+      padding: 32px 20px;
       background: #FFFFFF;
-      border-bottom: 1px solid #e2e8f0;
     }
 
     .logo-section img {
-      max-width: 100px;
-      height: auto;
+      height: 48px;
+      width: auto;
       display: inline-block;
     }
 
     .content {
-      padding: 32px 28px;
-      font-size: 15px;
-      color: #4a5568;
+      padding: 0 40px 40px;
+      font-size: 16px;
+      color: #334155;
     }
 
-    .content h2 {
-      color: #2456C4;
-      font-size: 20px;
-      margin: 0 0 16px 0;
-      font-weight: 600;
-      letter-spacing: -0.3px;
+    .content h1, .content h2 {
+      color: #0F172A;
+      font-size: 24px;
+      margin: 0 0 20px 0;
+      font-weight: 700;
+      letter-spacing: -0.5px;
     }
 
     .content p {
-      margin: 0 0 14px;
-      color: #4a5568;
+      margin: 0 0 16px;
+      color: #475569;
     }
 
     .otp-code {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 28px;
-      font-weight: bold;
-      letter-spacing: 6px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 8px;
       color: #2456C4;
       text-align: center;
-      padding: 18px;
-      background: #FFFFFF;
-      border: 2px dashed #2456C4;
-      border-radius: 8px;
-      margin: 20px 0;
+      padding: 24px;
+      background: #F1F5F9;
+      border-radius: 12px;
+      margin: 24px 0;
+      border: 1px solid #E2E8F0;
     }
 
     .highlight-box {
-      background: linear-gradient(135deg, #e8f0fe 0%, #f3f8ff 100%);
-      border-left: 3px solid #2456C4;
-      padding: 18px 20px;
-      margin: 20px 0;
-      border-radius: 0 6px 6px 0;
-      font-size: 14px;
+      background: #F1F5F9;
+      padding: 24px;
+      margin: 24px 0;
+      border-radius: 12px;
+      font-size: 15px;
     }
 
-    .highlight-box p {
-      margin: 0 0 10px;
+    .highlight-box strong {
+        color: #0F172A;
     }
 
     .highlight-box ul {
-      margin: 8px 0;
+      margin: 12px 0 0;
       padding-left: 20px;
     }
 
     .highlight-box li {
-      margin-bottom: 6px;
-      color: #4a5568;
-    }
-
-    .credentials-table {
-      width: 100%;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      overflow: hidden;
-      margin: 18px 0;
-      font-size: 14px;
-    }
-
-    .credentials-table td {
-      padding: 10px 14px;
-      border-bottom: 1px solid #edf2f7;
-    }
-
-    .credentials-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .credentials-table td:first-child {
-      background-color: #f7fafc;
-      font-weight: 600;
-      width: 38%;
-      color: #2d3748;
-    }
-
-    .credentials-table td:last-child {
-      color: #4a5568;
-    }
-
-    .footer {
-      background: #FFFFFF;
-      padding: 20px 28px;
-      text-align: center;
-      font-size: 13px;
-      color: #718096;
-      border-top: 1px solid #e2e8f0;
-    }
-
-    .footer p {
-      margin: 0 0 6px;
-    }
-
-    .footer a {
-      color: #2456C4;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    .footer-logo {
-      font-weight: 700;
-      font-size: 14px;
-      color: #2d3748;
       margin-bottom: 8px;
-    }
-
-    .footer-tagline {
-      color: #a0aec0;
-      font-size: 12px;
-      font-style: italic;
-      margin-top: 12px;
+      color: #475569;
     }
 
     .button {
       display: inline-block;
-      background: linear-gradient(135deg, #2456C4 0%, #1a45a0 100%);
+      background: #2456C4;
       color: #FFFFFF !important;
-      padding: 12px 28px;
+      padding: 14px 32px;
       text-decoration: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 600;
-      font-size: 14px;
-      margin: 20px 0;
-      box-shadow: 0 2px 8px rgba(36, 86, 196, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(36, 86, 196, 0.4);
+      font-size: 16px;
+      margin: 24px 0;
+      text-align: center;
     }
 
     .status-badge {
       display: inline-block;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .badge-pending {
-      background: #fef3c7;
-      color: #92400e;
+      background: #FEF3C7;
+      color: #92400E;
     }
 
     .badge-approved {
-      background: #d1fae5;
-      color: #065f46;
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .status-approved {
+        background: #DCFCE7;
+        color: #166534;
     }
 
     .badge-rejected {
-      background: #fee2e2;
-      color: #991b1b;
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .status-rejected {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .footer {
+      background: #F8FAFC;
+      padding: 40px 40px;
+      text-align: center;
+      font-size: 14px;
+      color: #64748B;
+      border-top: 1px solid #E2E8F0;
+    }
+
+    .footer img {
+        height: 32px;
+        margin-bottom: 16px;
+        opacity: 0.8;
+    }
+
+    .footer a {
+      color: #2456C4;
+      text-decoration: none;
     }
 
     @media (max-width: 600px) {
-      .email-wrapper { padding: 24px 12px; }
-      .container { margin: 0; border-radius: 8px; }
-      .logo-section { padding: 20px 16px 16px; }
-      .logo-section img { max-width: 80px; }
-      .content { padding: 24px 20px; font-size: 14px; }
-      .content h2 { font-size: 18px; }
-      .footer { padding: 20px 20px; }
-      .otp-code { font-size: 24px; letter-spacing: 4px; padding: 16px; }
-      .credentials-table { font-size: 13px; }
-      .credentials-table td { padding: 8px 12px; }
+      .email-wrapper { padding: 20px 10px; }
+      .content { padding: 0 24px 32px; }
+      .logo-section { padding: 24px 20px; }
     }
   </style>
 </head>
@@ -245,8 +195,7 @@ const generateProfessionalEmailTemplate = (
           <!-- Logo -->
           <tr>
             <td class="logo-section">
-              <h1 style="margin: 0; color: #2456C4; font-size: 24px; font-weight: 700;">YourCR</h1>
-              <p style="margin: 4px 0 0; color: #718096; font-size: 12px;">Class Representative Management System</p>
+              <img src="${logoUrl}" alt="YourCR Logo">
             </td>
           </tr>
 
@@ -260,12 +209,10 @@ const generateProfessionalEmailTemplate = (
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p class="footer-logo">YourCR</p>
-              <p style="margin: 8px 0;">
-                <a href="mailto:support@yourcr.app">support@yourcr.app</a><br>
-                <a href="https://yourcr.app">www.yourcr.app</a>
+              <p style="margin: 0 0 8px;">
+                <a href="https://yourcr.app">www.yourcr.app</a> | <a href="mailto:support@yourcr.app">support@yourcr.app</a>
               </p>
-              <p style="margin-top: 16px; color: #a0aec0; font-size: 11px;">
+              <p style="margin: 0;">
                 © ${new Date().getFullYear()} YourCR. All rights reserved.
               </p>
             </td>
@@ -411,27 +358,26 @@ export const sendCRRegistrationApprovedEmail = async (
   name: string,
   institutionName: string
 ): Promise<void> => {
-  const subject = 'CR Registration Approved – Welcome to YourCR!';
+  const subject = 'Your CR Registration has been Approved! 🎉';
   const content = `
     <h1>Registration Approved! 🎉</h1>
     <p>Congratulations <strong>${name}</strong>,</p>
-    <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-approved">Approved</span>!</p>
+    <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-approved">Approved</span>.</p>
     ${generateHighlightBox(`
-      <p><strong>What you can now do:</strong></p>
+      <p><strong>Next Steps:</strong></p>
       <ul style="padding-left:24px; margin:16px 0;">
-        <li>Create and manage class notices</li>
-        <li>Schedule classes and assessments</li>
-        <li>Communicate with your students</li>
-        <li>Track student issues and resolutions</li>
+        <li>Your dashboard is now fully unlocked.</li>
+        <li>You can now start managing your class students and notices.</li>
+        <li>Access routines, assessments, and attendance modules.</li>
       </ul>
     `)}
-    <p>Start managing your class right away!</p>
+    <p>Ready to lead your batch? Click below to get started.</p>
     ${generateButton('Go to Dashboard', 'https://yourcr.app/dashboard')}
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
-    title: 'CR Registration Approved',
-    preheader: `Your CR registration for ${institutionName} has been approved`,
+    title: 'Registration Approved',
+    preheader: `Your CR registration for ${institutionName} has been approved. Welcome aboard!`,
   });
 
   await addEmailToQueue({ to, subject, html });
@@ -443,26 +389,27 @@ export const sendCRRegistrationRejectedEmail = async (
   institutionName: string,
   reason?: string
 ): Promise<void> => {
-  const subject = 'CR Registration Update – Action Required';
+  const subject = 'CR Registration Rejected – Action Required';
   const content = `
-    <h1>Registration Update</h1>
+    <h1>Registration Rejected</h1>
     <p>Hi <strong>${name}</strong>,</p>
-    <p>Your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-rejected">Rejected</span>.</p>
+    <p>We regret to inform you that your Class Representative registration for <strong>${institutionName}</strong> has been <span class="status-badge status-rejected">Rejected</span>.</p>
     ${
       reason
         ? generateHighlightBox(`
-      <p><strong>Reason:</strong></p>
-      <p>${reason}</p>
+      <p><strong>Reason for Rejection:</strong></p>
+      <p style="margin-top: 8px; color: #991B1B; font-weight: 500;">${reason}</p>
     `)
         : ''
     }
-    <p>If you believe this is a mistake or would like to reapply with updated information, please contact our support team.</p>
-    ${generateButton('Contact Support', 'mailto:support@yourcr.app')}
+    <p>If you wish to re-submit your registration with corrected information, please log in to your account and update your details.</p>
+    ${generateButton('Update Registration', 'https://yourcr.app/cr-registration/complete')}
+    <p style="color: #64748B; font-size: 14px; margin-top: 24px;">Need help? Reply to this email or contact support.</p>
   `;
 
   const html = generateProfessionalEmailTemplate(content, {
-    title: 'CR Registration Rejected',
-    preheader: `Your CR registration for ${institutionName} requires attention`,
+    title: 'Registration Rejected',
+    preheader: `Your CR registration for ${institutionName} was not approved.`,
   });
 
   await addEmailToQueue({ to, subject, html });

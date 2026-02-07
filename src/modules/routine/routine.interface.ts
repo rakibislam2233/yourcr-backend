@@ -5,6 +5,7 @@ export interface ICreateRoutinePayload {
   fileUrl: string;
   type: RoutineType;
   createdById?: string;
+  batchId?: string;
 }
 
 export interface IUpdateRoutinePayload {
@@ -12,4 +13,5 @@ export interface IUpdateRoutinePayload {
   fileUrl?: string;
   type?: RoutineType;
   createdById?: string;
+  batchId?: string;
 }
