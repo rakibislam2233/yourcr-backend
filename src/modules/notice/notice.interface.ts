@@ -7,6 +7,7 @@ export interface ICreateNoticePayload {
   type: NoticeType;
   isActive?: boolean;
   postedById?: string;
+  batchId?: string;
 }
 
 export interface IUpdateNoticePayload {
@@ -16,4 +17,5 @@ export interface IUpdateNoticePayload {
   type?: NoticeType;
   isActive?: boolean;
   postedById?: string;
+  batchId?: string;
 }

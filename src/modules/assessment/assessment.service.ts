@@ -1,15 +1,34 @@
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { addNotificationJob } from '../../queues/notification.queue';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { UserRole } from '../../shared/enum/user.enum';
+import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { SubjectRepository } from '../subject/subject.repository';
 import { ICreateAssessmentPayload, IUpdateAssessmentPayload } from './assessment.interface';
 import { AssessmentRepository } from './assessment.repository';
-import { SubjectRepository } from '../subject/subject.repository';
-import { addNotificationJob } from '../../queues/notification.queue';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
 
-const createAssessment = async (payload: ICreateAssessmentPayload, actorId: string, req?: Request) => {
-  await createAuditLog(actorId, AuditAction.CREATE_ASSESSMENT, 'Assessment', undefined, { payload }, req);
+const createAssessment = async (
+  payload: ICreateAssessmentPayload,
+  actor: IDecodedToken,
+  req?: Request
+) => {
+  const actorId = actor.userId;
+  await createAuditLog(
+    actorId,
+    AuditAction.CREATE_ASSESSMENT,
+    'Assessment',
+    undefined,
+    { payload },
+    req
+  );
+
+  // Enforce batch isolation for CR
+  if (actor.role === UserRole.CR) {
+    payload.batchId = actor.batchId || undefined;
+  }
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
@@ -40,7 +59,10 @@ const getAssessmentById = async (id: string) => {
   return assessment;
 };
 
-const getAllAssessments = async (query: any) => {
+const getAllAssessments = async (query: any, user: IDecodedToken) => {
+  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
+    query.batchId = user.batchId;
+  }
   return await AssessmentRepository.getAllAssessments(query);
 };
 

@@ -5,8 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { ClassService } from './class.service';
 
 const createClass = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await ClassService.createClass(req.body, userId, req);
+  const result = await ClassService.createClass(req.body, req.user, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -30,7 +29,7 @@ const getClassById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllClasses = catchAsync(async (req: Request, res: Response) => {
-  const result = await ClassService.getAllClasses(req.query);
+  const result = await ClassService.getAllClasses(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

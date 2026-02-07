@@ -1,10 +1,19 @@
 import bcrypt from 'bcrypt';
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import config from '../../config';
 import { database } from '../../config/database.config';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { UserRole } from '../../shared/enum/user.enum';
 import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { hashPassword } from '../../utils/bcrypt.utils';
 import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
+import { OtpType } from '../otp/otp.interface';
+import { OtpService } from '../otp/otp.service';
+import { UserRepository } from '../user/user.repository';
+import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
 import {
   IChangePasswordPayload,
   IForgotPasswordPayload,
@@ -16,15 +25,6 @@ import {
   IResetPasswordPayload,
   IVerifyOtpPayload,
 } from './auth.interface';
-import { UserRepository } from '../user/user.repository';
-import { hashPassword } from '../../utils/bcrypt.utils';
-import { OtpService } from '../otp/otp.service';
-import { OtpType } from '../otp/otp.interface';
-import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
-import { UserRole } from '../../shared/enum/user.enum';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
 
 // --- Register ---
 const register = async (payload: IRegisterPayload) => {
@@ -136,7 +136,6 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     };
   }
 
-
   // 7. Check CR Registration Status
   if (user.role === UserRole.CR && user.isCr && user.isCrDetailsSubmitted) {
     // User has submitted CR registration but not yet approved
@@ -176,8 +175,13 @@ const login = async (payload: ILoginPayload, req?: Request) => {
 
   // 8. Generate tokens
   const [accessToken, refreshToken] = await Promise.all([
-    jwtHelper.generateAccessToken(user.id, user.email, user.role),
-    jwtHelper.generateRefreshToken(user.id, user.email, user.role),
+    jwtHelper.generateAccessToken(user.id, user.email, user.role, user.currentBatchId ?? undefined),
+    jwtHelper.generateRefreshToken(
+      user.id,
+      user.email,
+      user.role,
+      user.currentBatchId ?? undefined
+    ),
   ]);
 
   // Store refresh token in Redis
@@ -211,8 +215,18 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
     const user = await UserRepository.setUserEmailVerified(otpResponse.email);
     // 8. Generate tokens
     const [accessToken, refreshToken] = await Promise.all([
-      jwtHelper.generateAccessToken(user.id, user.email, user.role),
-      jwtHelper.generateRefreshToken(user.id, user.email, user.role),
+      jwtHelper.generateAccessToken(
+        user.id,
+        user.email,
+        user.role,
+        user.currentBatchId ?? undefined
+      ),
+      jwtHelper.generateRefreshToken(
+        user.id,
+        user.email,
+        user.role,
+        user.currentBatchId ?? undefined
+      ),
     ]);
     // Store refresh token in Redis
     await RedisUtils.setCache(
@@ -234,7 +248,12 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
     const user = await UserRepository.getUserByEmail(otpResponse.email);
     if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
-    const resetToken = jwtHelper.generateResetPasswordToken(user.id, user.email, user.role);
+    const resetToken = jwtHelper.generateResetPasswordToken(
+      user.id,
+      user.email,
+      user.role,
+      user.currentBatchId ?? undefined
+    );
 
     return {
       message: 'OTP verified. You can now reset your password.',
@@ -301,7 +320,12 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
   const user = await UserRepository.getUserById(decoded.userId);
   if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
-  const accessToken = jwtHelper.generateAccessToken(user.id, user.email, user.role);
+  const accessToken = jwtHelper.generateAccessToken(
+    user.id,
+    user.email,
+    user.role,
+    user.currentBatchId ?? undefined
+  );
   return {
     message: 'Token refreshed',
     data: { accessToken },
@@ -312,10 +336,10 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
 const logout = async (payload: ILogoutPayload, req?: Request) => {
   const decoded = jwtHelper.verifyRefreshToken(payload.refreshToken);
   await RedisUtils.deleteCache(AUTH_CACHE_KEY.REFRESH_TOKEN(decoded.userId));
-  
+
   // Audit log for logout
   await createAuditLog(decoded.userId, AuditAction.LOGOUT, 'User', decoded.userId, {}, req);
-  
+
   return { message: 'Logged out successfully' };
 };
 

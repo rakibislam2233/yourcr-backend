@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
+import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
-import pick from '../../utils/pick.utils';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
@@ -63,9 +63,17 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const createStudent = async (crId: string, studentData: any) => {
-  return await UserService.createStudent(crId, studentData);
-};
+const createStudent = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.user;
+  const result = await UserService.createStudent(userId, req.body, req);
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: 'Student created successfully',
+    data: result,
+  });
+});
 
 // Update my profile (self)
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
@@ -138,5 +146,5 @@ export const UserController = {
   createStudent,
   updateUser,
   deleteUser,
-  deleteMyProfile
+  deleteMyProfile,
 };

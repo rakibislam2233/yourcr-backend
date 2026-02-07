@@ -5,8 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { NoticeService } from './notice.service';
 
 const createNotice = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await NoticeService.createNotice(req.body, userId, req);
+  const result = await NoticeService.createNotice(req.body, req.user, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -30,7 +29,7 @@ const getNoticeById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllNotices = catchAsync(async (req: Request, res: Response) => {
-  const result = await NoticeService.getAllNotices(req.query);
+  const result = await NoticeService.getAllNotices(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

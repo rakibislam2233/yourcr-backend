@@ -33,7 +33,7 @@ const getRoutineById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllRoutines = catchAsync(async (req: Request, res: Response) => {
-  const result = await RoutineService.getAllRoutines(req.query);
+  const result = await RoutineService.getAllRoutines(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

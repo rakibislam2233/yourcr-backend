@@ -1,22 +1,22 @@
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../utils/ApiError';
-import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
-import { UserRepository } from '../user/user.repository';
-import { CRRegistrationRepository } from './crRegistration.repository';
-import { InstitutionRepository } from '../institution/institution.repository';
+import { database } from '../../config/database.config';
+import { AuditAction } from '../../shared/enum/audit.enum';
 import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
 import { UserRole } from '../../shared/enum/user.enum';
-import { uploadFile } from '../../utils/storage.utils';
-import { upload_cr_registration_folder } from './crRegistration.constant';
+import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
 import {
-  sendPendingCRRegistrationEmail,
   sendCRRegistrationApprovedEmail,
   sendCRRegistrationRejectedEmail,
+  sendPendingCRRegistrationEmail,
 } from '../../utils/emailTemplates';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
-import { database } from '../../config/database.config';
+import { uploadFile } from '../../utils/storage.utils';
+import { InstitutionRepository } from '../institution/institution.repository';
+import { UserRepository } from '../user/user.repository';
+import { upload_cr_registration_folder } from './crRegistration.constant';
+import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
+import { CRRegistrationRepository } from './crRegistration.repository';
 
 const completeCRRegistration = async (
   userId: string,
@@ -89,7 +89,7 @@ const completeCRRegistration = async (
       const existingCRs = activeCRs.map((cr: any) => cr.user);
       throw new ApiError(
         StatusCodes.CONFLICT,
-        `Batch already has active CR(s): ${existingCRs.map((cr: any) => `${cr.fullName} (${cr.email})`).join(', ')}`
+        `Batch already exists with active CRs. Please contact the CR (${existingCRs.map((cr: any) => `${cr.fullName}`).join(', ')}) to add you to the batch.`
       );
     }
   }
@@ -199,16 +199,6 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
       },
     });
 
-    // Update user role to CR and set approval time
-    await tx.user.update({
-      where: { id: registration.userId },
-      data: {
-        role: UserRole.CR,
-        isCr: true,
-        crApprovedAt: new Date(),
-      },
-    });
-
     // Find existing batch for this user and institution, or create a new one
     let batch;
 
@@ -240,6 +230,17 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
         },
       });
     }
+
+    // Update user role to CR, set approval time AND set currentBatchId
+    await tx.user.update({
+      where: { id: registration.userId },
+      data: {
+        role: UserRole.CR,
+        isCr: true,
+        crApprovedAt: new Date(),
+        currentBatchId: batch.id,
+      },
+    });
 
     // Add CR to batch enrollment
     await tx.batchEnrollment.create({

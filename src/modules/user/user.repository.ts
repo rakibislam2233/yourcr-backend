@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateAccountPayload, ICreateStudentPayload } from './user.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateAccountPayload, ICreateStudentPayload } from './user.interface';
 
 const createAccount = async (payload: ICreateAccountPayload) => {
   const user = await database.user.create({
@@ -139,7 +139,9 @@ const getUserProfileById = async (id: string) => {
   });
 };
 
-const createStudentAccount = async (data: ICreateStudentPayload) => {
+const createStudentAccount = async (
+  data: ICreateStudentPayload & { currentBatchId?: string; institutionId?: string }
+) => {
   return await database.user.create({
     data: {
       fullName: data.fullName,
@@ -148,6 +150,7 @@ const createStudentAccount = async (data: ICreateStudentPayload) => {
       password: data.password,
       institutionId: data.institutionId,
       crId: data.crId,
+      currentBatchId: data.currentBatchId,
       role: 'STUDENT',
     },
   });

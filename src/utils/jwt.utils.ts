@@ -33,11 +33,17 @@ export const getTokenTTL = (expiry: string): number => {
 };
 
 // ==================== Token Generation ====================
-export const generateAccessToken = (userId: string, email: string, role: string): string => {
+export const generateAccessToken = (
+  userId: string,
+  email: string,
+  role: string,
+  batchId?: string
+): string => {
   const payload: ITokenPayload = {
     userId,
     email,
     role,
+    batchId,
     type: TokenType.ACCESS,
   };
   return jwt.sign(payload, config.jwt.accessSecret, {
@@ -45,11 +51,17 @@ export const generateAccessToken = (userId: string, email: string, role: string)
   } as jwt.SignOptions);
 };
 
-export const generateRefreshToken = (userId: string, email: string, role: string): string => {
+export const generateRefreshToken = (
+  userId: string,
+  email: string,
+  role: string,
+  batchId?: string
+): string => {
   const payload: ITokenPayload = {
     userId,
     email,
     role,
+    batchId,
     type: TokenType.REFRESH,
   };
 
@@ -59,11 +71,17 @@ export const generateRefreshToken = (userId: string, email: string, role: string
   } as jwt.SignOptions);
 };
 
-export const generateResetPasswordToken = (userId: string, email: string, role: string): string => {
+export const generateResetPasswordToken = (
+  userId: string,
+  email: string,
+  role: string,
+  batchId?: string
+): string => {
   const payload: ITokenPayload = {
     userId,
     email,
     role,
+    batchId,
     type: TokenType.RESET_PASSWORD,
   };
   try {

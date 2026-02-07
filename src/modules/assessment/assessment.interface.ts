@@ -10,6 +10,7 @@ export interface ICreateAssessmentPayload {
   date: string;
   deadline: string;
   createdById?: string;
+  batchId?: string;
 }
 
 export interface IUpdateAssessmentPayload {
@@ -22,4 +23,5 @@ export interface IUpdateAssessmentPayload {
   date?: string;
   deadline?: string;
   createdById?: string;
+  batchId?: string;
 }

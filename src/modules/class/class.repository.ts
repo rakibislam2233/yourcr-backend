@@ -1,11 +1,11 @@
 import { database } from '../../config/database.config';
-import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 import {
+  createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
-  createPaginationQuery,
 } from '../../utils/pagination.utils';
+import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 
 const createClass = async (payload: ICreateClassPayload) => {
   return await database.class.create({
@@ -14,6 +14,9 @@ const createClass = async (payload: ICreateClassPayload) => {
       classDate: new Date(payload.classDate),
       startTime: new Date(payload.startTime),
       endTime: new Date(payload.endTime),
+    },
+    include: {
+      subject: true,
     },
   });
 };

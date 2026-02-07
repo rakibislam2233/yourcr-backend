@@ -1,14 +1,9 @@
 import { Router } from 'express';
-import { Request, Response } from 'express';
-import httpStatus from 'http-status-codes';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import validateRequest from '../../middleware/validation.middleware';
-import { UserValidations } from './user.validation';
+import { UserRole } from '../../shared/enum/user.enum';
 import { UserController } from './user.controller';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import upload from '../../utils/fileUpload.utils';
+import { UserValidations } from './user.validation';
 
 const router = Router();
 
@@ -40,7 +35,12 @@ router
   );
 
 // Create student (CR only)
-router.post('/create-student', auth(UserRole.CR), validateRequest(UserValidations.createStudent));
+router.post(
+  '/create-student',
+  auth(UserRole.CR),
+  validateRequest(UserValidations.createStudent),
+  UserController.createStudent
+);
 
 // Update user
 router.patch(

@@ -1,13 +1,14 @@
 import bcrypt from 'bcryptjs';
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../utils/ApiError';
-import { uploadFile } from '../../utils/storage.utils';
-import { ICreateStudentPayload, IUserProfileResponse, UserQueryOptions } from './user.interface';
-import { UserRepository } from './user.repository';
-import { sendStudentCreatedEmail } from '../../utils/emailTemplates';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
 import { Request } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import { database } from '../../config/database.config';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { sendStudentCreatedEmail } from '../../utils/emailTemplates';
+import { uploadFile } from '../../utils/storage.utils';
+import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
+import { UserRepository } from './user.repository';
 
 const getAllUsers = async (filters: any, options: any) => {
   return await UserRepository.getAllUsersForAdmin({ ...filters, ...options });
@@ -100,31 +101,39 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload, r
     email: studentData.email,
     phoneNumber: studentData.phoneNumber,
     password: hashedPassword,
-    institutionId: studentData.institutionId,
-    department: studentData.department,
-    program: studentData.program,
-    year: studentData.year,
-    studentId: studentData.studentId,
-    semester: studentData.semester,
-    batch: studentData.batch,
+    institutionId: cr.institutionId ?? undefined,
     crId,
+    currentBatchId: cr.currentBatchId ?? undefined,
   });
 
+  // Create batch enrollment
+  if (cr.currentBatchId) {
+    await database.batchEnrollment.create({
+      data: {
+        batchId: cr.currentBatchId,
+        userId: student.id,
+        role: 'STUDENT',
+        studentId: studentData.studentId || student.fullName,
+        enrolledBy: crId,
+      },
+    });
+  }
+
   // Send welcome email to student
-  await sendStudentCreatedEmail(
-    student.email,
-    student.fullName,
-    cr.fullName,
-    cr.institutionId ? 'Your Institution' : 'Your Institution'
-  );
+  const institutionName = cr.institutionId
+    ? (await database.institution.findUnique({ where: { id: cr.institutionId } }))?.name ||
+      'Your Institution'
+    : 'Your Institution';
+
+  await sendStudentCreatedEmail(student.email, student.fullName, cr.fullName, institutionName);
 
   // Audit log
   await createAuditLog(
     crId,
-    AuditAction.CREATE_ISSUE,
+    AuditAction.USER_REGISTERED,
     'User',
     student.id,
-    { studentEmail: student.email },
+    { studentEmail: student.email, batchId: cr.currentBatchId },
     req
   );
 

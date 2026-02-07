@@ -5,8 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { AssessmentService } from './assessment.service';
 
 const createAssessment = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const result = await AssessmentService.createAssessment(req.body, userId, req);
+  const result = await AssessmentService.createAssessment(req.body, req.user, req);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -30,7 +29,7 @@ const getAssessmentById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllAssessments = catchAsync(async (req: Request, res: Response) => {
-  const result = await AssessmentService.getAllAssessments(req.query);
+  const result = await AssessmentService.getAllAssessments(req.query, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

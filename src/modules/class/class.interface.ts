@@ -12,6 +12,7 @@ export interface ICreateClassPayload {
   roomNumber?: string;
   joinLink?: string;
   createdById?: string;
+  batchId?: string;
 }
 
 export interface IUpdateClassPayload {
@@ -25,4 +26,5 @@ export interface IUpdateClassPayload {
   roomNumber?: string;
   joinLink?: string;
   createdById?: string;
+  batchId?: string;
 }

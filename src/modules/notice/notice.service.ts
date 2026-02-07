@@ -1,35 +1,38 @@
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { addNotificationJob } from '../../queues/notification.queue';
+import { AuditAction } from '../../shared/enum/audit.enum';
+import { UserRole } from '../../shared/enum/user.enum';
+import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { UserRepository } from '../user/user.repository';
 import { ICreateNoticePayload, IUpdateNoticePayload } from './notice.interface';
 import { NoticeRepository } from './notice.repository';
-import { UserRepository } from '../user/user.repository';
-import { addNotificationJob } from '../../queues/notification.queue';
-import { UserRole } from '../../shared/enum/user.enum';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
 
-const createNotice = async (payload: ICreateNoticePayload, actorId: string, req?: Request) => {
+const createNotice = async (payload: ICreateNoticePayload, actor: IDecodedToken, req?: Request) => {
+  const actorId = actor.userId;
   await createAuditLog(actorId, AuditAction.CREATE_NOTICE, 'Notice', undefined, { payload }, req);
 
   const notice = await NoticeRepository.createNotice({
     ...payload,
     postedById: actorId,
+    batchId: actor.role === UserRole.CR ? actor.batchId || undefined : payload.batchId,
   });
 
-  const actor = await UserRepository.getUserById(actorId);
-  if (!actor) {
+  const noticeCreator = await UserRepository.getUserById(actorId);
+  if (!noticeCreator) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
   // If CR posts, notify all students in same institution
-  if (actor.role === UserRole.CR) {
+  if (noticeCreator.role === UserRole.CR) {
     await addNotificationJob({
       title: notice.title,
       message: notice.content,
       type: 'NOTICE',
       relatedId: notice.id,
-      crId: actor.id,
+      crId: noticeCreator.id,
     });
   }
 
@@ -45,11 +48,19 @@ const getNoticeById = async (id: string) => {
   return notice;
 };
 
-const getAllNotices = async (query: any) => {
+const getAllNotices = async (query: any, user: IDecodedToken) => {
+  if (user.role === UserRole.CR || user.role === UserRole.STUDENT) {
+    query.batchId = user.batchId;
+  }
   return await NoticeRepository.getAllNotices(query);
 };
 
-const updateNotice = async (id: string, payload: IUpdateNoticePayload, actorId: string, req?: Request) => {
+const updateNotice = async (
+  id: string,
+  payload: IUpdateNoticePayload,
+  actorId: string,
+  req?: Request
+) => {
   await createAuditLog(actorId, AuditAction.UPDATE_NOTICE, 'Notice', id, { payload }, req);
 
   const existing = await NoticeRepository.getNoticeById(id);
