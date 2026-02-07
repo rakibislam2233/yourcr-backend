@@ -29,7 +29,7 @@ const createClass = async (payload: ICreateClassPayload) => {
   await addNotificationJob({
     title: `New Class: ${classItem.subject?.name || 'Class'} on ${classItem.classDate.toDateString()}`,
     message: `Class scheduled at ${new Date(classItem.startTime).toLocaleTimeString()} - ${new Date(classItem.endTime).toLocaleTimeString()}`,
-    type: 'NOTICE',
+    type: 'CLASS',
     relatedId: classItem.id,
     crId: payload.createdById,
   });
@@ -93,8 +93,8 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
   if (changes.length > 0) {
     await addNotificationJob({
       title: `Class Updated: ${(existingClass as any).subject?.name || 'Class'}`,
-      message: `Class details have been updated (${changes.join(', ')}). Please check the latest information.`,
-      type: 'NOTICE',
+      message: `The following class details have been updated: ${changes.join(', ')}. \n\nNew Schedule: ${new Date(updatedClass.classDate).toDateString()} at ${new Date(updatedClass.startTime).toLocaleTimeString()}.\n\nPlease check your dashboard for the latest information.`,
+      type: 'CLASS_UPDATE',
       relatedId: id,
       crId: (existingClass as any).createdById,
     });
