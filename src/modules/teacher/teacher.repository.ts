@@ -14,21 +14,21 @@ const createTeacher = async (payload: ICreateTeacherPayload) => {
 };
 
 const getTeacherByEmail = async (email: string) => {
-  return await database.teacher.findUnique({
-    where: { email },
+  return await database.teacher.findFirst({
+    where: { email, isDeleted: false },
   });
 };
 
 const getTeacherById = async (id: string) => {
-  return await database.teacher.findUnique({
-    where: { id },
+  return await database.teacher.findFirst({
+    where: { id, isDeleted: false },
   });
 };
 
 const getAllTeachers = async (filters: any, options: any): Promise<PaginationResult<any>> => {
   const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
-  const where: any = {};
+  const where: any = { isDeleted: false };
   if (filters.batchId) where.batchId = filters.batchId;
   if (filters.department) where.department = { contains: filters.department, mode: 'insensitive' };
   if (filters.search) {

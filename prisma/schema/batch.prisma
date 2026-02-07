@@ -25,5 +25,7 @@ model Batch {
   assessmentSubmissions AssessmentSubmission[]
   currentBatchStudents  User[]                 @relation("CurrentBatch")
 
+  isDeleted             Boolean                @default(false)
+
   @@map("batches")
 }

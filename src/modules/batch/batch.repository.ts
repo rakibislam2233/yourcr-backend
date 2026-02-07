@@ -1,6 +1,6 @@
 import { database } from '../../config/database.config';
-import { ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 import { PaginationOptions, PaginationResult } from '../../utils/pagination.utils';
+import { ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 
 // Batch CRUD
 const createBatch = async (payload: ICreateBatchPayload) => {
@@ -14,8 +14,8 @@ const createBatch = async (payload: ICreateBatchPayload) => {
 };
 
 const getBatchById = async (id: string) => {
-  return await database.batch.findUnique({
-    where: { id },
+  return await database.batch.findFirst({
+    where: { id, isDeleted: false },
     include: {
       institution: true,
       cr: true,
@@ -35,7 +35,7 @@ const getAllBatches = async (
   const { page, limit, sortBy, sortOrder } = options;
   const skip = (page - 1) * limit;
 
-  const where: any = {};
+  const where: any = { isDeleted: false };
 
   if (filters.institutionId) {
     where.institutionId = filters.institutionId;
@@ -108,8 +108,9 @@ const updateBatch = async (id: string, payload: IUpdateBatchPayload) => {
 };
 
 const deleteBatch = async (id: string) => {
-  return await database.batch.delete({
+  return await database.batch.update({
     where: { id },
+    data: { isDeleted: true },
   });
 };
 

@@ -21,14 +21,14 @@ const createAccount = async (payload: ICreateAccountPayload) => {
 };
 
 export const getUserById = async (id: string) => {
-  return await database.user.findUnique({
-    where: { id },
+  return await database.user.findFirst({
+    where: { id, isDeleted: false },
   });
 };
 
 const getUserByEmail = async (email: string) => {
-  return await database.user.findUnique({
-    where: { email },
+  return await database.user.findFirst({
+    where: { email, isDeleted: false },
   });
 };
 
@@ -186,6 +186,7 @@ const getUsersByInstitutionAndRole = async (institutionId: string, role: string)
       institutionId,
       role: role as any,
       status: 'ACTIVE',
+      isDeleted: false,
     },
     select: {
       id: true,
@@ -200,6 +201,7 @@ const getStudentsByCrId = async (crId: string) => {
       crId,
       role: 'STUDENT',
       status: 'ACTIVE',
+      isDeleted: false,
     },
     select: {
       id: true,

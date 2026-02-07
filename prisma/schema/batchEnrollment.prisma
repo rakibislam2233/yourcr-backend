@@ -12,6 +12,8 @@ model BatchEnrollment {
   // Relations
   enrollmentAddedBy User?     @relation("EnrollmentAddedBy", fields: [enrolledBy], references: [id])
 
+  isDeleted         Boolean   @default(false)
+
   @@unique([userId, batchId])
   @@map("batch_enrollments")
 }
