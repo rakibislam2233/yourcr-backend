@@ -7,16 +7,13 @@ import { ClassService } from './class.service';
 
 const createClass = catchAsync(async (req: Request, res: Response) => {
   const { batchId, userId } = req.user;
-  const result = await ClassService.createClass(
-    {
-      ...req.body,
-      batchId: batchId || req.body.batchId,
-      createdById: userId,
-    },
-    req.user,
-    req
-  );
+  const result = await ClassService.createClass({
+    ...req.body,
+    batchId: batchId || req.body.batchId,
+    createdById: userId,
+  });
 
+  console.log('Result', result);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,

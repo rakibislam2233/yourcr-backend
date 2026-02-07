@@ -1,4 +1,6 @@
+import { StatusCodes } from 'http-status-codes';
 import { emailConfig } from '../config/email.config';
+import ApiError from './ApiError';
 
 interface EmailOptions {
   to: string;
@@ -21,6 +23,6 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
       attachments: options.attachments,
     });
   } catch (error) {
-    throw new Error(`Email sending failed: ${error}`);
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, `Email sending failed: ${error}`);
   }
 };

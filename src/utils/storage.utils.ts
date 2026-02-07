@@ -1,4 +1,6 @@
+import { StatusCodes } from 'http-status-codes';
 import cloudinary from '../config/cloudinary.config';
+import ApiError from './ApiError';
 
 // Upload file to Cloudinary
 export const uploadFile = async (
@@ -25,7 +27,7 @@ export const uploadFile = async (
     return result;
   } catch (error) {
     console.error('Error uploading file to Cloudinary:', error);
-    throw new Error('File upload failed');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'File upload failed');
   }
 };
 
@@ -34,7 +36,7 @@ export const deleteFile = async (publicId: string): Promise<any> => {
   try {
     return await cloudinary.uploader.destroy(publicId);
   } catch (error) {
-    throw new Error('File deletion failed');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'File deletion failed');
   }
 };
 
@@ -73,7 +75,7 @@ export const compressVideo = async (
     });
     return result;
   } catch (error) {
-    throw new Error('Video compression failed');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Video compression failed');
   }
 };
 
@@ -109,7 +111,7 @@ export const optimizeImage = async (
     });
     return result;
   } catch (error) {
-    throw new Error('Image optimization failed');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Image optimization failed');
   }
 };
 

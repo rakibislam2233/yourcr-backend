@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import httpStatus from 'http-status-codes';
+import httpStatus, { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
+import ApiError from '../../utils/ApiError';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
@@ -50,7 +51,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
 
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
 
   const userProfile = await UserService.getUserProfile(userId);
@@ -80,7 +81,7 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
 
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
 
   const result = await UserService.updateMyProfile(userId, req.body, req.file, req);
@@ -126,7 +127,7 @@ const deleteMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
 
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
 
   await UserService.deleteMyProfile(userId);

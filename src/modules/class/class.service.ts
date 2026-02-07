@@ -1,19 +1,12 @@
-import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { addNotificationJob } from '../../queues/notification.queue';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { IDecodedToken } from '../../shared/interfaces/jwt.interface';
 import ApiError from '../../utils/ApiError';
-import { createAuditLog } from '../../utils/audit.helper';
 import { SubjectRepository } from '../subject/subject.repository';
 import { TeacherRepository } from '../teacher/teacher.repository';
 import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 import { ClassRepository } from './class.repository';
 
-const createClass = async (payload: ICreateClassPayload, actor: IDecodedToken, req?: Request) => {
-  const actorId = actor.userId;
-  await createAuditLog(actorId, AuditAction.CREATE_CLASS, 'Class', undefined, { payload }, req);
-
+const createClass = async (payload: ICreateClassPayload) => {
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
     if (!subject) {
@@ -36,7 +29,7 @@ const createClass = async (payload: ICreateClassPayload, actor: IDecodedToken, r
     message: `Class scheduled at ${new Date(classItem.startTime).toLocaleTimeString()} - ${new Date(classItem.endTime).toLocaleTimeString()}`,
     type: 'NOTICE',
     relatedId: classItem.id,
-    crId: actorId,
+    crId: payload.createdById,
   });
 
   return classItem;

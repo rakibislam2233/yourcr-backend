@@ -1,19 +1,35 @@
+import { StatusCodes } from 'http-status-codes';
 import { database } from '../../config/database.config';
+import ApiError from '../../utils/ApiError';
 import {
   createPaginationQuery,
   createPaginationResult,
   PaginationResult,
   parsePaginationOptions,
 } from '../../utils/pagination.utils';
+import parseAmPmToDate from '../../utils/time';
 import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 
 const createClass = async (payload: ICreateClassPayload) => {
+  const baseDate = new Date(payload.classDate);
+
+  if (isNaN(baseDate.getTime())) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid classDate format');
+  }
+
+  const startDateTime = parseAmPmToDate(payload.startTime, baseDate);
+  const endDateTime = parseAmPmToDate(payload.endTime, baseDate);
+
+  if (endDateTime <= startDateTime) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'End time must be after start time');
+  }
+
   return await database.class.create({
     data: {
       ...payload,
-      classDate: new Date(payload.classDate),
-      startTime: new Date(payload.startTime),
-      endTime: new Date(payload.endTime),
+      classDate: baseDate,
+      startTime: startDateTime,
+      endTime: endDateTime,
     },
     include: {
       subject: true,

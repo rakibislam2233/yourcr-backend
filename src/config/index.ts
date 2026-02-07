@@ -1,5 +1,7 @@
 import colors from 'colors';
 import dotenv from 'dotenv';
+import ApiError from '../utils/ApiError';
+import { StatusCodes } from 'http-status-codes';
 
 dotenv.config();
 
@@ -28,7 +30,7 @@ if (missingEnvVars.length > 0) {
     console.error(
       colors.red(`❌ Missing required environment variables: ${missingEnvVars.join(', ')}`)
     );
-    throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, `Missing required environment variables: ${missingEnvVars.join(', ')}`);
   } else {
     console.warn(
       colors.yellow(
@@ -166,11 +168,11 @@ const config = {
 // Validate critical configurations
 if (config.env === 'production') {
   if (!config.jwt.accessSecret || config.jwt.accessSecret.length < 32) {
-    throw new Error('JWT_ACCESS_SECRET must be at least 32 characters in production');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'JWT_ACCESS_SECRET must be at least 32 characters in production');
   }
 
   if (!config.jwt.refreshSecret || config.jwt.refreshSecret.length < 32) {
-    throw new Error('JWT_REFRESH_SECRET must be at least 32 characters in production');
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'JWT_REFRESH_SECRET must be at least 32 characters in production');
   }
 
   if (!config.redis.password) {

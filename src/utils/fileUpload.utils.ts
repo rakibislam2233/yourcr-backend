@@ -1,5 +1,7 @@
 import multer from 'multer';
 import { Request } from 'express';
+import ApiError from './ApiError';
+import { StatusCodes } from 'http-status-codes';
 
 // Configure multer for file upload
 const storage = multer.memoryStorage();
@@ -21,7 +23,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, PDF, and Word documents are allowed.'));
+    cb(new ApiError(StatusCodes.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, GIF, PDF, and Word documents are allowed.'));
   }
 };
 

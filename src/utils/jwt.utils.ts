@@ -9,7 +9,7 @@ import ApiError from './ApiError';
 export const getExpirationDate = (expiration: string): Date => {
   const match = expiration.match(/^(\d+)([mhd])$/);
   if (!match) {
-    throw new Error('Invalid expiration format. Use: 15m, 24h, 7d');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid expiration format. Use: 15m, 24h, 7d');
   }
 
   const [, value, unit] = match;
@@ -23,7 +23,7 @@ export const getExpirationDate = (expiration: string): Date => {
     case 'd':
       return addDays(new Date(), timeValue);
     default:
-      throw new Error('Invalid time unit');
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid time unit');
   }
 };
 

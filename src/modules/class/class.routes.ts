@@ -14,9 +14,17 @@ router.post(
   ClassController.createClass
 );
 
-router.get('/', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT), ClassController.getAllClasses);
+router.get(
+  '/',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  ClassController.getAllClasses
+);
 
-router.get('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT), ClassController.getClassById);
+router.get(
+  '/:id',
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+  ClassController.getClassById
+);
 
 router.patch(
   '/:id',
@@ -25,10 +33,6 @@ router.patch(
   ClassController.updateClass
 );
 
-router.delete(
-  '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  ClassController.deleteClass
-);
+router.delete('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ClassController.deleteClass);
 
 export const ClassRoutes = router;
