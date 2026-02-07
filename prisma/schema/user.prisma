@@ -13,8 +13,8 @@ model User {
   isEmailVerified Boolean    @default(false)
 
   // CR Specific Fields
-  isCr                 Boolean   @default(false)
-  crApprovedAt         DateTime?
+  isCr                   Boolean   @default(false)
+  crApprovedAt           DateTime?
   isRegistrationComplete Boolean   @default(false)
 
   crId          String?

@@ -52,7 +52,7 @@ const getAllTeachers = async (filters: any, options: any): Promise<PaginationRes
 
 const updateTeacher = async (id: string, payload: IUpdateTeacherPayload) => {
   return await database.teacher.update({
-    where: { id },
+    where: { id, isDeleted: false },
     data: payload,
   });
 };

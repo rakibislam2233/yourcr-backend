@@ -43,7 +43,6 @@ const getClassById = async (id: string) => {
     include: {
       subject: true,
       teacher: true,
-      createdBy: true,
     },
   });
 };
@@ -81,7 +80,6 @@ const getAllClasses = async (filters: any, options: any): Promise<PaginationResu
       include: {
         subject: true,
         teacher: true,
-        createdBy: true,
       },
     }),
     database.class.count({ where }),
@@ -91,14 +89,55 @@ const getAllClasses = async (filters: any, options: any): Promise<PaginationResu
 };
 
 const updateClass = async (id: string, payload: IUpdateClassPayload) => {
+  let baseDate: Date | undefined;
+  let startDateTime: Date | undefined;
+  let endDateTime: Date | undefined;
+
+  if (payload.classDate) {
+    baseDate = new Date(payload.classDate);
+
+    if (isNaN(baseDate.getTime())) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid classDate format');
+    }
+  }
+
+  if (payload.startTime && baseDate) {
+    startDateTime = parseAmPmToDate(payload.startTime, baseDate);
+  }
+
+  if (payload.endTime && baseDate) {
+    endDateTime = parseAmPmToDate(payload.endTime, baseDate);
+  }
+
+  if (startDateTime && endDateTime && endDateTime <= startDateTime) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'End time must be after start time');
+  }
+
+  // Build update data object - only include fields that are being updated
+  const updateData: any = { ...payload };
+
+  // Only update date/time fields if they were provided and processed
+  if (payload.classDate && baseDate) {
+    updateData.classDate = baseDate;
+  } else {
+    delete updateData.classDate;
+  }
+
+  if (payload.startTime && startDateTime) {
+    updateData.startTime = startDateTime;
+  } else {
+    delete updateData.startTime;
+  }
+
+  if (payload.endTime && endDateTime) {
+    updateData.endTime = endDateTime;
+  } else {
+    delete updateData.endTime;
+  }
+
   return await database.class.update({
-    where: { id },
-    data: {
-      ...payload,
-      classDate: payload.classDate ? new Date(payload.classDate) : undefined,
-      startTime: payload.startTime ? new Date(payload.startTime) : undefined,
-      endTime: payload.endTime ? new Date(payload.endTime) : undefined,
-    },
+    where: { id, isDeleted: false },
+    data: updateData,
   });
 };
 

@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { addNotificationJob } from '../../queues/notification.queue';
+import { scheduleClassReminder } from '../../queues/reminder.queue';
 import ApiError from '../../utils/ApiError';
 import { SubjectRepository } from '../subject/subject.repository';
 import { TeacherRepository } from '../teacher/teacher.repository';
@@ -23,7 +24,7 @@ const createClass = async (payload: ICreateClassPayload) => {
 
   const classItem = await ClassRepository.createClass(payload);
 
-  // Notify students under this CR
+  // Immediate notification to students
   await addNotificationJob({
     title: `New Class: ${classItem.subject?.name || 'Class'} on ${classItem.classDate.toDateString()}`,
     message: `Class scheduled at ${new Date(classItem.startTime).toLocaleTimeString()} - ${new Date(classItem.endTime).toLocaleTimeString()}`,
@@ -31,6 +32,14 @@ const createClass = async (payload: ICreateClassPayload) => {
     relatedId: classItem.id,
     crId: payload.createdById,
   });
+
+  // Schedule reminder 1 hour before class
+  await scheduleClassReminder(
+    classItem.id,
+    new Date(classItem.startTime),
+    classItem.subject?.name || 'Class',
+    payload.createdById
+  );
 
   return classItem;
 };
@@ -48,7 +57,7 @@ const getAllClasses = async (filters: any, options: any) => {
 };
 
 const updateClass = async (id: string, payload: IUpdateClassPayload) => {
-  await ClassService.getClassById(id);
+  const existingClass = await ClassService.getClassById(id);
 
   if (payload.subjectId) {
     const subject = await SubjectRepository.getSubjectById(payload.subjectId);
@@ -64,7 +73,36 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
     }
   }
 
-  return await ClassRepository.updateClass(id, payload);
+  const updatedClass = await ClassRepository.updateClass(id, payload);
+
+  // Notify students about the update
+  const changes: string[] = [];
+  if (payload.classDate) changes.push('date');
+  if (payload.startTime) changes.push('time');
+  if (payload.status) changes.push('status');
+  if (payload.classType) changes.push('type');
+
+  if (changes.length > 0) {
+    await addNotificationJob({
+      title: `Class Updated: ${(existingClass as any).subject?.name || 'Class'}`,
+      message: `Class details have been updated (${changes.join(', ')}). Please check the latest information.`,
+      type: 'NOTICE',
+      relatedId: id,
+      crId: (existingClass as any).createdById,
+    });
+
+    // Reschedule reminder if time changed
+    if (payload.startTime || payload.classDate) {
+      await scheduleClassReminder(
+        updatedClass.id,
+        new Date(updatedClass.startTime),
+        (updatedClass as any).subject?.name || 'Class',
+        (updatedClass as any).createdById
+      );
+    }
+  }
+
+  return updatedClass;
 };
 
 const deleteClass = async (id: string) => {

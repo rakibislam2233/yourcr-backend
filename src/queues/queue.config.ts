@@ -1,4 +1,3 @@
-
 import { QueueOptions, WorkerOptions } from 'bullmq';
 import config from '../config';
 
@@ -14,7 +13,7 @@ export const queueConnection = {
 export const defaultQueueOptions: QueueOptions = {
   connection: queueConnection,
   defaultJobOptions: {
-    attempts: 3, 
+    attempts: 3,
     backoff: {
       type: 'exponential', // Retry delay exponentially increases
       delay: 5000, // Initial delay: 5 seconds
@@ -32,9 +31,9 @@ export const defaultQueueOptions: QueueOptions = {
 // Default worker options
 export const defaultWorkerOptions: WorkerOptions = {
   connection: queueConnection,
-  concurrency: 5, 
+  concurrency: 5,
   limiter: {
-    max: 10, 
+    max: 10,
     duration: 1000,
   },
 };
@@ -43,4 +42,5 @@ export const defaultWorkerOptions: WorkerOptions = {
 export const QUEUE_NAMES = {
   EMAIL: 'emails',
   NOTIFICATION: 'notifications',
+  REMINDER: 'reminders',
 } as const;
