@@ -14,13 +14,9 @@ export interface ICreateStudentPayload {
   email: string;
   phoneNumber: string;
   password: string;
+  studentId?: string;
   institutionId?: string;
-  department?: string;
-  program?: string;
-  year?: string;
-  studentId?: string; // Institution-provided student ID
-  semester?: string;
-  batch?: string;
+  batchId?: string;
   crId: string;
 }
 

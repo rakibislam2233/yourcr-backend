@@ -438,12 +438,13 @@ export const sendStudentCreatedEmail = async (
   to: string,
   name: string,
   crName: string,
-  institutionName: string
+  institutionName: string,
+  defaultPassword: string
 ): Promise<void> => {
   const subject = 'Welcome to YourCR – Account Created';
   const content = `
     <p>Hi <strong>${name}</strong>,</p>
-    <p>Your account has been created on YourCR by your Class Representative <strong>${crName}</strong> from <strong>${institutionName}</strong>.</p>
+    <p>Your account has been created on YourCR by your Class Representative <strong>${crName}</strong> from <strong>${institutionName}</strong>. Your default password is <strong>${defaultPassword}</strong>. Please change your password after logging in.</p>
     ${generateHighlightBox(`
       <p><strong>What you can do:</strong></p>
       <ul style="padding-left:24px; margin:16px 0;">

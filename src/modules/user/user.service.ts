@@ -7,39 +7,20 @@ import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
 import { sendStudentCreatedEmail } from '../../utils/emailTemplates';
 import { uploadFile } from '../../utils/storage.utils';
-import { ICreateStudentPayload, IUserProfileResponse } from './user.interface';
+import { ICreateStudentPayload } from './user.interface';
 import { UserRepository } from './user.repository';
+import { InstitutionRepository } from '../institution/institution.repository';
 
 const getAllUsers = async (filters: any, options: any) => {
   return await UserRepository.getAllUsersForAdmin(filters, options);
 };
 
 const getUserById = async (id: string) => {
-  const user = await UserRepository.getUserByIdForResponse(id);
-
-  if (!user || user.isDeleted) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-  }
-
-  return user;
-};
-
-const getUserProfile = async (userId: string): Promise<IUserProfileResponse> => {
-  const user = await UserRepository.getUserProfileById(userId);
-
+  const user = await UserRepository.getUserById(id);
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
-
-  return {
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-    role: user.role,
-    status: user.status,
-    isCr: user.isCr,
-  };
+  return user;
 };
 
 const updateMyProfile = async (
@@ -81,8 +62,8 @@ const updateMyProfile = async (
   return updated;
 };
 
-const createStudent = async (crId: string, studentData: ICreateStudentPayload, req?: Request) => {
-  const defaultPassword = 'Student@123';
+const createStudent = async (crId: string, studentData: ICreateStudentPayload) => {
+  const defaultPassword = studentData.studentId ? studentData.studentId : 'Student@123';
   const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
   const cr = await UserRepository.getUserById(crId);
@@ -101,9 +82,9 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload, r
     email: studentData.email,
     phoneNumber: studentData.phoneNumber,
     password: hashedPassword,
-    institutionId: cr.institutionId ?? undefined,
-    crId,
-    currentBatchId: cr.currentBatchId ?? undefined,
+    institutionId: cr.institutionId! || studentData.institutionId,
+    crId: crId,
+    currentBatchId: cr.currentBatchId! || studentData.batchId,
   });
 
   // Create batch enrollment
@@ -119,22 +100,15 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload, r
     });
   }
 
-  // Send welcome email to student
-  const institutionName = cr.institutionId
-    ? (await database.institution.findUnique({ where: { id: cr.institutionId } }))?.name ||
-      'Your Institution'
-    : 'Your Institution';
+  //institution name
+  const institution = await InstitutionRepository.getInstitutionById(cr.institutionId!);
 
-  await sendStudentCreatedEmail(student.email, student.fullName, cr.fullName, institutionName);
-
-  // Audit log
-  await createAuditLog(
-    crId,
-    AuditAction.USER_REGISTERED,
-    'User',
-    student.id,
-    { studentEmail: student.email, batchId: cr.currentBatchId },
-    req
+  await sendStudentCreatedEmail(
+    student.email,
+    student.fullName,
+    cr.fullName,
+    institution?.name!,
+    defaultPassword
   );
 
   const { password, ...studentWithoutPassword } = student;
@@ -143,6 +117,10 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload, r
     ...studentWithoutPassword,
     defaultPassword,
   };
+};
+
+const getAllStudents = async (filters: any, options: any) => {
+  return await UserRepository.getAllStudents(filters, options);
 };
 
 const updateUserById = async (id: string, payload: any) => {
@@ -172,9 +150,9 @@ const deleteMyProfile = async (userId: string) => {
 export const UserService = {
   getAllUsers,
   getUserById,
-  getUserProfile,
   updateMyProfile,
   createStudent,
+  getAllStudents,
   updateUserById,
   deleteUserById,
   deleteMyProfile,

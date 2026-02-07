@@ -7,15 +7,15 @@ import { UserValidations } from './user.validation';
 
 const router = Router();
 
-// Get all users (Admin only)
-router.get('/', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserController.getAllUsers);
-
-// Get user by ID
-router.get(
-  '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
-  UserController.getUserById
+// Create student (CR only)
+router.post(
+  '/create-student',
+  auth(UserRole.CR),
+  validateRequest(UserValidations.createStudent),
+  UserController.createStudent
 );
+
+router.get('/all-students', auth(UserRole.CR), UserController.getAllStudents);
 
 // Get user profile
 router
@@ -34,22 +34,23 @@ router
     UserController.deleteMyProfile
   );
 
-// Create student (CR only)
-router.post(
-  '/create-student',
-  auth(UserRole.CR),
-  validateRequest(UserValidations.createStudent),
-  UserController.createStudent
-);
+// Get all users (Admin only)
+router.get('/', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserController.getAllUsers);
 
-// Update user
-router.patch(
-  '/:id',
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
-  UserController.updateUser
-);
-
-// Delete user (Admin only)
-router.delete('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserController.deleteUser);
+// Get user by ID
+router
+  .route('/:id')
+  .get(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    UserController.getUserById
+  )
+  .patch(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    UserController.updateUser
+  )
+  .delete(
+    auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR, UserRole.STUDENT),
+    UserController.deleteUser
+  );
 
 export const UserRoutes = router;

@@ -33,6 +33,10 @@ router.patch(
   ClassController.updateClass
 );
 
-router.delete('/:id', auth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ClassController.deleteClass);
+router.delete(
+  '/:id',
+  auth(UserRole.CR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  ClassController.deleteClass
+);
 
 export const ClassRoutes = router;

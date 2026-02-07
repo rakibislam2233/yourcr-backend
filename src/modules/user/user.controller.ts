@@ -54,7 +54,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
 
-  const userProfile = await UserService.getUserProfile(userId);
+  const userProfile = await UserService.getUserById(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -66,13 +66,32 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
 
 const createStudent = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.user;
-  const result = await UserService.createStudent(userId, req.body, req);
+  const result = await UserService.createStudent(userId, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
     message: 'Student created successfully',
     data: result,
+  });
+});
+
+const getAllStudents = catchAsync(async (req: Request, res: Response) => {
+  const { userId, batchId } = req.user;
+  const filters = pick(req.query, ['search', 'status']);
+  const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+  if (batchId) {
+    filters.batchId = batchId;
+    filters.crId = userId;
+  }
+  const users = await UserService.getAllStudents(filters, options);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Users fetched successfully',
+    meta: users.pagination,
+    data: users.data,
   });
 });
 
@@ -145,6 +164,7 @@ export const UserController = {
   getUserProfile,
   updateMyProfile,
   createStudent,
+  getAllStudents,
   updateUser,
   deleteUser,
   deleteMyProfile,
