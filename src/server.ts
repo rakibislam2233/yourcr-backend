@@ -11,6 +11,7 @@ import { setupSocket } from './socket/socket.handler';
 import { setSocketInstance } from './socket/socket.service';
 import logger from './utils/logger';
 import { seedDatabase } from './utils/seed.utils';
+import './workers/classStatus.worker';
 import './workers/email.worker';
 import './workers/notification.worker';
 import './workers/reminder.worker';
@@ -305,6 +306,11 @@ async function main() {
       setupSocket(io);
       logger.info(colors.green('✅ Socket.IO initialized'));
     }
+
+    // Reschedule class status updates for existing classes
+    logger.info(colors.cyan('\n🔄 Rescheduling class status updates...'));
+    const { rescheduleAllClassStatusUpdates } = await import('./utils/classStatusScheduler.utils');
+    await rescheduleAllClassStatusUpdates();
 
     // Step 5: Start health monitoring (development only)
     if (config.env === 'development') {

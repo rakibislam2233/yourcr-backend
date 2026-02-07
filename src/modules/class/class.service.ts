@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { scheduleClassStatusUpdate } from '../../queues/classStatus.queue';
 import { addNotificationJob } from '../../queues/notification.queue';
 import { scheduleClassReminder } from '../../queues/reminder.queue';
 import ApiError from '../../utils/ApiError';
@@ -39,6 +40,13 @@ const createClass = async (payload: ICreateClassPayload) => {
     new Date(classItem.startTime),
     classItem.subject?.name || 'Class',
     payload.createdById
+  );
+
+  // Schedule automatic status updates
+  await scheduleClassStatusUpdate(
+    classItem.id,
+    new Date(classItem.startTime),
+    new Date(classItem.endTime)
   );
 
   return classItem;
@@ -91,13 +99,20 @@ const updateClass = async (id: string, payload: IUpdateClassPayload) => {
       crId: (existingClass as any).createdById,
     });
 
-    // Reschedule reminder if time changed
-    if (payload.startTime || payload.classDate) {
+    // Reschedule reminder and status updates if time changed
+    if (payload.startTime || payload.classDate || payload.endTime) {
       await scheduleClassReminder(
         updatedClass.id,
         new Date(updatedClass.startTime),
         (updatedClass as any).subject?.name || 'Class',
         (updatedClass as any).createdById
+      );
+
+      // Reschedule automatic status updates
+      await scheduleClassStatusUpdate(
+        updatedClass.id,
+        new Date(updatedClass.startTime),
+        new Date(updatedClass.endTime)
       );
     }
   }
