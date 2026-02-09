@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import parseAmPmToDate from '../../utils/time';
+import parseAmPmToDate, { parseDateInBD, getBangladeshTime } from '../../utils/time';
+
 const timeAmPmSchema = z.string('Time is required').refine(
   val => {
-    // 12-hour format with optional leading zero, space before AM/PM optional
     return /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i.test(val);
   },
   {
@@ -16,9 +16,19 @@ const createClassValidation = z.object({
       subjectId: z.string().optional(),
       teacherId: z.string().optional(),
 
-      classDate: z.string('ClassDate is required').refine(val => !isNaN(Date.parse(val)), {
-        message: 'Invalid date format (use YYYY-MM-DD or valid ISO date)',
-      }),
+      classDate: z.string('ClassDate is required').refine(
+        val => {
+          try {
+            const date = parseDateInBD(val);
+            return !isNaN(date.getTime());
+          } catch {
+            return false;
+          }
+        },
+        {
+          message: 'Invalid date format (use YYYY-MM-DD or valid ISO date)',
+        }
+      ),
 
       startTime: timeAmPmSchema,
       endTime: timeAmPmSchema,
@@ -32,9 +42,16 @@ const createClassValidation = z.object({
     .refine(
       data => {
         if (!data.startTime || !data.endTime) return true;
-        const start = parseAmPmToDate(data.startTime, new Date(data.classDate));
-        const end = parseAmPmToDate(data.endTime, new Date(data.classDate));
-        return end > start;
+
+        try {
+          const baseDate = parseDateInBD(data.classDate);
+          const start = parseAmPmToDate(data.startTime, baseDate);
+          const end = parseAmPmToDate(data.endTime, baseDate);
+
+          return end > start;
+        } catch {
+          return false;
+        }
       },
       {
         message: 'End time must be after start time',
@@ -43,31 +60,74 @@ const createClassValidation = z.object({
     )
     .refine(
       data => {
-        if (!data.classDate || !data.startTime) return true;
-        const classStart = parseAmPmToDate(data.startTime, new Date(data.classDate));
-        const now = new Date();
-        // Allow 5 mins buffer for server lag
-        return classStart.getTime() > now.getTime() - 5 * 60 * 1000;
+        try {
+          const baseDate = parseDateInBD(data.classDate);
+          const classStart = parseAmPmToDate(data.startTime, baseDate);
+          const now = getBangladeshTime();
+          const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+          return classStart >= thirtyMinutesAgo;
+        } catch {
+          return false;
+        }
       },
       {
-        message: 'Class start time cannot be in the past',
+        message: 'Class can only be created up to 30 minutes before the start time',
         path: ['startTime'],
       }
     ),
 });
 
 const updateClassValidation = z.object({
-  body: z.object({
-    subjectId: z.string().optional(),
-    teacherId: z.string().optional(),
-    classDate: z.string().optional(),
-    startTime: timeAmPmSchema.optional(),
-    endTime: timeAmPmSchema.optional(),
-    classType: z.enum(['ONLINE', 'OFFLINE']).optional(),
-    status: z.enum(['SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
-    roomNumber: z.string().optional(),
-    joinLink: z.string().url({ message: 'Invalid join link URL' }).optional(),
-  }),
+  body: z
+    .object({
+      subjectId: z.string().optional(),
+      teacherId: z.string().optional(),
+
+      classDate: z
+        .string()
+        .optional()
+        .refine(
+          val => {
+            if (!val) return true;
+            try {
+              const date = parseDateInBD(val);
+              return !isNaN(date.getTime());
+            } catch {
+              return false;
+            }
+          },
+          {
+            message: 'Invalid date format',
+          }
+        ),
+
+      startTime: timeAmPmSchema.optional(),
+      endTime: timeAmPmSchema.optional(),
+      classType: z.enum(['ONLINE', 'OFFLINE']).optional(),
+      status: z.enum(['SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
+      roomNumber: z.string().optional(),
+      joinLink: z.string().url({ message: 'Invalid join link URL' }).optional(),
+    })
+    .refine(
+      data => {
+        if (!data.startTime || !data.endTime || !data.classDate) return true;
+
+        try {
+          const baseDate = parseDateInBD(data.classDate);
+          const start = parseAmPmToDate(data.startTime, baseDate);
+          const end = parseAmPmToDate(data.endTime, baseDate);
+
+          return end > start;
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: 'End time must be after start time',
+        path: ['endTime'],
+      }
+    ),
 });
 
 export const ClassValidations = {
