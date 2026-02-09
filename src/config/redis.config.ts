@@ -2,7 +2,6 @@ import colors from 'colors';
 import Redis from 'ioredis';
 import config from './index';
 
-// Single Redis client for everything
 export const redisClient = new Redis({
   username: config.redis.username || undefined,
   host: config.redis.host,
@@ -12,15 +11,31 @@ export const redisClient = new Redis({
 
   // Connection settings
   retryStrategy(times) {
+    if (times > 10) {
+      console.error(colors.red('❌ Redis retry limit exceeded'));
+      return null; // Stop retrying after 10 attempts
+    }
     const delay = Math.min(times * 50, 2000);
     return delay;
   },
-  maxRetriesPerRequest: 3,
+
+  maxRetriesPerRequest: 3, // ✅ শুধু একবার
   connectTimeout: 10000,
   lazyConnect: false,
 
-  // Keep connection alive
+  // Additional settings
+  enableReadyCheck: true,
+  enableOfflineQueue: true,
   keepAlive: 30000,
+
+  // Reconnect on specific errors
+  reconnectOnError: err => {
+    const targetError = 'READONLY';
+    if (err.message.includes(targetError)) {
+      return true;
+    }
+    return false;
+  },
 });
 
 // Event listeners
@@ -40,8 +55,21 @@ redisClient.on('close', () => {
   console.log(colors.yellow('⚠️ Redis disconnected'));
 });
 
+redisClient.on('reconnecting', () => {
+  console.log(colors.yellow('🔄 Redis reconnecting...'));
+});
+
 // Graceful shutdown
 export const closeRedis = async (): Promise<void> => {
-  await redisClient.quit();
-  console.log(colors.green('✅ Redis closed'));
+  try {
+    await redisClient.quit();
+    console.log(colors.green('✅ Redis closed gracefully'));
+  } catch (error) {
+    console.error(colors.red('❌ Error closing Redis:'), error);
+    redisClient.disconnect(); 
+  }
 };
+
+// Process handlers for graceful shutdown
+process.on('SIGTERM', closeRedis);
+process.on('SIGINT', closeRedis);

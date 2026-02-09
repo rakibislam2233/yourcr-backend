@@ -5,6 +5,9 @@ import ApiError from '../utils/ApiError';
 
 dotenv.config();
 
+// Default to Bangladesh timezone if not set
+process.env.TZ = process.env.TZ || 'Asia/Dhaka';
+
 const requiredEnvVars = [
   'DATABASE_URL',
   'JWT_ACCESS_SECRET',
