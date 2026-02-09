@@ -7,8 +7,8 @@ export interface ICreateAssessmentPayload {
   description?: string;
   fileUrls?: string[];
   totalMarks?: number;
-  date: string;
-  deadline: string;
+  date: string | Date;
+  deadline: string | Date;
   createdById: string;
   batchId: string;
 }
@@ -20,8 +20,8 @@ export interface IUpdateAssessmentPayload {
   description?: string;
   fileUrls?: string[];
   totalMarks?: number;
-  date?: string;
-  deadline?: string;
+  date?: string | Date;
+  deadline?: string | Date;
   createdById?: string;
   batchId?: string;
 }
