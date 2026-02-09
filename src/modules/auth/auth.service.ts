@@ -7,7 +7,7 @@ import { AuditAction } from '../../shared/enum/audit.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
-import { getAuthRedirect } from '../../utils/auth-redirect';
+import { getAuthStatus } from '../../utils/auth-status';
 import { hashPassword } from '../../utils/bcrypt.utils';
 import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
@@ -93,7 +93,7 @@ const login = async (payload: ILoginPayload, req?: Request) => {
   });
 
   if (!user) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Invalid credentials.');
   }
 
   // 3. Verify Password
@@ -125,23 +125,22 @@ const login = async (payload: ILoginPayload, req?: Request) => {
   // Audit log for successful login
   await createAuditLog(user.id, AuditAction.LOGIN, 'User', user.id, { email }, req);
 
-  // 5. Check for redirects (Verification/Registration/Approval)
-  const authRedirect = getAuthRedirect(user);
-  if (authRedirect) {
-    // If it's email verification, we return without tokens
-    if (authRedirect.redirect === '/verify-email') {
+  // 5. Check for account status (Verification/Registration/Approval)
+  const authStatus = getAuthStatus(user);
+  if (authStatus) {
+    // Case 1: If email is not verified, we must verify it first (No Tokens)
+    if (authStatus.status.isEmailVerified === false) {
       const sessionId = await OtpService.createOtpSession(user, OtpType.EMAIL_VERIFICATION);
       return {
-        message: authRedirect.message,
+        message: authStatus.message,
         data: {
-          ...authRedirect.status,
-          redirect: authRedirect.redirect,
+          ...authStatus.status,
           sessionId,
         },
       };
     }
 
-    // For other redirects (complete profile, pending), we provide tokens so they are technically logged in
+    // Case 2: Email is verified but profile is incomplete or pending (With Tokens)
     const [accessToken, refreshToken] = await Promise.all([
       jwtHelper.generateAccessToken(
         user.id,
@@ -164,7 +163,7 @@ const login = async (payload: ILoginPayload, req?: Request) => {
     );
 
     return {
-      message: authRedirect.message,
+      message: authStatus.message,
       data: {
         user: {
           id: user.id,
@@ -173,8 +172,7 @@ const login = async (payload: ILoginPayload, req?: Request) => {
           fullName: user.fullName,
         },
         tokens: { accessToken, refreshToken },
-        ...authRedirect.status,
-        redirect: authRedirect.redirect,
+        ...authStatus.status,
       },
     };
   }
@@ -320,8 +318,8 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
       AUTH_CACHE_TTL.REFRESH_TOKEN
     );
 
-    // 2. Resolve Redirection Path
-    const authRedirect = getAuthRedirect(user);
+    // 2. Get Account Status
+    const authStatus = getAuthStatus(user);
 
     return {
       message: 'Email verified successfully',
@@ -333,8 +331,7 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
           fullName: user.fullName,
         },
         tokens: { accessToken, refreshToken },
-        ...(authRedirect ? authRedirect.status : {}),
-        redirect: authRedirect ? authRedirect.redirect : null,
+        ...(authStatus ? authStatus.status : {}),
       },
     };
   }
