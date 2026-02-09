@@ -58,6 +58,7 @@ const config = {
   // Environment
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '8082', 10),
+  timezone: process.env.TZ || 'Asia/Dhaka',
 
   // Database
   database: {
