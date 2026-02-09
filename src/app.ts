@@ -12,7 +12,6 @@ import { generalApiRateLimiter } from './middleware/rate-limit.middleware';
 import globalErrorHandler from './middleware/error.middleware';
 import notFound from './middleware/not-found.middleware';
 import version1Routes from './routes/v1';
-// Health check handlers
 
 // Create Express application
 const app = express();
