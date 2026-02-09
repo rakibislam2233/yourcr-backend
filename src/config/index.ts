@@ -143,9 +143,9 @@ const config = {
 
   // Redis
   redis: {
-    username: process.env.REDIS_USERNAME || '',
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    username: process.env.REDIS_USERNAME || undefined,
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB || '0', 10),
   },
@@ -201,11 +201,6 @@ if (config.env === 'production') {
       'JWT_REFRESH_SECRET must be at least 32 characters in production'
     );
   }
-
-  if (!config.redis.password) {
-    console.warn(colors.yellow('⚠️  WARNING: Redis password not set in production!'));
-  }
-
   if (!config.email.username || !config.email.password) {
     console.warn(colors.yellow('⚠️  WARNING: SMTP credentials not configured!'));
   }

@@ -3,10 +3,10 @@ import Redis from 'ioredis';
 import config from './index';
 
 export const redisClient = new Redis({
-  username: config.redis.username || undefined,
   host: config.redis.host,
   port: config.redis.port,
   password: config.redis.password || undefined,
+  username: config.redis.username || undefined,
   db: config.redis.db || 0,
 
   // Connection settings
@@ -19,7 +19,7 @@ export const redisClient = new Redis({
     return delay;
   },
 
-  maxRetriesPerRequest: 3, // ✅ শুধু একবার
+  maxRetriesPerRequest: 3,
   connectTimeout: 10000,
   lazyConnect: false,
 
@@ -66,10 +66,6 @@ export const closeRedis = async (): Promise<void> => {
     console.log(colors.green('✅ Redis closed gracefully'));
   } catch (error) {
     console.error(colors.red('❌ Error closing Redis:'), error);
-    redisClient.disconnect(); 
+    redisClient.disconnect(); // Force disconnect if quit fails
   }
 };
-
-// Process handlers for graceful shutdown
-process.on('SIGTERM', closeRedis);
-process.on('SIGINT', closeRedis);
