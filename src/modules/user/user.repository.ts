@@ -28,6 +28,7 @@ export const getUserById = async (id: string) => {
       fullName: true,
       email: true,
       phoneNumber: true,
+      password: true,
       isEmailVerified: true,
       institution: true,
       currentBatch: true,

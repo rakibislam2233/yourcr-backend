@@ -7,12 +7,14 @@ import { AuditAction } from '../../shared/enum/audit.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
+import { getAuthRedirect } from '../../utils/auth-redirect';
 import { hashPassword } from '../../utils/bcrypt.utils';
 import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
 import { OtpType } from '../otp/otp.interface';
 import { OtpService } from '../otp/otp.service';
 import { UserRepository } from '../user/user.repository';
+import { UserDeviceService } from '../userDevice/userDevice.service';
 import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
 import {
   IChangePasswordPayload,
@@ -123,67 +125,46 @@ const login = async (payload: ILoginPayload, req?: Request) => {
   // Audit log for successful login
   await createAuditLog(user.id, AuditAction.LOGIN, 'User', user.id, { email }, req);
 
-  // 6. Check Email Verification
-  if (!user.isEmailVerified) {
-    const otpSessionId = await OtpService.createOtpSession(user, OtpType.EMAIL_VERIFICATION);
-
-    return {
-      message: 'Email not verified. A new OTP has been sent to your email.',
-      data: {
-        isEmailVerified: false,
-        sessionId: otpSessionId,
-      },
-    };
-  }
-
-  // 7. Check CR Registration Status (Bypass if student is already enrolled in a batch)
-  if (user.role === UserRole.STUDENT && !user.currentBatchId) {
-    // If not submitted details yet
-    if (!user.isRegistrationComplete) {
+  // 5. Check for redirects (Verification/Registration/Approval)
+  const authRedirect = getAuthRedirect(user);
+  if (authRedirect) {
+    // If it's email verification, we return without tokens
+    if (authRedirect.redirect === '/verify-email') {
+      const sessionId = await OtpService.createOtpSession(user, OtpType.EMAIL_VERIFICATION);
       return {
-        message: 'Please complete your CR registration details.',
+        message: authRedirect.message,
         data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            fullName: user.fullName,
-          },
-          redirect: '/cr-registration/complete',
+          ...authRedirect.status,
+          redirect: authRedirect.redirect,
+          sessionId,
         },
       };
     }
 
-    // If submitted but not approved yet
-    if (user.isRegistrationComplete && (!user.isCr || !user.crApprovedAt)) {
-      return {
-        message: 'CR registration is pending approval. Please wait for admin approval.',
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            fullName: user.fullName,
-          },
-          redirect: '/cr-registration/pending',
-        },
-      };
-    }
+    // For other redirects (complete profile, pending), we provide tokens so they are technically logged in
+    const [accessToken, refreshToken] = await Promise.all([
+      jwtHelper.generateAccessToken(
+        user.id,
+        user.email,
+        user.role,
+        user.currentBatchId ?? undefined
+      ),
+      jwtHelper.generateRefreshToken(
+        user.id,
+        user.email,
+        user.role,
+        user.currentBatchId ?? undefined
+      ),
+    ]);
 
-    // Role migration: If approved but still has STUDENT role, update to CR
-    if (user.isCr && user.isRegistrationComplete && user.crApprovedAt) {
-      await database.user.update({
-        where: { id: user.id },
-        data: { role: UserRole.CR },
-      });
-      user.role = UserRole.CR;
-    }
-  }
+    await RedisUtils.setCache(
+      AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
+      refreshToken,
+      AUTH_CACHE_TTL.REFRESH_TOKEN
+    );
 
-  // Handle existing CR role but check for approval safety
-  if (user.role === UserRole.CR && !user.crApprovedAt) {
     return {
-      message: 'CR registration submitted. Awaiting admin approval.',
+      message: authRedirect.message,
       data: {
         user: {
           id: user.id,
@@ -191,16 +172,30 @@ const login = async (payload: ILoginPayload, req?: Request) => {
           role: user.role,
           fullName: user.fullName,
         },
-        redirect: '/cr-registration/pending',
+        tokens: { accessToken, refreshToken },
+        ...authRedirect.status,
+        redirect: authRedirect.redirect,
       },
     };
+  }
+
+  // 6. Role migration safety: If approved but still has STUDENT role, update to CR
+  if (
+    user.role === UserRole.STUDENT &&
+    user.isCr &&
+    user.isRegistrationComplete &&
+    user.crApprovedAt
+  ) {
+    await database.user.update({
+      where: { id: user.id },
+      data: { role: UserRole.CR },
+    });
+    user.role = UserRole.CR;
   }
 
   // 8. Register device for push notifications (if tokens provided)
   if (fcmToken || webPushToken) {
     try {
-      const { UserDeviceService } = await import('../userDevice/userDevice.service');
-
       // Extract device info from request
       const userAgent = req?.headers['user-agent'] || '';
       const deviceType = getDeviceType(userAgent, fcmToken, webPushToken);
@@ -301,7 +296,8 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
 
   if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
     const user = await UserRepository.setUserEmailVerified(otpResponse.email);
-    // 8. Generate tokens
+
+    // 1. Generate tokens immediately so user stays logged in
     const [accessToken, refreshToken] = await Promise.all([
       jwtHelper.generateAccessToken(
         user.id,
@@ -316,18 +312,29 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
         user.currentBatchId ?? undefined
       ),
     ]);
+
     // Store refresh token in Redis
     await RedisUtils.setCache(
       AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
       refreshToken,
       AUTH_CACHE_TTL.REFRESH_TOKEN
     );
+
+    // 2. Resolve Redirection Path
+    const authRedirect = getAuthRedirect(user);
+
     return {
       message: 'Email verified successfully',
       data: {
-        email: user.email,
-        isEmailVerified: user.isEmailVerified,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          fullName: user.fullName,
+        },
         tokens: { accessToken, refreshToken },
+        ...(authRedirect ? authRedirect.status : {}),
+        redirect: authRedirect ? authRedirect.redirect : null,
       },
     };
   }

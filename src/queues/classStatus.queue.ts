@@ -31,7 +31,7 @@ export const scheduleClassStatusUpdate = async (
         },
         {
           delay: startDelay,
-          jobId: `${classId}-ongoing`, // Unique ID to prevent duplicates
+          jobId: `${classId}-ongoing`,
         }
       );
       logger.info(colors.blue(`⏰ Scheduled class ${classId} to ONGOING at ${startTime}`));
@@ -49,7 +49,7 @@ export const scheduleClassStatusUpdate = async (
         },
         {
           delay: endDelay,
-          jobId: `${classId}-completed`, // Unique ID to prevent duplicates
+          jobId: `${classId}-completed`,
         }
       );
       logger.info(colors.blue(`⏰ Scheduled class ${classId} to COMPLETED at ${endTime}`));

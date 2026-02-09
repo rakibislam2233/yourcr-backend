@@ -40,8 +40,8 @@ export const scheduleAssessmentReminder = async (
 
   // 1. Reminder: 1 day before deadline at 9 AM
   const dayBeforeReminder = new Date(deadline);
-  dayBeforeReminder.setDate(dayBeforeReminder.getDate() - 1); // 1 day before
-  dayBeforeReminder.setHours(9, 0, 0, 0); // Set to 9 AM
+  dayBeforeReminder.setDate(dayBeforeReminder.getDate() - 1);
+  dayBeforeReminder.setHours(9, 0, 0, 0);
 
   const dayBeforeDelay = dayBeforeReminder.getTime() - now.getTime();
 
@@ -97,7 +97,7 @@ export const scheduleClassReminder = async (
       {
         type: 'CLASS_REMINDER',
         title: `⏰ Class Starting Soon: ${classTitle}`,
-        message: `Your class "${classTitle}" will start in 15 minutes at ${classDate.toLocaleTimeString()}. Get ready!`,
+        message: `Your class ${classTitle} will start in 15 minutes at ${classDate.toLocaleTimeString()}. Get ready!`,
         relatedId: classId,
         scheduledFor: reminderDate,
         crId,

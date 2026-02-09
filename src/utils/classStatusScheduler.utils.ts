@@ -3,7 +3,7 @@ import { database } from '../config/database.config';
 import { scheduleClassStatusUpdate } from '../queues/classStatus.queue';
 import logger from './logger';
 
-// Reschedule all class status updates
+
 export const rescheduleAllClassStatusUpdates = async () => {
   try {
     logger.info(colors.blue('🔄 Rescheduling class status updates...'));
