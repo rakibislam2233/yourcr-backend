@@ -20,8 +20,9 @@ import './workers/reminder.worker';
 // Track if shutdown is in progress
 let isShuttingDown = false;
 
-// Declare server variable globally
+// Declare server variables globally
 let server: http.Server | null = null;
+let io: SocketIOServer | null = null;
 
 // ==========================================
 // UNCAUGHT EXCEPTION HANDLER
@@ -35,9 +36,7 @@ process.on('uncaughtException', (error: Error) => {
   process.exit(1);
 });
 
-// ==========================================
-// START HTTP SERVER
-// ==========================================
+// Start server
 const startServer = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const port = config.port;
@@ -67,7 +66,12 @@ const startServer = async (): Promise<void> => {
     server.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
         logger.error(colors.red(`❌ Port ${port} is already in use`));
-        logger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
+        if (process.platform === 'win32') {
+          logger.error(colors.yellow(`💡 Try: netstat -ano | findstr :${port}`));
+          logger.error(colors.yellow(`💡 Then: taskkill /F /PID <PID>`));
+        } else {
+          logger.error(colors.yellow(`💡 Try: lsof -ti:${port} | xargs kill -9`));
+        }
       } else if (error.code === 'EACCES') {
         logger.error(colors.red(`❌ Port ${port} requires elevated privileges`));
         logger.error(colors.yellow(`💡 Try: sudo node server.js`));
@@ -77,29 +81,54 @@ const startServer = async (): Promise<void> => {
       reject(error);
     });
 
-    // Handle client connections
-    server.on('connection', socket => {
-      socket.setKeepAlive(true);
-
-      socket.on('error', err => {
-        logger.error(colors.red('❌ Socket error:'), err);
-      });
-    });
-
-    // Track active connections for graceful shutdown
     let connections = new Set<any>();
 
-    server.on('connection', conn => {
-      connections.add(conn);
-      conn.on('close', () => {
-        connections.delete(conn);
+    server.on('connection', socket => {
+      // Set keep-alive
+      socket.setKeepAlive(true);
+
+      // Track connection
+      connections.add(socket);
+
+      // Remove on close
+      socket.on('close', () => {
+        connections.delete(socket);
+      });
+
+      // ✅ Handle socket errors - ignore common client errors
+      socket.on('error', (err: any) => {
+        // Ignored error patterns
+        const ignoredPatterns = [
+          'ECONNRESET',
+          'EPIPE',
+          'Parse Error',
+          'Invalid method encountered',
+          'Invalid HTTP',
+          'HPE_INVALID_METHOD',
+        ];
+
+        // Check if error should be logged
+        const shouldIgnore = ignoredPatterns.some(
+          pattern =>
+            err.message?.includes(pattern) ||
+            err.code === pattern ||
+            err.toString().includes(pattern)
+        );
+
+        // Only log unexpected errors
+        if (!shouldIgnore) {
+          logger.error(colors.red('❌ Socket error:'), err);
+        }
+
+        // Destroy problematic socket
+        socket.destroy();
       });
     });
 
+    // Store connections reference for graceful shutdown
     (server as any).connections = connections;
   });
 };
-
 const gracefulShutdown = async (signal: string): Promise<void> => {
   if (isShuttingDown) {
     logger.warn(colors.yellow('⚠️  Shutdown already in progress...'));
@@ -130,10 +159,28 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
     // Step 1: Stop health monitoring
     stopHealthMonitoring();
 
-    // Step 2: Close HTTP Server
+    // Step 2: Close HTTP Server & Socket.IO
+    if (io) {
+      if (!isDevelopmentRestart) {
+        logger.info(colors.cyan('🔌 [2.1/5] Closing Socket.IO server...'));
+      }
+      io.close();
+      io = null;
+    }
+
     if (server) {
       if (!isDevelopmentRestart) {
-        logger.info(colors.cyan('🌐 [2/5] Closing HTTP server...'));
+        logger.info(colors.cyan('🌐 [2.2/5] Closing HTTP server...'));
+      }
+
+      // Force destroy all connections FIRST to unblock server.close()
+      const connections = (server as any).connections;
+      if (connections && connections.size > 0) {
+        if (!isDevelopmentRestart) {
+          logger.info(colors.yellow(`   🧹 Destroying ${connections.size} active connections...`));
+        }
+        connections.forEach((conn: any) => conn.destroy());
+        connections.clear();
       }
 
       await new Promise<void>(resolve => {
@@ -144,13 +191,6 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
           resolve();
         });
       });
-
-      // Force destroy all connections
-      const connections = (server as any).connections;
-      if (connections && connections.size > 0) {
-        connections.forEach((conn: any) => conn.destroy());
-        connections.clear();
-      }
 
       server = null;
     }
@@ -192,9 +232,7 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
   }
 };
 
-// ==========================================
-// HEALTH CHECK
-// ==========================================
+// Health check
 const logHealthStats = (): void => {
   const memoryUsage = process.memoryUsage();
   const uptime = process.uptime();
@@ -302,7 +340,7 @@ async function main() {
 
     // Attach Socket.IO
     if (server) {
-      const io = new SocketIOServer(server, socketConfig);
+      io = new SocketIOServer(server, socketConfig);
       setSocketInstance(io);
       setupSocket(io);
       logger.info(colors.green('✅ Socket.IO initialized'));
@@ -356,11 +394,7 @@ async function main() {
 // Start the application
 main();
 
-// ==========================================
-// PROCESS EVENT HANDLERS
-// ==========================================
-
-// Unhandled Promise Rejection
+// Process event handlers
 process.on('unhandledRejection', (reason: any) => {
   logger.error(colors.red('💥 UNHANDLED REJECTION:'), reason);
   gracefulShutdown('UNHANDLED_REJECTION');
