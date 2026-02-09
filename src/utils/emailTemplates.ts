@@ -32,7 +32,7 @@ const generateProfessionalEmailTemplate = (
 
     .container {
       max-width: 600px;
-      margin: 30px auto; 
+      margin: 30px 20px; 
       background-color: #FFFFFF;
       border-radius: 16px;
       overflow: hidden;

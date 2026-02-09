@@ -13,6 +13,7 @@ import { ICreateClassPayload, IUpdateClassPayload } from './class.interface';
 const createClass = async (payload: ICreateClassPayload) => {
   const baseDate = new Date(payload.classDate);
 
+
   if (isNaN(baseDate.getTime())) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid classDate format');
   }

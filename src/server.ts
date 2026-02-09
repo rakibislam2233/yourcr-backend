@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Dhaka';
 import colors from 'colors';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';

@@ -32,13 +32,26 @@ const createClassValidation = z.object({
     .refine(
       data => {
         if (!data.startTime || !data.endTime) return true;
-        const start = parseAmPmToDate(data.startTime, new Date());
-        const end = parseAmPmToDate(data.endTime, new Date());
+        const start = parseAmPmToDate(data.startTime, new Date(data.classDate));
+        const end = parseAmPmToDate(data.endTime, new Date(data.classDate));
         return end > start;
       },
       {
         message: 'End time must be after start time',
         path: ['endTime'],
+      }
+    )
+    .refine(
+      data => {
+        if (!data.classDate || !data.startTime) return true;
+        const classStart = parseAmPmToDate(data.startTime, new Date(data.classDate));
+        const now = new Date();
+        // Allow 5 mins buffer for server lag
+        return classStart.getTime() > now.getTime() - 5 * 60 * 1000;
+      },
+      {
+        message: 'Class start time cannot be in the past',
+        path: ['startTime'],
       }
     ),
 });
