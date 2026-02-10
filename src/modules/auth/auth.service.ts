@@ -444,9 +444,15 @@ const refreshToken = async (payload: IRefreshTokenPayload) => {
     user.role,
     user.currentBatchId ?? undefined
   );
+  const refreshToken = jwtHelper.generateRefreshToken(
+    user.id,
+    user.email,
+    user.role,
+    user.currentBatchId ?? undefined
+  );
   return {
     message: 'Token refreshed',
-    data: { accessToken },
+    data: { accessToken, refreshToken },
   };
 };
 

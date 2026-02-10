@@ -7,9 +7,10 @@ import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
 import { sendStudentCreatedEmail } from '../../utils/emailTemplates';
 import { uploadFile } from '../../utils/storage.utils';
-import { ICreateStudentPayload } from './user.interface';
+import { ICreateStudentPayload, IUpdateInstitutionAndBatchPayload } from './user.interface';
 import { UserRepository } from './user.repository';
 import { InstitutionRepository } from '../institution/institution.repository';
+import { BatchRepository } from '../batch/batch.repository';
 
 const getAllUsers = async (filters: any, options: any) => {
   return await UserRepository.getAllUsersForAdmin(filters, options);
@@ -135,12 +136,25 @@ const updateUserById = async (id: string, payload: any) => {
   return await UserRepository.updateUserById(id, allowedUpdates);
 };
 
-const updateInstitutionAndBatch = async (crId: string, payload: any) => {
-  const existingUser = await UserRepository.getUserById(crId);
-  if (!existingUser) {
+const updateInstitutionAndBatch = async (
+  crId: string,
+  payload: IUpdateInstitutionAndBatchPayload
+) => {
+  const user = await UserRepository.getUserById(crId);
+  if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
-  
+
+  // update institution
+  if (payload.institutionInfo) {
+    await InstitutionRepository.updateInstitution(user.institutionId!, payload.institutionInfo);
+  }
+  // update batch
+  if (payload.batchInformation) {
+    await BatchRepository.updateBatch(user.currentBatchId!, payload.batchInformation);
+  }
+
+  return user;
 };
 
 const deleteUserById = async (id: string) => {
@@ -160,6 +174,7 @@ export const UserService = {
   getAllUsers,
   getUserById,
   updateMyProfile,
+  updateInstitutionAndBatch,
   createStudent,
   getAllStudents,
   updateUserById,

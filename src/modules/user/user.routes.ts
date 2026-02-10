@@ -7,6 +7,14 @@ import { UserValidations } from './user.validation';
 
 const router = Router();
 
+//update institution and batch
+router.patch(
+  '/update-institution-and-batch',
+  auth(UserRole.CR),
+  validateRequest(UserValidations.updateInstitutionAndBatch),
+  UserController.updateInstitutionAndBatch
+);
+
 // Create student (CR only)
 router.post(
   '/create-student',

@@ -113,6 +113,23 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateInstitutionAndBatch = catchAsync(async (req: Request, res: Response) => {
+  const { crId } = req.user;
+
+  if (!crId) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+  }
+
+  const result = await UserService.updateInstitutionAndBatch(crId, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Institution and batch updated successfully',
+    data: result,
+  });
+});
+
 // Update user
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -164,6 +181,7 @@ export const UserController = {
   getUserProfile,
   updateMyProfile,
   createStudent,
+  updateInstitutionAndBatch,
   getAllStudents,
   updateUser,
   deleteUser,

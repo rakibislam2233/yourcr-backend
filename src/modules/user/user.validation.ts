@@ -1,4 +1,64 @@
 import { z } from 'zod';
+import { InstitutionType } from '../../shared/enum/institution.enum';
+
+const institutionInfoSchema = z.object({
+  name: z.string().min(1, 'Institution name is required').optional(),
+  shortName: z.string().min(1, 'Short name is required').optional(),
+  establishedYear: z.string().min(1, 'Established year is required').optional(),
+  type: z
+    .nativeEnum(InstitutionType, {
+      error: 'Invalid institution type',
+    })
+    .optional(),
+  contactEmail: z
+    .string()
+    .email('Invalid contact email format')
+    .transform(v => v.toLowerCase()),
+  contactPhone: z.string().optional(),
+  website: z.string().optional(),
+  address: z.string().min(1, 'Address is required').optional(),
+  logo: z.string().optional(),
+});
+
+const batchInformation = z.object({
+  batchType: z
+    .enum(['SEMESTER', 'YEAR'], { error: 'Batch type must be SEMESTER or YEAR' })
+    .optional(),
+  department: z.string().min(1, 'Department is required').optional(),
+  session: z.string().min(1, 'Session is required').optional(),
+  academicYear: z.string().min(1, 'Academic year is required').optional(),
+  semester: z.string().optional(),
+  shift: z.string().optional(),
+  group: z.string().optional(),
+});
+
+const jsonString = <T extends z.ZodTypeAny>(schema: T, fieldName: string) =>
+  z
+    .string()
+    .min(1)
+    .superRefine((val, ctx) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(val);
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${fieldName} must be valid JSON`,
+        });
+        return;
+      }
+
+      const result = schema.safeParse(parsed);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: issue.message,
+            path: issue.path,
+          });
+        }
+      }
+    });
 
 // ── Create Student (by CR) ───────────────────────────────────────────────────
 const createStudent = z.object({
@@ -38,7 +98,16 @@ const updateMyProfile = z.object({
   }),
 });
 
+// update institution and batch
+const updateInstitutionAndBatch = z.object({
+  body: z.object({
+    institutionInfo: jsonString(institutionInfoSchema, 'institutionInfo'),
+    batchInformation: jsonString(batchInformation, 'batchInformation'),
+  }),
+});
+
 export const UserValidations = {
   createStudent,
   updateMyProfile,
+  updateInstitutionAndBatch,
 };
