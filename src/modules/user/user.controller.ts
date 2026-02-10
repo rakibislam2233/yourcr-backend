@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
+import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
-import ApiError from '../../utils/ApiError';
+import { batchInformationSchema, institutionInfoSchema } from './user.validation';
 
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
@@ -114,13 +115,40 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateInstitutionAndBatch = catchAsync(async (req: Request, res: Response) => {
-  const { crId } = req.user;
-
-  if (!crId) {
+  const { userId } = req.user;
+  if (!userId) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
+  // Parse JSON strings from form-data
+  let institutionInfo;
+  let batchInformation;
 
-  const result = await UserService.updateInstitutionAndBatch(crId, req.body);
+  try {
+    const rawInstitutionInfo = JSON.parse(req.body.institutionInfo);
+    institutionInfo = institutionInfoSchema.parse(rawInstitutionInfo);
+  } catch (error: any) {
+    if (error instanceof SyntaxError) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'institutionInfo must be valid JSON');
+    }
+    throw new ApiError(httpStatus.BAD_REQUEST, error.message || 'Invalid institution info');
+  }
+
+  try {
+    const rawBatchInfo = JSON.parse(req.body.batchInformation);
+    batchInformation = batchInformationSchema.parse(rawBatchInfo);
+  } catch (error: any) {
+    if (error instanceof SyntaxError) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'batchInformation must be valid JSON');
+    }
+    throw new ApiError(httpStatus.BAD_REQUEST, error.message || 'Invalid batch info');
+  }
+
+  const parsedData = {
+    institutionInfo,
+    batchInformation,
+  };
+
+  const result = await UserService.updateInstitutionAndBatch(userId, parsedData, req.file, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { InstitutionType } from '../../shared/enum/institution.enum';
 
-const institutionInfoSchema = z.object({
-  name: z.string().min(1, 'Institution name is required').optional(),
-  shortName: z.string().min(1, 'Short name is required').optional(),
-  establishedYear: z.string().min(1, 'Established year is required').optional(),
+export const institutionInfoSchema = z.object({
+  name: z.string().optional(),
+  shortName: z.string().optional(),
+  establishedYear: z.coerce.number().optional(),
   type: z
     .nativeEnum(InstitutionType, {
       error: 'Invalid institution type',
@@ -16,11 +16,11 @@ const institutionInfoSchema = z.object({
     .transform(v => v.toLowerCase()),
   contactPhone: z.string().optional(),
   website: z.string().optional(),
-  address: z.string().min(1, 'Address is required').optional(),
+  address: z.string().optional(),
   logo: z.string().optional(),
 });
 
-const batchInformation = z.object({
+export const batchInformationSchema = z.object({
   batchType: z
     .enum(['SEMESTER', 'YEAR'], { error: 'Batch type must be SEMESTER or YEAR' })
     .optional(),
@@ -102,7 +102,7 @@ const updateMyProfile = z.object({
 const updateInstitutionAndBatch = z.object({
   body: z.object({
     institutionInfo: jsonString(institutionInfoSchema, 'institutionInfo'),
-    batchInformation: jsonString(batchInformation, 'batchInformation'),
+    batchInformation: jsonString(batchInformationSchema, 'batchInformation'),
   }),
 });
 

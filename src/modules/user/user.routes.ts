@@ -4,6 +4,7 @@ import validateRequest from '../../middleware/validation.middleware';
 import { UserRole } from '../../shared/enum/user.enum';
 import { UserController } from './user.controller';
 import { UserValidations } from './user.validation';
+import upload from '../../utils/fileUpload.utils';
 
 const router = Router();
 
@@ -11,6 +12,7 @@ const router = Router();
 router.patch(
   '/update-institution-and-batch',
   auth(UserRole.CR),
+  upload.single('logo'),
   validateRequest(UserValidations.updateInstitutionAndBatch),
   UserController.updateInstitutionAndBatch
 );

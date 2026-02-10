@@ -46,7 +46,7 @@ export interface IUpdateInstitutionAndBatchPayload {
   institutionInfo: {
     name?: string;
     shortName?: string;
-    establishedYear?: string;
+    establishedYear?: number;
     type?: InstitutionType;
     logo?: string;
     contactEmail?: string;
@@ -56,9 +56,12 @@ export interface IUpdateInstitutionAndBatchPayload {
   };
   // Batch Info
   batchInformation: {
-    name?: string;
     batchType?: BatchType;
     department?: string;
+    session?: string;
     academicYear?: string;
+    semester?: string;
+    shift?: string;
+    group?: string;
   };
 }

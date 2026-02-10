@@ -48,6 +48,8 @@ const getAllInstitutions = async () => {
   return institutions;
 };
 
+
+
 // Update institution
 const updateInstitution = async (id: string, data: IUpdateInstitutionPayload) => {
   const institution = await database.institution.update({

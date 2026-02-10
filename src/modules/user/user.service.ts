@@ -138,16 +138,33 @@ const updateUserById = async (id: string, payload: any) => {
 
 const updateInstitutionAndBatch = async (
   crId: string,
-  payload: IUpdateInstitutionAndBatchPayload
+  payload: IUpdateInstitutionAndBatchPayload,
+  file?: Express.Multer.File,
+  req?: Request
 ) => {
   const user = await UserRepository.getUserById(crId);
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
+  
+  await createAuditLog(crId, AuditAction.UPDATE_PROFILE, 'User', crId, { payload }, req);
 
+  let logoUrl: string | undefined;
+  // update logo
+  if (file) {
+    const uploadResult = await uploadFile(
+      file.buffer,
+      'yourcr/institution-logos',
+      `logo_${crId}_${Date.now()}`
+    );
+    logoUrl = uploadResult.secure_url;
+  }
   // update institution
   if (payload.institutionInfo) {
-    await InstitutionRepository.updateInstitution(user.institutionId!, payload.institutionInfo);
+    await InstitutionRepository.updateInstitution(user.institutionId!, {
+      ...payload.institutionInfo,
+      logo: logoUrl,
+    });
   }
   // update batch
   if (payload.batchInformation) {
