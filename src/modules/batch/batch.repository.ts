@@ -1,5 +1,10 @@
 import { database } from '../../config/database.config';
-import { PaginationOptions, PaginationResult } from '../../utils/pagination.utils';
+import {
+  createPaginationQuery,
+  createPaginationResult,
+  PaginationResult,
+  parsePaginationOptions,
+} from '../../utils/pagination.utils';
 import { IBatchFilters, ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 
 // Batch CRUD
@@ -30,10 +35,10 @@ const getBatchById = async (id: string) => {
 
 const getAllBatches = async (
   filters: IBatchFilters,
-  options: PaginationOptions
+  query: any
 ): Promise<PaginationResult<any>> => {
-  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;
-  const skip = (page - 1) * limit;
+  const pagination = parsePaginationOptions(query);
+  const { skip, take, orderBy } = createPaginationQuery(pagination);
 
   const where: any = { isDeleted: false };
 
@@ -90,25 +95,13 @@ const getAllBatches = async (
         },
       },
       skip,
-      take: limit,
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      take,
+      orderBy,
     }),
     database.batch.count({ where }),
   ]);
 
-  return {
-    data: batches,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page * limit < total,
-      hasPrev: page > 1,
-    },
-  };
+  return createPaginationResult(batches, total, pagination);
 };
 
 const updateBatch = async (id: string, payload: IUpdateBatchPayload) => {

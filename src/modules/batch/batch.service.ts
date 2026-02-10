@@ -14,8 +14,6 @@ const createBatch = async (payload: ICreateBatchPayload, req?: Request) => {
   const existingBatch = await BatchRepository.getAllBatches(payload, {
     page: 1,
     limit: 1,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
   });
 
   if (existingBatch.data.length > 0) {
@@ -48,8 +46,8 @@ const getBatchById = async (id: string) => {
   return batch;
 };
 
-const getAllBatches = async (filters: IBatchFilters, options: any) => {
-  return await BatchRepository.getAllBatches(filters, options);
+const getAllBatches = async (filters: IBatchFilters, query: any) => {
+  return await BatchRepository.getAllBatches(filters, query);
 };
 
 const updateBatch = async (id: string, payload: IUpdateBatchPayload, req?: Request) => {
@@ -75,18 +73,13 @@ const checkExistingBatch = async (filters: IBatchFilters) => {
   const result = await BatchRepository.getAllBatches(filters, {
     page: 1,
     limit: 1,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
   });
 
   return result.data.length > 0;
 };
 
 const getBatchesByInstitution = async (institutionId: string) => {
-  return await BatchRepository.getAllBatches(
-    { institutionId },
-    { page: 1, limit: 100, sortBy: 'createdAt', sortOrder: 'desc' }
-  );
+  return await BatchRepository.getAllBatches({ institutionId }, { page: 1, limit: 100 });
 };
 
 const getUserBatches = async (userId: string) => {
