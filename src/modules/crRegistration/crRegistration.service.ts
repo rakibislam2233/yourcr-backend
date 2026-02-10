@@ -11,7 +11,9 @@ import {
   sendCRRegistrationRejectedEmail,
   sendPendingCRRegistrationEmail,
 } from '../../utils/emailTemplates';
+import { RedisUtils } from '../../utils/redis.utils';
 import { uploadFile } from '../../utils/storage.utils';
+import { AUTH_CACHE_KEY } from '../auth/auth.cache';
 import { InstitutionRepository } from '../institution/institution.repository';
 import { UserRepository } from '../user/user.repository';
 import { upload_cr_registration_folder } from './crRegistration.constant';
@@ -19,11 +21,21 @@ import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
 import { CRRegistrationRepository } from './crRegistration.repository';
 
 const completeCRRegistration = async (
-  userId: string,
+  sessionId: string,
   payload: ICompleteCRRegistrationPayload,
   file: Express.Multer.File,
   req?: Request
 ) => {
+  // 1. Verify sessionId and get userId
+  const sessionKey = AUTH_CACHE_KEY.REGISTRATION_SESSION(sessionId);
+  const sessionData = await RedisUtils.getCache<{ userId: string }>(sessionKey);
+
+  if (!sessionData || !sessionData.userId) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid or expired registration session');
+  }
+
+  const userId = sessionData.userId;
+
   // Audit log
   await createAuditLog(
     userId,
@@ -34,7 +46,7 @@ const completeCRRegistration = async (
     req
   );
 
-  // 1. Check if user exists
+  // 2. Check if user exists
   const user = await UserRepository.getUserById(userId);
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
@@ -159,6 +171,9 @@ const completeCRRegistration = async (
 
   // 8. Send pending email (outside transaction)
   await sendPendingCRRegistrationEmail(user.email, user.fullName, institution.name);
+
+  // 9. Clear session
+  await RedisUtils.deleteCache(sessionKey);
 
   return {
     email: user.email,

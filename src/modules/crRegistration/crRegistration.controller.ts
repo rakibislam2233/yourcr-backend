@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
+import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { CRRegistrationService } from './crRegistration.service';
-import ApiError from '../../utils/ApiError';
 
 const completeCRRegistration = catchAsync(async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  if (!userId) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
+  const { sessionId } = req.body;
+  if (!sessionId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Session ID is required');
   }
 
   // Validate file exists
@@ -38,7 +38,7 @@ const completeCRRegistration = catchAsync(async (req: Request, res: Response) =>
 
   // Call service with parsed data and file
   const result = await CRRegistrationService.completeCRRegistration(
-    userId,
+    sessionId,
     parsedData,
     req.file,
     req

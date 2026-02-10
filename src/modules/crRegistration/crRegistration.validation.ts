@@ -57,6 +57,7 @@ const formDataRegistration = z.object({
   body: z.object({
     institutionInfo: jsonString(institutionInfoSchema, 'institutionInfo'),
     batchInformation: jsonString(batchInformation, 'batchInformation'),
+    sessionId: z.string().min(1, 'Session ID is required'),
   }),
 });
 

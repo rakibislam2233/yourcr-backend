@@ -32,6 +32,7 @@ export const getUserById = async (id: string) => {
       isEmailVerified: true,
       institution: true,
       currentBatch: true,
+      isRegistrationComplete: true,
       status: true,
       role: true,
       isCr: true,

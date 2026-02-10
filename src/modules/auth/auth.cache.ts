@@ -7,13 +7,15 @@ export const AUTH_CACHE_KEY = {
   RESET_PASSWORD_LIMIT: (userId: string) => `limit-reset-password:${userId}`,
   LOGIN_ATTEMPT: (email: string) => `login-attempt:${email}`,
   LOGIN_LOCK: (email: string) => `login-lock:${email}`,
+  REGISTRATION_SESSION: (sessionId: string) => `registration-session:${sessionId}`,
 };
 
 export const AUTH_CACHE_TTL = {
-  OTP_SESSION: 30 * 60, 
+  OTP_SESSION: 30 * 60,
   RESET_PASSWORD_TOKEN: 60 * 60, // 1 hour (3600 seconds)
   REFRESH_TOKEN: 7 * 24 * 60 * 60, // 7 days (604800 seconds)
   LOGIN_ATTEMPT: 2 * 60, // 2 minutes
   LOGIN_LOCK: 2 * 60, // 2 minutes
   OTP_RESEND_COOLDOWN: 1 * 60, // 1 minute
+  REGISTRATION_SESSION: 1 * 60 * 60, // 1 hour
 };

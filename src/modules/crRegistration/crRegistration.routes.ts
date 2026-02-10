@@ -10,7 +10,6 @@ const router = express.Router();
 
 router.post(
   '/',
-  auth(UserRole.STUDENT),
   upload.single('documentProof'),
   validateRequest(CRRegistrationValidations.formDataRegistration),
   CRRegistrationController.completeCRRegistration

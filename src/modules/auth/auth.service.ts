@@ -13,6 +13,7 @@ import * as jwtHelper from '../../utils/jwt.utils';
 import { RedisUtils } from '../../utils/redis.utils';
 import { OtpType } from '../otp/otp.interface';
 import { OtpService } from '../otp/otp.service';
+import { generateSessionId } from '../otp/otp.utils';
 import { UserRepository } from '../user/user.repository';
 import { UserDeviceService } from '../userDevice/userDevice.service';
 import { AUTH_CACHE_KEY, AUTH_CACHE_TTL } from './auth.cache';
@@ -140,38 +141,37 @@ const login = async (payload: ILoginPayload, req?: Request) => {
       };
     }
 
-    // Case 2: Email is verified but profile is incomplete or pending (With Tokens)
-    const [accessToken, refreshToken] = await Promise.all([
-      jwtHelper.generateAccessToken(
-        user.id,
-        user.email,
-        user.role,
-        user.currentBatchId ?? undefined
-      ),
-      jwtHelper.generateRefreshToken(
-        user.id,
-        user.email,
-        user.role,
-        user.currentBatchId ?? undefined
-      ),
-    ]);
+    // Case 2: Email is verified but profile is incomplete (SessionId instead of Tokens)
+    if (authStatus.status.isRegistrationComplete === false) {
+      const sessionId = await generateSessionId(36);
+      await RedisUtils.setCache(
+        AUTH_CACHE_KEY.REGISTRATION_SESSION(sessionId),
+        { userId: user.id },
+        AUTH_CACHE_TTL.REGISTRATION_SESSION
+      );
+      return {
+        message: authStatus.message,
+        data: {
+          ...authStatus.status,
+          sessionId,
+        },
+      };
+    }
 
-    await RedisUtils.setCache(
-      AUTH_CACHE_KEY.REFRESH_TOKEN(user.id),
-      refreshToken,
-      AUTH_CACHE_TTL.REFRESH_TOKEN
-    );
+    // Case 3: Profile is complete but pending approval (No Tokens)
+    if (authStatus.status.isCrApproved === false) {
+      return {
+        message: authStatus.message,
+        data: {
+          ...authStatus.status,
+        },
+      };
+    }
 
+    // Fallback if authStatus exists but none of the above (shouldn't happen with current getAuthStatus)
     return {
       message: authStatus.message,
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          fullName: user.fullName,
-        },
-        tokens: { accessToken, refreshToken },
         ...authStatus.status,
       },
     };
@@ -295,7 +295,37 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
   if (otpResponse.type === OtpType.EMAIL_VERIFICATION) {
     const user = await UserRepository.setUserEmailVerified(otpResponse.email);
 
-    // 1. Generate tokens immediately so user stays logged in
+    // 2. Get Account Status
+    const authStatus = getAuthStatus(user);
+
+    if (authStatus) {
+      // If registration is incomplete, return sessionId
+      if (authStatus.status.isRegistrationComplete === false) {
+        const sessionId = await generateSessionId(36);
+        await RedisUtils.setCache(
+          AUTH_CACHE_KEY.REGISTRATION_SESSION(sessionId),
+          { userId: user.id },
+          AUTH_CACHE_TTL.REGISTRATION_SESSION
+        );
+        return {
+          message: authStatus.message,
+          data: {
+            ...authStatus.status,
+            sessionId,
+          },
+        };
+      }
+
+      // If pending approval, return status without tokens
+      return {
+        message: authStatus.message,
+        data: {
+          ...authStatus.status,
+        },
+      };
+    }
+
+    // 3. Complete login if no authStatus
     const [accessToken, refreshToken] = await Promise.all([
       jwtHelper.generateAccessToken(
         user.id,
@@ -318,9 +348,6 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
       AUTH_CACHE_TTL.REFRESH_TOKEN
     );
 
-    // 2. Get Account Status
-    const authStatus = getAuthStatus(user);
-
     return {
       message: 'Email verified successfully',
       data: {
@@ -331,7 +358,6 @@ const verifyOtp = async (payload: IVerifyOtpPayload) => {
           fullName: user.fullName,
         },
         tokens: { accessToken, refreshToken },
-        ...(authStatus ? authStatus.status : {}),
       },
     };
   }
