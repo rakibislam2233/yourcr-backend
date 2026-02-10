@@ -5,6 +5,7 @@ import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { BatchEnrollmentService } from '../batchEnrollment/batchEnrollment.service';
+import { IBatchFilters } from './batch.interface';
 import { BatchService } from './batch.service';
 
 // ── Batch Controllers ───────────────────────────────────────────────────
@@ -54,7 +55,7 @@ const getAllBatches = catchAsync(async (req: Request, res: Response) => {
     sortOrder: (req.query.sortOrder as string) || 'desc',
   };
 
-  const result = await BatchService.getAllBatches(filters, options);
+  const result = await BatchService.getAllBatches(filters as IBatchFilters, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -118,7 +119,7 @@ const checkExistingBatch = catchAsync(async (req: Request, res: Response) => {
     group: req.query.group,
   };
 
-  const result = await BatchService.checkExistingBatch(filters);
+  const result = await BatchService.checkExistingBatch(filters as IBatchFilters);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

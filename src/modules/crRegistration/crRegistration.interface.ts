@@ -1,4 +1,5 @@
 import { InstitutionType } from '../../shared/enum/institution.enum';
+import { IBatchInfo } from '../batch/batch.interface';
 
 export interface ICompleteCRRegistrationPayload {
   institutionInfo: {
@@ -9,15 +10,7 @@ export interface ICompleteCRRegistrationPayload {
     address: string;
   };
   // Batch Info
-  batchInformation: {
-    batchType: 'SEMESTER' | 'YEAR';
-    department: string;
-    session: string;
-    academicYear: string;
-    semester?: string;
-    shift?: string;
-    group?: string;
-  };
+  batchInformation: IBatchInfo;
   documentProof?: string;
 }
 
@@ -26,13 +19,5 @@ export interface ICRRegistrationWithBatchPayload {
   userId: string;
   institutionId: string;
   documentProof: string;
-  batchInfo: {
-    batchType: 'SEMESTER' | 'YEAR';
-    department: string;
-    session: string;
-    academicYear: string;
-    semester?: string;
-    shift?: string;
-    group?: string;
-  };
+  batchInfo: IBatchInfo;
 }

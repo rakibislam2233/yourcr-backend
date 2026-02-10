@@ -81,13 +81,7 @@ const completeCRRegistration = async (
   // 5. Check if batch already exists using session with institutionId
   const existingBatch = await CRRegistrationRepository.checkExistingBatchWithCRs({
     institutionId: institution.id,
-    department: payload.batchInformation.department,
-    session: payload.batchInformation.session,
-    batchType: payload.batchInformation.batchType,
-    academicYear: payload.batchInformation.academicYear,
-    semester: payload.batchInformation.semester,
-    shift: payload.batchInformation.shift,
-    group: payload.batchInformation.group,
+    ...payload.batchInformation,
   });
 
   // Only prevent CR registration if batch exists with ACTIVE CRs
@@ -149,13 +143,7 @@ const completeCRRegistration = async (
       batch = await tx.batch.create({
         data: {
           institutionId: institution.id,
-          department: payload.batchInformation.department,
-          session: payload.batchInformation.session,
-          batchType: payload.batchInformation.batchType,
-          academicYear: payload.batchInformation.academicYear,
-          semester: payload.batchInformation.semester,
-          shift: payload.batchInformation.shift,
-          group: payload.batchInformation.group,
+          ...payload.batchInformation,
           createdBy: userId,
         },
       });
@@ -179,13 +167,7 @@ const completeCRRegistration = async (
     batch: result.batch
       ? {
           id: result.batch.id,
-          department: result.batch.department,
-          session: result.batch.session,
-          batchType: result.batch.batchType,
-          academicYear: result.batch.academicYear,
-          semester: result.batch.semester,
-          shift: result.batch.shift,
-          group: result.batch.group,
+          ...result.batch,
         }
       : null,
     message: 'CR registration submitted successfully. Please wait for admin approval.',

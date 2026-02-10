@@ -1,6 +1,6 @@
 import { database } from '../../config/database.config';
 import { PaginationOptions, PaginationResult } from '../../utils/pagination.utils';
-import { ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
+import { IBatchFilters, ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 
 // Batch CRUD
 const createBatch = async (payload: ICreateBatchPayload) => {
@@ -29,7 +29,7 @@ const getBatchById = async (id: string) => {
 };
 
 const getAllBatches = async (
-  filters: any,
+  filters: IBatchFilters,
   options: PaginationOptions
 ): Promise<PaginationResult<any>> => {
   const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;

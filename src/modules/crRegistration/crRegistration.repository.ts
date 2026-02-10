@@ -1,5 +1,6 @@
 import { database } from '../../config/database.config';
 import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
+import { IBatchInfo } from '../batch/batch.interface';
 
 // Create CR registration
 const createCRRegistration = async (data: {
@@ -66,16 +67,7 @@ const getAllCRRegistrations = async () => {
 };
 
 // Check existing batch with CRs
-const checkExistingBatchWithCRs = async (batchInfo: {
-  institutionId: string;
-  department: string;
-  session: string;
-  batchType: 'SEMESTER' | 'YEAR';
-  academicYear: string;
-  semester?: string;
-  shift?: string;
-  group?: string;
-}) => {
+const checkExistingBatchWithCRs = async (batchInfo: IBatchInfo & { institutionId: string }) => {
   return await database.batch.findFirst({
     where: {
       institutionId: batchInfo.institutionId,
