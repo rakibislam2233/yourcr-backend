@@ -20,7 +20,8 @@ const getUserById = async (id: string) => {
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
-  return user;
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 };
 
 const updateMyProfile = async (
@@ -132,6 +133,14 @@ const updateUserById = async (id: string, payload: any) => {
   const { email, password, ...allowedUpdates } = payload;
 
   return await UserRepository.updateUserById(id, allowedUpdates);
+};
+
+const updateInstitutionAndBatch = async (crId: string, payload: any) => {
+  const existingUser = await UserRepository.getUserById(crId);
+  if (!existingUser) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  
 };
 
 const deleteUserById = async (id: string) => {

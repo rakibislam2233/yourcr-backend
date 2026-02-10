@@ -1,9 +1,9 @@
+import { database } from '../../config/database.config';
 import {
+  IBatchMemberResponse,
   ICreateBatchEnrollmentPayload,
   IUpdateBatchEnrollmentPayload,
-  IBatchMemberResponse,
 } from './batchEnrollment.interface';
-import { database } from '../../config/database.config';
 import { BatchEnrollmentRepository } from './batchEnrollment.repository';
 
 // Create batch enrollment
@@ -14,6 +14,7 @@ const createBatchEnrollment = async (data: ICreateBatchEnrollmentPayload) => {
       userId: data.userId,
       role: data.role || 'STUDENT',
       studentId: data.studentId,
+      enrolledBy: data.enrolledBy,
     },
     include: {
       user: {

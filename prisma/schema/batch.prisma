@@ -2,10 +2,13 @@ model Batch {
   id            String      @id @default(uuid())
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id])
-  name          String
   batchType     BatchType
   department    String
+  session       String
   academicYear  String
+  semester      String?
+  shift         String?
+  group         String?
   isActive      Boolean     @default(true)
   isArchived    Boolean     @default(false)
   createdBy     String

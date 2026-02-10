@@ -68,18 +68,24 @@ const getAllCRRegistrations = async () => {
 // Check existing batch with CRs
 const checkExistingBatchWithCRs = async (batchInfo: {
   institutionId: string;
-  name: string;
   department: string;
+  session: string;
   batchType: 'SEMESTER' | 'YEAR';
   academicYear: string;
+  semester?: string;
+  shift?: string;
+  group?: string;
 }) => {
   return await database.batch.findFirst({
     where: {
       institutionId: batchInfo.institutionId,
-      name: batchInfo.name,
       department: batchInfo.department,
+      session: batchInfo.session,
       batchType: batchInfo.batchType as any,
       academicYear: batchInfo.academicYear,
+      semester: batchInfo.semester,
+      shift: batchInfo.shift,
+      group: batchInfo.group,
     },
     include: {
       enrollments: {

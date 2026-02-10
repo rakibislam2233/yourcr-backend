@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
+import { UserRole } from '../../shared/enum/user.enum';
+import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { BatchService } from './batch.service';
 import { BatchEnrollmentService } from '../batchEnrollment/batchEnrollment.service';
-import ApiError from '../../utils/ApiError';
-import { UserRole } from '../../shared/enum/user.enum';
+import { BatchService } from './batch.service';
 
 // ── Batch Controllers ───────────────────────────────────────────────────
 const createBatch = catchAsync(async (req: Request, res: Response) => {
@@ -23,7 +23,7 @@ const getBatchById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const batchId = Array.isArray(id) ? id[0] : id;
 
-  const result = await BatchService.getBatchById(batchId);
+  const result = await BatchService.getBatchById(batchId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -37,7 +37,11 @@ const getAllBatches = catchAsync(async (req: Request, res: Response) => {
   const filters = {
     institutionId: req.query.institutionId,
     department: req.query.department,
+    session: req.query.session,
     batchType: req.query.batchType,
+    semester: req.query.semester,
+    shift: req.query.shift,
+    group: req.query.group,
     isActive: req.query.isActive,
     isArchived: req.query.isArchived,
     search: req.query.search,
@@ -56,14 +60,14 @@ const getAllBatches = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Batches fetched successfully',
-    meta: result.meta,
+    meta: result.pagination,
     data: result.data,
   });
 });
 
 const updateBatch = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const { role } = req.user;
   const batchId = Array.isArray(id) ? id[0] : id;
 
   // Only ADMIN, or SUPER_ADMIN can update batches
@@ -71,7 +75,7 @@ const updateBatch = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can update batches');
   }
 
-  const result = await BatchService.updateBatch(batchId, req.body, req);
+  const result = await BatchService.updateBatch(batchId as string, req.body, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -83,7 +87,7 @@ const updateBatch = catchAsync(async (req: Request, res: Response) => {
 
 const deleteBatch = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const { role } = req.user;
   const batchId = Array.isArray(id) ? id[0] : id;
 
   // Only ADMIN, or SUPER_ADMIN can delete batches
@@ -91,7 +95,7 @@ const deleteBatch = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can delete batches');
   }
 
-  const result = await BatchService.deleteBatch(batchId, req);
+  const result = await BatchService.deleteBatch(batchId as string, req);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -105,9 +109,13 @@ const deleteBatch = catchAsync(async (req: Request, res: Response) => {
 const checkExistingBatch = catchAsync(async (req: Request, res: Response) => {
   const filters = {
     institutionId: req.query.institutionId,
-    name: req.query.name,
     department: req.query.department,
+    session: req.query.session,
+    batchType: req.query.batchType,
     academicYear: req.query.academicYear,
+    semester: req.query.semester,
+    shift: req.query.shift,
+    group: req.query.group,
   };
 
   const result = await BatchService.checkExistingBatch(filters);
@@ -126,13 +134,18 @@ const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 
   // Only CR, ADMIN, or SUPER_ADMIN can enroll users in a batch
   if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can enroll users in a batch');
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Only CR, Admin or Super Admin can enroll users in a batch'
+    );
   }
 
   const result = await BatchEnrollmentService.createBatchEnrollment({
-    batchId,
+    batchId: batchId as string,
     userId: req.body.userId,
-    enrolledBy: userId
+    enrolledBy: userId as string,
+    role: req.body.role,
+    studentId: req.body.studentId,
   });
 
   sendResponse(res, {
@@ -145,8 +158,19 @@ const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 
 const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) => {
   const { batchId } = req.params;
+  const filters = req.query;
+  const options = {
+    page: parseInt(req.query.page as string) || 1,
+    limit: parseInt(req.query.limit as string) || 10,
+    sortBy: (req.query.sortBy as string) || 'createdAt',
+    sortOrder: (req.query.sortOrder as string) || 'desc',
+  };
 
-  const result = await BatchEnrollmentService.getAllBatchEnrollments({ batchId });
+  const result = await BatchEnrollmentService.getAllBatchEnrollments(
+    batchId as string,
+    filters,
+    options
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -159,7 +183,7 @@ const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) =>
 const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
   const { batchId } = req.params;
 
-  const result = await BatchEnrollmentService.getBatchMembers({ batchId });
+  const result = await BatchEnrollmentService.getBatchMembers({ batchId: batchId as string });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -173,7 +197,7 @@ const getBatchEnrollmentById = catchAsync(async (req: Request, res: Response) =>
   const { id } = req.params;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
-  const result = await BatchEnrollmentService.getBatchEnrollmentById(enrollmentId);
+  const result = await BatchEnrollmentService.getBatchEnrollmentById(enrollmentId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -185,15 +209,21 @@ const getBatchEnrollmentById = catchAsync(async (req: Request, res: Response) =>
 
 const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const { role } = req.user;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
   // Only CR, ADMIN, or SUPER_ADMIN can update batch enrollment
   if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can update batch enrollment');
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Only CR, Admin or Super Admin can update batch enrollment'
+    );
   }
 
-  const result = await BatchEnrollmentService.updateBatchEnrollment(enrollmentId, req.body);
+  const result = await BatchEnrollmentService.updateBatchEnrollment(
+    enrollmentId as string,
+    req.body
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -205,15 +235,18 @@ const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 
 const deleteBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const { role } = req.user;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
   // Only CR, ADMIN, or SUPER_ADMIN can delete batch enrollment
   if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Only CR, Admin or Super Admin can delete batch enrollment');
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Only CR, Admin or Super Admin can delete batch enrollment'
+    );
   }
 
-  const result = await BatchEnrollmentService.deleteBatchEnrollment(enrollmentId);
+  const result = await BatchEnrollmentService.deleteBatchEnrollment(enrollmentId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -227,7 +260,7 @@ const deleteBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 const getBatchesByInstitution = catchAsync(async (req: Request, res: Response) => {
   const { institutionId } = req.params;
 
-  const result = await BatchService.getBatchesByInstitution(institutionId);
+  const result = await BatchService.getBatchesByInstitution(institutionId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -240,7 +273,7 @@ const getBatchesByInstitution = catchAsync(async (req: Request, res: Response) =
 const getUserBatches = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  const result = await BatchService.getUserBatches(userId);
+  const result = await BatchService.getUserBatches(userId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -253,7 +286,7 @@ const getUserBatches = catchAsync(async (req: Request, res: Response) => {
 const getBatchCRs = catchAsync(async (req: Request, res: Response) => {
   const { batchId } = req.params;
 
-  const result = await BatchService.getBatchCRs(batchId);
+  const result = await BatchService.getBatchCRs(batchId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

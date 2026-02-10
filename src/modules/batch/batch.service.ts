@@ -1,12 +1,12 @@
+import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { database } from '../../config/database.config';
+import { AuditAction } from '../../shared/enum/audit.enum';
 import ApiError from '../../utils/ApiError';
+import { createAuditLog } from '../../utils/audit.helper';
+import { UserRepository } from '../user/user.repository';
 import { ICreateBatchPayload, IUpdateBatchPayload } from './batch.interface';
 import { BatchRepository } from './batch.repository';
-import { UserRepository } from '../user/user.repository';
-import { createAuditLog } from '../../utils/audit.helper';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { Request } from 'express';
-import { database } from '../../config/database.config';
 
 // ── Batch Service ───────────────────────────────────────────────────
 const createBatch = async (payload: ICreateBatchPayload, req?: Request) => {
@@ -14,10 +14,13 @@ const createBatch = async (payload: ICreateBatchPayload, req?: Request) => {
   const existingBatch = await BatchRepository.getAllBatches(
     {
       institutionId: payload.institutionId,
-      name: payload.name,
       department: payload.department,
+      session: payload.session,
       batchType: payload.batchType,
       academicYear: payload.academicYear,
+      semester: payload.semester,
+      shift: payload.shift,
+      group: payload.group,
     },
     { page: 1, limit: 1, sortBy: 'createdAt', sortOrder: 'desc' }
   );
@@ -79,9 +82,13 @@ const checkExistingBatch = async (filters: any) => {
   const result = await BatchRepository.getAllBatches(
     {
       institutionId: filters.institutionId,
-      name: filters.name,
       department: filters.department,
+      session: filters.session,
+      batchType: filters.batchType, // Added batchType if not present
       academicYear: filters.academicYear,
+      semester: filters.semester,
+      shift: filters.shift,
+      group: filters.group,
     },
     { page: 1, limit: 1, sortBy: 'createdAt', sortOrder: 'desc' }
   );

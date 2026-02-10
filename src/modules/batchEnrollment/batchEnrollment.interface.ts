@@ -3,6 +3,7 @@ export interface ICreateBatchEnrollmentPayload {
   userId: string;
   role?: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
   studentId?: string; // Institution-provided student ID/roll number
+  enrolledBy?: string;
 }
 
 export interface IUpdateBatchEnrollmentPayload {
@@ -22,10 +23,13 @@ export interface IBatchEnrollmentResponse {
   };
   batch: {
     id: string;
-    name: string;
     batchType: 'SEMESTER' | 'YEAR';
     department: string;
+    session: string;
     academicYear: string;
+    semester?: string;
+    shift?: string;
+    group?: string;
   };
   role: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
   studentId?: string;

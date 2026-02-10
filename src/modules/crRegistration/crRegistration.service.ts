@@ -81,15 +81,23 @@ const completeCRRegistration = async (
   // 5. Check if batch already exists using session with institutionId
   const existingBatch = await CRRegistrationRepository.checkExistingBatchWithCRs({
     institutionId: institution.id,
-    name: payload.batchInformation.name,
     department: payload.batchInformation.department,
+    session: payload.batchInformation.session,
     batchType: payload.batchInformation.batchType,
     academicYear: payload.batchInformation.academicYear,
+    semester: payload.batchInformation.semester,
+    shift: payload.batchInformation.shift,
+    group: payload.batchInformation.group,
   });
 
   // Only prevent CR registration if batch exists with ACTIVE CRs
-  if (existingBatch && existingBatch.enrollments && existingBatch.enrollments.length > 0) {
-    const activeCRs = existingBatch.enrollments.filter(
+  const batchWithEnrollments = existingBatch as any;
+  if (
+    batchWithEnrollments &&
+    batchWithEnrollments.enrollments &&
+    batchWithEnrollments.enrollments.length > 0
+  ) {
+    const activeCRs = batchWithEnrollments.enrollments.filter(
       (enrollment: any) => enrollment.isActive && enrollment.role === 'CR'
     );
 
@@ -141,10 +149,13 @@ const completeCRRegistration = async (
       batch = await tx.batch.create({
         data: {
           institutionId: institution.id,
-          name: payload.batchInformation.name,
-          batchType: payload.batchInformation.batchType,
           department: payload.batchInformation.department,
+          session: payload.batchInformation.session,
+          batchType: payload.batchInformation.batchType,
           academicYear: payload.batchInformation.academicYear,
+          semester: payload.batchInformation.semester,
+          shift: payload.batchInformation.shift,
+          group: payload.batchInformation.group,
           createdBy: userId,
         },
       });
@@ -168,10 +179,13 @@ const completeCRRegistration = async (
     batch: result.batch
       ? {
           id: result.batch.id,
-          name: result.batch.name,
           department: result.batch.department,
+          session: result.batch.session,
           batchType: result.batch.batchType,
           academicYear: result.batch.academicYear,
+          semester: result.batch.semester,
+          shift: result.batch.shift,
+          group: result.batch.group,
         }
       : null,
     message: 'CR registration submitted successfully. Please wait for admin approval.',
@@ -230,9 +244,9 @@ const approveCRRegistration = async (registrationId: string, req?: Request) => {
       batch = await tx.batch.create({
         data: {
           institutionId: registration.institutionId,
-          name: `${registration.user.fullName}'s Batch`,
-          batchType: 'SEMESTER',
           department: 'General',
+          session: new Date().getFullYear().toString(),
+          batchType: 'SEMESTER',
           academicYear: new Date().getFullYear().toString(),
           createdBy: registration.userId,
         },

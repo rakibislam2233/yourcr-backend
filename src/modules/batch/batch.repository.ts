@@ -45,8 +45,20 @@ const getAllBatches = async (
     where.department = filters.department;
   }
 
-  if (filters.batchType) {
-    where.batchType = filters.batchType;
+  if (filters.session) {
+    where.session = filters.session;
+  }
+
+  if (filters.semester) {
+    where.semester = filters.semester;
+  }
+
+  if (filters.shift) {
+    where.shift = filters.shift;
+  }
+
+  if (filters.group) {
+    where.group = filters.group;
   }
 
   if (filters.isActive !== undefined) {
@@ -59,8 +71,9 @@ const getAllBatches = async (
 
   if (filters.search) {
     where.OR = [
-      { name: { contains: filters.search, mode: 'insensitive' } },
       { department: { contains: filters.search, mode: 'insensitive' } },
+      { session: { contains: filters.search, mode: 'insensitive' } },
+      { semester: { contains: filters.search, mode: 'insensitive' } },
     ];
   }
 

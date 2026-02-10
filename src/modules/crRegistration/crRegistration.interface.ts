@@ -10,10 +10,13 @@ export interface ICompleteCRRegistrationPayload {
   };
   // Batch Info
   batchInformation: {
-    name: string;
     batchType: 'SEMESTER' | 'YEAR';
     department: string;
+    session: string;
     academicYear: string;
+    semester?: string;
+    shift?: string;
+    group?: string;
   };
   documentProof?: string;
 }
@@ -24,9 +27,12 @@ export interface ICRRegistrationWithBatchPayload {
   institutionId: string;
   documentProof: string;
   batchInfo: {
-    name: string;
     batchType: 'SEMESTER' | 'YEAR';
     department: string;
+    session: string;
     academicYear: string;
+    semester?: string;
+    shift?: string;
+    group?: string;
   };
 }

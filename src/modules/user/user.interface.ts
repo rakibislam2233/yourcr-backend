@@ -1,3 +1,5 @@
+import { BatchType } from '../../../prisma/generated/enums';
+import { InstitutionType } from '../../shared/enum/institution.enum';
 import { UserRole } from '../../shared/enum/user.enum';
 
 export interface ICreateAccountPayload {
@@ -20,36 +22,6 @@ export interface ICreateStudentPayload {
   crId: string;
 }
 
-// NEW: User batch information
-export interface IUserBatchInfo {
-  batchId: string;
-  batchName: string;
-  role: 'STUDENT' | 'CR' | 'ASSISTANT_CR';
-  studentId?: string;
-  enrolledAt: Date;
-  isActive: boolean;
-}
-
-// Interface for user profile
-export interface IUserProfileResponse {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  role: string;
-  status: string;
-  isCr: boolean;
-  academicInfo?: {
-    institutionId: string;
-    department: string;
-    program: string;
-    year: string;
-    studentId?: string;
-    semester?: string;
-    batch?: string;
-  };
-}
-
 // User filter options
 export interface UserFilterOptions {
   fullName?: string;
@@ -67,4 +39,26 @@ export interface UserQueryOptions extends UserFilterOptions {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+//update institution and batch
+export interface IUpdateInstitutionAndBatchPayload {
+  institutionInfo: {
+    name?: string;
+    shortName?: string;
+    establishedYear?: string;
+    type?: InstitutionType;
+    logo?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    website?: string;
+    address?: string;
+  };
+  // Batch Info
+  batchInformation: {
+    name?: string;
+    batchType?: BatchType;
+    department?: string;
+    academicYear?: string;
+  };
 }
