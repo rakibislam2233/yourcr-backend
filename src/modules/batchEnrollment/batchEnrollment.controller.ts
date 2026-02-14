@@ -80,6 +80,10 @@ const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
   // Validate batch access
   const batch = await BatchEnrollmentService.getBatchById(batchId as string);
 
+  if (!batch) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'You are not authorized to access this batch');
+  }
+
   // Check if user is enrolled in this batch or is admin
   const userBatches = await BatchEnrollmentService.getUserEnrollments(userId);
   const isEnrolled = userBatches.some((b: any) => b.batchId === batchId);
@@ -106,7 +110,7 @@ const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
 
 const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const {  role } = req.user;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
   // Only CR, ADMIN, or SUPER_ADMIN can update enrollments
