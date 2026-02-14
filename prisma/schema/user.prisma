@@ -6,6 +6,7 @@ model User {
   phoneNumber     String
   profileImage    String?
   bio             String?
+  studentId       String?
   dateOfBirth     DateTime?
   lastLogin       DateTime   @default(now())
   role            UserRole   @default(STUDENT)

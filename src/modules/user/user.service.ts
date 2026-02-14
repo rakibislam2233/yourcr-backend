@@ -84,6 +84,7 @@ const createStudent = async (crId: string, studentData: ICreateStudentPayload) =
     email: studentData.email,
     phoneNumber: studentData.phoneNumber,
     password: hashedPassword,
+    studentId: studentData.studentId,
     institutionId: cr.institutionId! || studentData.institutionId,
     crId: crId,
     currentBatchId: cr.currentBatchId! || studentData.batchId,
