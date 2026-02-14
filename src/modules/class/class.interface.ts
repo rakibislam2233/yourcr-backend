@@ -1,6 +1,4 @@
-export type ClassType = 'ONLINE' | 'OFFLINE';
-export type ClassStatus = 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
-
+import { ClassStatus, ClassType, Platform } from '../../../prisma/generated/enums';
 export interface ICreateClassPayload {
   subjectId?: string;
   teacherId?: string;
@@ -11,6 +9,7 @@ export interface ICreateClassPayload {
   status?: ClassStatus;
   roomNumber?: string;
   joinLink?: string;
+  platform?: Platform;
   createdById: string;
   batchId: string;
 }
@@ -25,6 +24,7 @@ export interface IUpdateClassPayload {
   status?: ClassStatus;
   roomNumber?: string;
   joinLink?: string;
+  platform?: Platform;
   createdById?: string;
   batchId?: string;
 }

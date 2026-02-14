@@ -5,12 +5,8 @@ import logger from '../../utils/logger';
 import { ICreateUserDevicePayload, UserDeviceRepository } from './userDevice.repository';
 
 export const UserDeviceService = {
-  /**
-   * Register a new device or update existing one
-   */
   registerDevice: async (payload: ICreateUserDevicePayload) => {
     try {
-      // Check if device already exists
       const existingDevice = await UserDeviceRepository.getDeviceByUserAndDeviceId(
         payload.userId,
         payload.deviceId || ''

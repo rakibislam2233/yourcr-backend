@@ -1,6 +1,4 @@
-import { BatchType } from '../../../prisma/generated/enums';
-import { InstitutionType } from '../../shared/enum/institution.enum';
-import { UserRole } from '../../shared/enum/user.enum';
+import { BatchType, InstitutionType, UserRole } from '../../../prisma/generated/enums';
 
 export interface ICreateAccountPayload {
   fullName: string;

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';

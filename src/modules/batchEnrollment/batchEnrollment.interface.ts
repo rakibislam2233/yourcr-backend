@@ -1,3 +1,4 @@
+
 export interface ICreateBatchEnrollmentPayload {
   batchId: string;
   userId: string;

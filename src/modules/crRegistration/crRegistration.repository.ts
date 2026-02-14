@@ -1,5 +1,5 @@
 import { database } from '../../config/database.config';
-import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
+import { CRRegistrationStatus } from '../../../prisma/generated/enums';
 import { IBatchInfo } from '../batch/batch.interface';
 
 // Create CR registration

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { InstitutionType } from '../../shared/enum/institution.enum';
+import { InstitutionType } from '../../../prisma/generated/enums';
 
 // ── Create Institution ───────────────────────────────────────────────────
 const createInstitution = z.object({

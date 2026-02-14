@@ -13,9 +13,8 @@ const timeAmPmSchema = z.string('Time is required').refine(
 const createClassValidation = z.object({
   body: z
     .object({
-      subjectId: z.string().optional(),
-      teacherId: z.string().optional(),
-
+      subjectId: z.string('Subject is required'),
+      teacherId: z.string('Teacher is required'),
       classDate: z.string('ClassDate is required').refine(
         val => {
           try {
@@ -29,14 +28,12 @@ const createClassValidation = z.object({
           message: 'Invalid date format (use YYYY-MM-DD or valid ISO date)',
         }
       ),
-
       startTime: timeAmPmSchema,
       endTime: timeAmPmSchema,
-
-      classType: z.enum(['ONLINE', 'OFFLINE']).optional(),
+      classType: z.enum(['ONLINE', 'OFFLINE']),
       status: z.enum(['SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
-
-      roomNumber: z.string().optional(),
+      platform: z.enum(['ZOOM', 'GOOGLE_MEET', 'MICROSOFT_TEAMS', 'OTHER']).optional(),
+      roomNumber: z.string('Room number is required').optional(),
       joinLink: z.string().url({ message: 'Invalid join link URL' }).optional(),
     })
     .refine(
@@ -106,6 +103,7 @@ const updateClassValidation = z.object({
       endTime: timeAmPmSchema.optional(),
       classType: z.enum(['ONLINE', 'OFFLINE']).optional(),
       status: z.enum(['SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
+      platform: z.enum(['ZOOM', 'GOOGLE_MEET', 'MICROSOFT_TEAMS', 'OTHER']).optional(),
       roomNumber: z.string().optional(),
       joinLink: z.string().url({ message: 'Invalid join link URL' }).optional(),
     })

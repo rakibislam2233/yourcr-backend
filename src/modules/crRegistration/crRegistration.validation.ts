@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { InstitutionType } from '../../shared/enum/institution.enum';
+import { InstitutionType } from '../../../prisma/generated/enums';
 
 const institutionInfoSchema = z.object({
   name: z.string().min(1, 'Institution name is required'),

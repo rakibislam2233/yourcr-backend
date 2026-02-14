@@ -1,4 +1,4 @@
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 
 export interface IRegisterPayload {
   fullName: string;

@@ -12,7 +12,7 @@ import {
   refreshTokenRateLimiter,
 } from '../../middleware/rate-limit.middleware';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 
 const router = Router();
 

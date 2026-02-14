@@ -66,10 +66,7 @@ const getBatchEnrollmentById = async (id: string) => {
 
 // Get all batch enrollments
 const getAllBatchEnrollments = async (batchId: string, filters: any, options: any) => {
-  const result = await BatchEnrollmentRepository.getAllBatchEnrollments(batchId, {
-    ...filters,
-    ...options,
-  });
+  const result = await BatchEnrollmentRepository.getAllBatchEnrollments(batchId, filters, options);
   return result;
 };
 

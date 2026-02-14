@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
 import validateRequest from '../../middleware/validation.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 import { AssessmentController } from './assessment.controller';
 import { AssessmentValidations } from './assessment.validation';
 

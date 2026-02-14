@@ -1,9 +1,7 @@
 import { Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { database } from '../../config/database.config';
-import { AuditAction } from '../../shared/enum/audit.enum';
-import { CRRegistrationStatus } from '../../shared/enum/crRegistration.enum';
-import { UserRole } from '../../shared/enum/user.enum';
+import { CRRegistrationStatus, UserRole } from '../../../prisma/generated/enums';
 import ApiError from '../../utils/ApiError';
 import { createAuditLog } from '../../utils/audit.helper';
 import {
@@ -19,6 +17,7 @@ import { UserRepository } from '../user/user.repository';
 import { upload_cr_registration_folder } from './crRegistration.constant';
 import { ICompleteCRRegistrationPayload } from './crRegistration.interface';
 import { CRRegistrationRepository } from './crRegistration.repository';
+import { AuditAction } from '../../shared/enum/audit.enum';
 
 const completeCRRegistration = async (
   sessionId: string,

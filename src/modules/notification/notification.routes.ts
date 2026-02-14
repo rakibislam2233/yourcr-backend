@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import { NotificationController } from './notification.controller';
+import { UserRole } from '../../../prisma/generated/enums';
 
 const router = Router();
 

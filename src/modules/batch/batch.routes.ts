@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 import { BatchController } from './batch.controller';
 import { BatchValidations } from './batch.validation';
 import validateRequest from '../../middleware/validation.middleware';

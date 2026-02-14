@@ -3,8 +3,6 @@ import { database } from '../../config/database.config';
 import ApiError from '../../utils/ApiError';
 import { ICreateInstitutionPayload, IUpdateInstitutionPayload } from './institution.interface';
 import { InstitutionRepository } from './institution.repository';
-import { UserRole } from '../../shared/enum/user.enum';
-
 // Create institution
 const createInstitution = async (payload: ICreateInstitutionPayload) => {
   // Check if institution already exists

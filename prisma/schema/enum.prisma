@@ -108,6 +108,13 @@ enum ClassStatus {
   CANCELLED
 }
 
+enum Platform {
+  ZOOM
+  GOOGLE_MEET
+  MICROSOFT_TEAMS
+  OTHER
+}
+
 enum BatchType {
   SEMESTER
   YEAR

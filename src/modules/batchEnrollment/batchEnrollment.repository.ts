@@ -1,4 +1,3 @@
-import { BatchRole } from '../../../prisma/generated/enums';
 import { database } from '../../config/database.config';
 import {
   createPaginationQuery,
@@ -6,15 +5,13 @@ import {
   PaginationResult,
   parsePaginationOptions,
 } from '../../utils/pagination.utils';
+import {
+  ICreateBatchEnrollmentPayload,
+  IUpdateBatchEnrollmentPayload,
+} from './batchEnrollment.interface';
 
 // Create batch enrollment
-const createBatchEnrollment = async (data: {
-  batchId: string;
-  userId: string;
-  role: BatchRole;
-  studentId?: string;
-  enrolledBy?: string;
-}) => {
+const createBatchEnrollment = async (data: ICreateBatchEnrollmentPayload) => {
   return await database.batchEnrollment.create({
     data: {
       batchId: data.batchId,
@@ -58,15 +55,16 @@ const getBatchEnrollmentById = async (id: string) => {
 // Get all batch enrollments
 const getAllBatchEnrollments = async (
   batchId: string,
-  query: any
+  filters: any,
+  options: any
 ): Promise<PaginationResult<any>> => {
-  const pagination = parsePaginationOptions(query);
+  const pagination = parsePaginationOptions(options);
   const { skip, take, orderBy } = createPaginationQuery(pagination);
 
   const where: any = { batchId, isDeleted: false };
 
-  if (query.role) {
-    where.role = query.role;
+  if (filters.role) {
+    where.role = filters.role;
   }
 
   const [enrollments, total] = await Promise.all([
@@ -101,7 +99,7 @@ const getAllBatchEnrollments = async (
 };
 
 // Update batch enrollment
-const updateBatchEnrollment = async (id: string, data: any) => {
+const updateBatchEnrollment = async (id: string, data: IUpdateBatchEnrollmentPayload) => {
   return await database.batchEnrollment.update({
     where: { id },
     data,

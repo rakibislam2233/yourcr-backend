@@ -1,7 +1,7 @@
 import express from 'express';
 import { auth } from '../../middleware/auth.middleware';
 import validateRequest from '../../middleware/validation.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
+import { UserRole } from '../../../prisma/generated/enums';
 import upload from '../../utils/fileUpload.utils';
 import { CRRegistrationController } from './crRegistration.controller';
 import { CRRegistrationValidations } from './crRegistration.validation';

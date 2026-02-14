@@ -4,19 +4,15 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { BatchEnrollmentService } from './batchEnrollment.service';
 import ApiError from '../../utils/ApiError';
-import { UserRole } from '../../shared/enum/user.enum';
-import { BatchEnrollmentValidations } from './batchEnrollment.validation';
-import validateRequest from '../../middleware/validation.middleware';
+import { UserRole } from '../../../prisma/generated/enums';
 
 const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
-  const { userId, role } = req.user;
-  
+  const { role } = req.user;
   // Only CR, ADMIN, or SUPER_ADMIN can enroll users in batches
   if (role !== UserRole.CR && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
-
-  const result = await BatchEnrollmentService.createBatchEnrollment(req.body, userId, req);
+  const result = await BatchEnrollmentService.createBatchEnrollment(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -29,7 +25,7 @@ const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 const getBatchEnrollmentById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
-  
+
   const result = await BatchEnrollmentService.getBatchEnrollmentById(enrollmentId);
 
   sendResponse(res, {
@@ -46,11 +42,11 @@ const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) =>
 
   // Validate batch access
   const batch = await BatchEnrollmentService.getBatchById(batchId as string);
-  
+
   // Check if user is enrolled in this batch or is admin
   const userBatches = await BatchEnrollmentService.getUserEnrollments(userId);
   const isEnrolled = userBatches.some((b: any) => b.batchId === batchId);
-  
+
   if (!isEnrolled && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied to this batch');
   }
@@ -58,11 +54,11 @@ const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) =>
   const options = {
     page: parseInt(req.query.page as string) || 1,
     limit: parseInt(req.query.limit as string) || 10,
-    sortBy: req.query.sortBy as string || 'createdAt',
-    sortOrder: req.query.sortOrder as string || 'desc',
+    sortBy: (req.query.sortBy as string) || 'createdAt',
+    sortOrder: (req.query.sortOrder as string) || 'desc',
   };
 
-  const result = await BatchEnrollmentService.getAllBatchEnrollments(batchId as string, options);
+  const result = await BatchEnrollmentService.getAllBatchEnrollments(batchId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -79,11 +75,11 @@ const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
 
   // Validate batch access
   const batch = await BatchEnrollmentService.getBatchById(batchId as string);
-  
+
   // Check if user is enrolled in this batch or is admin
   const userBatches = await BatchEnrollmentService.getUserEnrollments(userId);
   const isEnrolled = userBatches.some((b: any) => b.batchId === batchId);
-  
+
   if (!isEnrolled && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied to this batch');
   }

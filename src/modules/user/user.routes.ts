@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.middleware';
 import validateRequest from '../../middleware/validation.middleware';
-import { UserRole } from '../../shared/enum/user.enum';
 import { UserController } from './user.controller';
 import { UserValidations } from './user.validation';
 import upload from '../../utils/fileUpload.utils';
+import { UserRole } from '../../../prisma/generated/enums';
 
 const router = Router();
 

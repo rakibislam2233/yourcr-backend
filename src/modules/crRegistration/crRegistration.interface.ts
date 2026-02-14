@@ -1,4 +1,4 @@
-import { InstitutionType } from '../../shared/enum/institution.enum';
+import { InstitutionType } from '../../../prisma/generated/enums';
 import { IBatchInfo } from '../batch/batch.interface';
 
 export interface ICompleteCRRegistrationPayload {

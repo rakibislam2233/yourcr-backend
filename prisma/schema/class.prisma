@@ -9,6 +9,7 @@ model Class {
   classDate   DateTime
   startTime   DateTime
   endTime     DateTime
+  platform    Platform    @default(ZOOM)
   classType   ClassType   @default(OFFLINE)
   status      ClassStatus @default(SCHEDULED)
   roomNumber  String?
