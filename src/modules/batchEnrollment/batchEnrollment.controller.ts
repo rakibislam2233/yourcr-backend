@@ -43,6 +43,10 @@ const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) =>
   // Validate batch access
   const batch = await BatchEnrollmentService.getBatchById(batchId as string);
 
+  if (!batch) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'You are not authorized to access this batch');
+  }
+
   // Check if user is enrolled in this batch or is admin
   const userBatches = await BatchEnrollmentService.getUserEnrollments(userId);
   const isEnrolled = userBatches.some((b: any) => b.batchId === batchId);
