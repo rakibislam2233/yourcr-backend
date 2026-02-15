@@ -4,15 +4,14 @@ import validateRequest from '../../middleware/validation.middleware';
 import { RoutineController } from './routine.controller';
 import { RoutineValidations } from './routine.validation';
 
-import upload from '../../utils/fileUpload.utils';
 import { UserRole } from '../../../prisma/generated/enums';
-
+import upload from '../../utils/fileUpload.utils';
 const router = Router();
 
 router.post(
   '/',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
-  upload.single('file'),
+  upload.single('fileUrl'),
   validateRequest(RoutineValidations.createRoutine),
   RoutineController.createRoutine
 );
@@ -32,7 +31,7 @@ router.get(
 router.patch(
   '/:id',
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CR),
-  upload.single('file'),
+  upload.single('fileUrl'),
   validateRequest(RoutineValidations.updateRoutine),
   RoutineController.updateRoutine
 );

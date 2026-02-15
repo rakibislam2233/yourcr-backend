@@ -21,7 +21,6 @@ const getAllRoutines = async (filters: any, options: any) => {
 };
 
 const updateRoutine = async (id: string, payload: IUpdateRoutinePayload) => {
-  const existing = await RoutineService.getRoutineById(id);
   return await RoutineRepository.updateRoutine(id, payload);
 };
 

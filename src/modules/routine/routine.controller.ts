@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status-codes';
+import ApiError from '../../utils/ApiError';
 import catchAsync from '../../utils/catchAsync';
 import pick from '../../utils/pick.utils';
 import sendResponse from '../../utils/sendResponse';
@@ -8,17 +9,55 @@ import { RoutineService } from './routine.service';
 
 const createRoutine = catchAsync(async (req: Request, res: Response) => {
   const { batchId, userId } = req.user;
-
   let fileUrl = req.body.fileUrl;
+
   if (req.file) {
-    const uploadResult = await uploadFile(req.file.buffer, 'routines', `routine_${Date.now()}`);
+    // Use RAW for PDFs to allow direct download/access
+    let resourceType: 'image' | 'video' | 'raw' = 'raw';
+
+    if (req.file.mimetype === 'application/pdf') {
+      resourceType = 'raw'; // RAW type for PDFs
+    } else if (req.file.mimetype.startsWith('image/')) {
+      resourceType = 'image';
+    } else if (req.file.mimetype.startsWith('video/')) {
+      resourceType = 'video';
+    }
+
+    const fileName = `routine_${Date.now()}`;
+
+    console.log('Uploading file:', {
+      mimetype: req.file.mimetype,
+      resourceType,
+      fileName,
+      size: req.file.size,
+    });
+
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      'routines',
+      fileName,
+      resourceType,
+      req.file.mimetype
+    );
+
     fileUrl = uploadResult.secure_url;
+
+    console.log('Upload successful:', {
+      url: fileUrl,
+      publicId: uploadResult.public_id,
+      resourceType: uploadResult.resource_type,
+      format: uploadResult.format,
+    });
+  }
+
+  if (!fileUrl) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'File or file URL is required');
   }
 
   const result = await RoutineService.createRoutine(
     {
       ...req.body,
-      fileUrl: fileUrl || req.body.fileUrl,
+      fileUrl: fileUrl,
       batchId: batchId || req.body.batchId,
       createdById: userId,
     },
@@ -71,8 +110,28 @@ const updateRoutine = catchAsync(async (req: Request, res: Response) => {
   const routineId = Array.isArray(id) ? id[0] : id;
 
   let fileUrl = req.body.fileUrl;
+
   if (req.file) {
-    const uploadResult = await uploadFile(req.file.buffer, 'routines', `routine_${Date.now()}`);
+    let resourceType: 'image' | 'video' | 'raw' = 'raw';
+
+    if (req.file.mimetype === 'application/pdf') {
+      resourceType = 'raw';
+    } else if (req.file.mimetype.startsWith('image/')) {
+      resourceType = 'image';
+    } else if (req.file.mimetype.startsWith('video/')) {
+      resourceType = 'video';
+    }
+
+    const fileName = `routine_${Date.now()}`;
+
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      'routines',
+      fileName,
+      resourceType,
+      req.file.mimetype
+    );
+
     fileUrl = uploadResult.secure_url;
   }
 

@@ -46,9 +46,6 @@ const getAllRoutines = async (filters: any, options: any): Promise<PaginationRes
       skip,
       take,
       orderBy,
-      include: {
-        createdBy: true,
-      },
     }),
     database.routine.count({ where }),
   ]);
