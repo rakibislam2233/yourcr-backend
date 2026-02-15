@@ -5,6 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { BatchEnrollmentService } from './batchEnrollment.service';
 import ApiError from '../../utils/ApiError';
 import { UserRole } from '../../../prisma/generated/enums';
+import pick from '../../utils/pick.utils';
 
 const createBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { role } = req.user;
@@ -37,38 +38,34 @@ const getBatchEnrollmentById = catchAsync(async (req: Request, res: Response) =>
 });
 
 const getAllBatchEnrollments = catchAsync(async (req: Request, res: Response) => {
-  const { batchId } = req.params;
   const { userId, role } = req.user;
-
+  const filters = pick(req.query, ['batchId', 'userId', 'role']);
+  const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
   // Validate batch access
-  const batch = await BatchEnrollmentService.getBatchById(batchId as string);
+  const batch = await BatchEnrollmentService.getBatchById(filters.batchId as string);
 
   if (!batch) {
     throw new ApiError(httpStatus.NOT_FOUND, 'You are not authorized to access this batch');
   }
-
   // Check if user is enrolled in this batch or is admin
   const userBatches = await BatchEnrollmentService.getUserEnrollments(userId);
-  const isEnrolled = userBatches.some((b: any) => b.batchId === batchId);
+  const isEnrolled = userBatches.some((b: any) => b.batchId === filters.batchId);
 
   if (!isEnrolled && role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied to this batch');
   }
 
-  const options = {
-    page: parseInt(req.query.page as string) || 1,
-    limit: parseInt(req.query.limit as string) || 10,
-    sortBy: (req.query.sortBy as string) || 'createdAt',
-    sortOrder: (req.query.sortOrder as string) || 'desc',
-  };
-
-  const result = await BatchEnrollmentService.getAllBatchEnrollments(batchId);
+  const result = await BatchEnrollmentService.getAllBatchEnrollments(
+    filters?.batchId as string,
+    filters,
+    options
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Batch enrollments fetched successfully',
-    meta: result.meta,
+    meta: result.pagination,
     data: result.data,
   });
 });
@@ -98,7 +95,7 @@ const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
     role: req.query.role as string, // Filter by role if provided
   };
 
-  const result = await BatchEnrollmentService.getBatchMembers(batchId as string, options);
+  const result = await BatchEnrollmentService.getBatchMembers(batchId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -110,7 +107,7 @@ const getBatchMembers = catchAsync(async (req: Request, res: Response) => {
 
 const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const {  role } = req.user;
+  const { role } = req.user;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
   // Only CR, ADMIN, or SUPER_ADMIN can update enrollments
@@ -118,7 +115,7 @@ const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
 
-  const result = await BatchEnrollmentService.updateBatchEnrollment(enrollmentId, req.body, req);
+  const result = await BatchEnrollmentService.updateBatchEnrollment(enrollmentId, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -130,7 +127,7 @@ const updateBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
 
 const deleteBatchEnrollment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId, role } = req.user;
+  const { role } = req.user;
   const enrollmentId = Array.isArray(id) ? id[0] : id;
 
   // Only CR, ADMIN, or SUPER_ADMIN can delete enrollments
@@ -138,7 +135,7 @@ const deleteBatchEnrollment = catchAsync(async (req: Request, res: Response) => 
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
 
-  const result = await BatchEnrollmentService.deleteBatchEnrollment(enrollmentId, req);
+  const result = await BatchEnrollmentService.deleteBatchEnrollment(enrollmentId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -158,7 +155,7 @@ const getUserEnrollments = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
   }
 
-  const result = await BatchEnrollmentService.getUserEnrollments(userId);
+  const result = await BatchEnrollmentService.getUserEnrollments(userId as string);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

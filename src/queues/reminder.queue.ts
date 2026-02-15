@@ -49,7 +49,7 @@ export const scheduleAssessmentReminder = async (
     await addReminderJob(
       {
         type: 'ASSESSMENT_REMINDER',
-        title: `⏰ Assessment Due Tomorrow: ${title}`,
+        title: `Assessment Deadline Reminder: ${title} Due Tomorrow`,
         message: `This is a reminder that the assessment "${title}" is due tomorrow at ${deadline.toLocaleString()}. Please submit your work on time!`,
         relatedId: assessmentId,
         scheduledFor: dayBeforeReminder,
@@ -69,7 +69,7 @@ export const scheduleAssessmentReminder = async (
     await addReminderJob(
       {
         type: 'ASSESSMENT_REMINDER',
-        title: `⏳ 3 Hours Left: ${title}`,
+        title: `Urgent Assessment Alert: Submission Deadline for ${title} is Approaching`,
         message: `Urgent! The assessment "${title}" is due in 3 hours at ${deadline.toLocaleString()}.`,
         relatedId: assessmentId,
         scheduledFor: threeHoursBeforeReminder,
@@ -96,8 +96,8 @@ export const scheduleClassReminder = async (
     await addReminderJob(
       {
         type: 'CLASS_REMINDER',
-        title: `⏰ Class Starting Soon: ${classTitle}`,
-        message: `Your class ${classTitle} will start in 15 minutes at ${classDate.toLocaleTimeString()}. Get ready!`,
+        title: `Upcoming Session Reminder: ${classTitle} Starts in 15 Minutes.`,
+        message: `Your class for ${classTitle} is scheduled to start in 15 minutes at ${classDate.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}. Please be ready!`,
         relatedId: classId,
         scheduledFor: reminderDate,
         crId,

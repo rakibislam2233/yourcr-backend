@@ -71,8 +71,7 @@ const getAllBatchEnrollments = async (batchId: string, filters: any, options: an
 };
 
 // Get batch members (with roles)
-const getBatchMembers = async (params: { batchId: string }): Promise<IBatchMemberResponse[]> => {
-  const { batchId } = params;
+const getBatchMembers = async (batchId: string): Promise<IBatchMemberResponse[]> => {
 
   const enrollments = await database.batchEnrollment.findMany({
     where: { batchId },

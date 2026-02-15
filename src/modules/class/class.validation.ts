@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import parseAmPmToDate, { parseDateInBD, getBangladeshTime } from '../../utils/time';
+import parseAmPmToDate, { getBangladeshTime, parseDateInBD } from '../../utils/time';
 
 const timeAmPmSchema = z.string('Time is required').refine(
   val => {
@@ -19,13 +19,20 @@ const createClassValidation = z.object({
         val => {
           try {
             const date = parseDateInBD(val);
-            return !isNaN(date.getTime());
+            if (isNaN(date.getTime())) return false;
+
+            const now = getBangladeshTime();
+            // Reset both to midnight for simple date comparison
+            const inputDate = new Date(date).setHours(0, 0, 0, 0);
+            const currentDate = new Date(now).setHours(0, 0, 0, 0);
+
+            return inputDate >= currentDate;
           } catch {
             return false;
           }
         },
         {
-          message: 'Invalid date format (use YYYY-MM-DD or valid ISO date)',
+          message: 'Date cannot be in the past',
         }
       ),
       startTime: timeAmPmSchema,
@@ -89,13 +96,20 @@ const updateClassValidation = z.object({
             if (!val) return true;
             try {
               const date = parseDateInBD(val);
-              return !isNaN(date.getTime());
+              if (isNaN(date.getTime())) return false;
+
+              const now = getBangladeshTime();
+              // Reset both to midnight for simple date comparison
+              const inputDate = new Date(date).setHours(0, 0, 0, 0);
+              const currentDate = new Date(now).setHours(0, 0, 0, 0);
+
+              return inputDate >= currentDate;
             } catch {
               return false;
             }
           },
           {
-            message: 'Invalid date format',
+            message: 'Date cannot be in the past',
           }
         ),
 
